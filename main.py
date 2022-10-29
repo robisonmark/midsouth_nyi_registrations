@@ -93,8 +93,8 @@ def create_student_categories():
 
         if category_col in multiple_possible:
             # df = pd.pivot(df, [category_col], loc_cols)
-            # df = df.set_index([category_col]).unstack()
-            df = pd.pivot_table(df, index=category_col, columns=['First Name'])
+            df = df.set_index(category_col).unstack()
+            # df = pd.pivot_table(df, index=category_col, values='First Name', columns=loc_cols)
             print(df)
 
         filename = category_col.replace(' ', '_').lower()
