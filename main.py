@@ -58,8 +58,9 @@ multiple_possible = [
 
 
 def write_csv(df, df_name, filename):
+    print(df)
     if df_name not in write_file_exlusion:
-        df.to_csv(f'./{filename}.csv', index=False,)
+        df.to_csv(f'./{filename}.csv', index=True)
 
 def create_student_categories():
     df_original = pd.read_csv('./momentum_numbers.csv')
@@ -92,15 +93,11 @@ def create_student_categories():
         df = df.loc[:, loc_cols].dropna(subset=[category_col])
 
         if category_col in multiple_possible:
-            # df = pd.pivot(df, [category_col], loc_cols)
-            # df = df.set_index(category_col).unstack()
-            df = pd.pivot_table(df, index=[category_col], columns=loc_cols)
-            print(df)
-            df = df.melt()
+            df = df.explode(category_col).groupby([category_col, 'Grade Level', 'What church are you a part of?']).sum()
 
-        filename = category_col.replace(' ', '_').lower()
-        
-        write_csv(df, category_col, filename)
+            filename = category_col.replace(' ', '_').lower()
+            
+            write_csv(df, category_col, filename)
 
 
 
