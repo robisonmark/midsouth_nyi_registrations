@@ -1,4 +1,5 @@
 .DS_Store
-momentum_numbers
-./church/*
-./numbers/*
+church/**.*
+numbers/**.*
+files/**.*
+events/**.*
