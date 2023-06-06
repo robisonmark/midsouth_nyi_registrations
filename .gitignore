@@ -1,5 +1,6 @@
-.DS_Store
-church/**.*
+**.DS_Store
+church/**/**.*
+processed/**/**.*
 numbers/**.*
 files/**.*
 events/**.*
