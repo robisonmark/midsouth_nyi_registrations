@@ -1,7 +1,7 @@
 /**.DS_Store
-church/**/**.*
-processed/**/**.*
-numbers/**.*
-files/**.*
-events/**/**.*
-.venv/*
+/registration_numbers/church/**/**.*
+/registration_numbers/processed/**/**.*
+/registration_numbers/numbers/**.*
+/registration_numbers/files/**.*
+/registration_numbers/events/**/**.*
+/registration_numbers/.venv/*
