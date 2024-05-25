@@ -4,3 +4,4 @@ processed/**/**.*
 numbers/**.*
 files/**.*
 events/**/**.*
+.venv/*
