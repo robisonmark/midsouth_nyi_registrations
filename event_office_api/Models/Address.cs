@@ -1,13 +1,10 @@
-namespace EventOfficeApi.Models
+using System;
+public interface IAddress
 {
-    public class Address
-    {
-        public string street address 1 { get; set; }
-    public string street address 2 { get; set; }
-public string locality { get; set; }
-public int postal code { get; set; }
-        public string country { get; set; }
-public string administrative area level { get; set; }
-    
-    }
+    string StreetAddress1 { get; set; }
+    string? StreetAddress2 { get; set; }
+    string Locality { get; set; }
+    int PostalCode { get; set; }
+    string Country { get; set; }
+    string AdministrativeAreaLevel { get; set; }
 }
