@@ -1,21 +1,24 @@
 import csv
 import sys
-import argparse
-import pandas as pd
+=
+from cement import shell
 
 import camp_registrations
 
 
 
-
-
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(event = 'camp')
-    parser.add_argument('--event', help = "What event are you running church numbers for")
-    
-    args = parser.parse_args(sys.argv[1:])
-    folder = "C:\\TEMP\\"+args.folder
-    event = args.event
+    count = 0
+    event_prompt = shell.Prompt(
+        "For which event are you running registration numbers?",
+        options=["Camp", "Momentum"],
+        numbered=True,
+    )
+    file_prompt = shell.Prompt(
+        "For which event are you running registration numbers?",
+        options=["Camp", "Momentum"],
+        numbered=True,
+    )
 
-    if event == 'camp':
-        camp_registrations.constants.write_csv()
+    if event_prompt == 'Camp':
+        camp_registrations()
