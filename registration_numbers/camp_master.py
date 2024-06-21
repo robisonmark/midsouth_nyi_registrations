@@ -22,7 +22,7 @@ CAMPS = {"high_school": [], "middle_school": []}
 
 hs_output_list = []
 ms_output_list = []
-file_path = "./church/2024-05-31/"
+file_path = "./church/2024-06-03/"
 for root, dirs, files in os.walk(file_path, topdown=False):
     for name in files:
         print(os.path.join(root, name))
@@ -100,7 +100,7 @@ for root, dirs, files in os.walk(file_path, topdown=False):
                 and date_parse > datetime.datetime(2024, 5, 24)
                 else ""
             )
-            late_fee = 25 if date_parse > datetime.datetime(2024, 5, 31) else ""
+            late_fee = 0 if date_parse > datetime.datetime(2024, 5, 31) else ""
             adult_one = (
                 1
                 if sh.cell_value(rowx=rx + 1, colx=STUDENT_CHAPERONE_COLUMN)
