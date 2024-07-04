@@ -45,3 +45,7 @@ dotnet run
 The API will start running, and you should see output indicating that the server is listening on a specific port (usually http://localhost:5000 or https://localhost:5001).
 You can now test your API by making HTTP requests to the specified endpoint. For example, if you have an API endpoint /api/values, you can access it by opening a web browser and navigating to http://localhost:5000/api/values
 ```
+```
+dotnet add package Npgsql
+dotnet add package Npgsql.EntityFrameworkCore.PostgreSQL
+```
