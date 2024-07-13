@@ -1,0 +1,2 @@
+# RoBrosBaseDomainService
+RoBrosBaseDomainService is foundational domain in the Momentum Office App.  It allows for setting up the base fields required for all entities.  It could also set up basic database crud operations, allowing entities to be focused on only the entity itself consuming this service.  This would allow for consistency in how the EntityServices write to the Database.
