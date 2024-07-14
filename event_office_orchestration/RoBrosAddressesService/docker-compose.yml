@@ -1,23 +1,30 @@
 version: '3.8'
 
 services:
-  db:
-    image: postgres:15
-    container_name: postgres
-    ports:
-      - "5432:5432" # Expose PostgreSQL port
-    environment:
-      POSTGRES_DB: mydb
-      POSTGRES_USER: myuser
-      POSTGRES_PASSWORD: mypassword
-
-  address_service:
+  api:
     build:
-    container_name: address_service
+      context: .
+      dockerfile: Dockerfile
     ports:
-      - "5002:80" # Map port 5002 on the host to port 80 in the container
+      - "8080:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=db;Database=YourDatabaseName;Username=postgres;Password=YourPassword
     depends_on:
       - db
+
+  db:
+    image: postgres:15-alpine
     environment:
-      - ConnectionStrings__DefaultConnection=Host=db;Database=mydb;Username=myuser;Password=mypassword
+      POSTGRES_DB: YourDatabaseName
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: YourPassword
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+volumes:
+  pgdata:
+
 

@@ -1,13 +1,13 @@
-namespace EventOfficeApi.Models
+namespace EventOfficeApi.Models;
 public abstract class BaseEntity
 {
     public Guid Id { get; protected set; }
     public DateTime CreatedAt { get; protected set; }
     public string CreatedBy { get; protected set; }
     public DateTime? UpdatedAt { get; protected set; }
-    public string UpdatedBy { get; protected set; }
+    public string? UpdatedBy { get; protected set; }
     public int Version { get; protected set; }
-    public string EntityData { get; protected set; }
+    public string? EntityData { get; protected set; }
 
     protected BaseEntity(string createdBy)
     {
@@ -25,21 +25,21 @@ public abstract class BaseEntity
         Version++;
     }
 
-    public override bool Equals(object obj)
-    {
-        if (obj == null || !(obj is BaseEntity))
-        {
-            return false;
-        }
+    // public override bool Equals(object obj)
+    // {
+    //     if (obj == null || !(obj is BaseEntity))
+    //     {
+    //         return false;
+    //     }
 
-        if (ReferenceEquals(this, obj))
-        {
-            return true;
-        }
+    //     if (ReferenceEquals(this, obj))
+    //     {
+    //         return true;
+    //     }
 
-        var other = (BaseEntity)obj;
-        return Id.Equals(other.Id);
-    }
+    //     var other = (BaseEntity)obj;
+    //     return Id.Equals(other.Id);
+    // }
 
     public override int GetHashCode()
     {
