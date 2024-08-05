@@ -13,7 +13,7 @@ With .NET 8, you can create various types of projects, such as console applicati
 
 To get a list of templates run `dotnet new --list` once you have installed .NET on your computer.
 
-__This project was bootstrapped using `dotnet new apicontroller`__
+__This project was bootstrapped using `dotnet new webapi`__
 __The .gitignore file was bootstrapped using `dotnet new gitignore`__
 
 ## Running
