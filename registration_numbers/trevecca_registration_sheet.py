@@ -8,9 +8,11 @@ STUDENT_CHAPERONE_COLUMN = 3
 REGISTRATION_DATE_COLUMN = 2
 FIRST_NAME_COLUMN = 6
 LAST_NAME_COLUMN = 7
+BIRTHDAY_COLUMN = 8
 CHURCH_COLUMN = 32
-SHIRT_SIZE_COLUMN = 17
+EMAIL_COLUMN = 15
 GENDER_COLUMN = 16
+SHIRT_SIZE_COLUMN = 17
 STUDENT_CAMP_COLUMN = 4
 CHAPERONE_CAMP_COLUMN = 5
 PAYMENT_COLUMN = 48
@@ -25,6 +27,7 @@ MAIN_ROSTER = []
 
 
 file_path = "./church/"
+
 for root, dirs, files in os.walk(file_path, topdown=False):
     for name in files:
 
@@ -48,6 +51,9 @@ for root, dirs, files in os.walk(file_path, topdown=False):
 
             camp = sh.cell_value(rowx=rx + 1, colx=CAMP_COLUMN).lower()
 
+            birthday = sh.cell_value(rowx=rx + 1, colx=BIRTHDAY_COLUMN)
+            email = sh.cell_value(rowx=rx + 1, colx=EMAIL_COLUMN)
+
             street_address = sh.cell_value(rowx=rx + 1, colx=STREET_ADDRESS_COLUMN)
             street_address_unit = sh.cell_value(rowx=rx + 1, colx=STREET_ADDRESS_UNIT_COLUMN)
             city = sh.cell_value(rowx=rx + 1, colx=CITY_COLUMN)
@@ -55,7 +61,6 @@ for root, dirs, files in os.walk(file_path, topdown=False):
             zip_code = sh.cell_value(rowx=rx + 1, colx=ZIP_CODE_COLUMN)
 
             address_string = f"{street_address} {street_address_unit}, {city}, {state} {zip_code}"
-
             if student_chaperone_selection != "Chaperone":
                 MAIN_ROSTER.append(
                         {
@@ -63,6 +68,8 @@ for root, dirs, files in os.walk(file_path, topdown=False):
                             "Church": church,
                             "Name": name,
                             "Camp": camp,
+                            "Birthday": birthday,
+                            "Email": email,
                             "Address": address_string,
 
                         }
@@ -75,5 +82,4 @@ class Trevecca:
                 writer.writerow(MAIN_ROSTER[0].keys())
                 for student in MAIN_ROSTER:
                     writer.writerow(student.values())
-
 
