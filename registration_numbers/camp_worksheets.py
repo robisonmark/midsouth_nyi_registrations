@@ -1,7 +1,7 @@
 from cement import shell
 
 from trevecca_registration_sheet import Trevecca
-from registation_numbers_breakdown import RegistrationNumbers
+from registration_numbers.registration_numbers_breakdown import RegistrationNumbers
 
 if __name__ == "__main__":
     process = shell.Prompt("Which process do you want to run?",
