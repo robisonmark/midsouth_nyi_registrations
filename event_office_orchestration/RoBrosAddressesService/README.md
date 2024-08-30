@@ -46,6 +46,7 @@ The API will start running, and you should see output indicating that the server
 You can now test your API by making HTTP requests to the specified endpoint. For example, if you have an API endpoint /api/values, you can access it by opening a web browser and navigating to http://localhost:5000/api/values
 ```
 ```
+dotnet add package NSwag.AspNetCore
 dotnet add package Npgsql
 dotnet add package Npgsql.EntityFrameworkCore.PostgreSQL
 ```

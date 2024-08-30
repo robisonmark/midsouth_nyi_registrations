@@ -21,17 +21,17 @@ namespace EventOfficeApi.Controllers
 
         [HttpGet]
         [Route("/api/person", Name = "GetPersonById")]
-        [ProducesResponseType(typeof(Person), StatusCodes.Status201Created)]
+        [ProducesResponseType(typeof(Registrant), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetPerson(Guid personId)
         {
             // TODO: Implement Database Access
-            Person person = new Person
+            Registrant person = new Registrant
             {
                 Id = Guid.NewGuid(),
                 GivenName = "John",
                 FamilyName = "Doe",
-                CompetitionStatus = "Registered",
+                ParticpantRole = "Competitor",
                 Church = new Church
                 {
                     Id = 1,
@@ -44,7 +44,10 @@ namespace EventOfficeApi.Controllers
                     PostalCode = 12345,
                     Country = "USA",
                     AdministrativeAreaLevel = "CA"
-                }
+                },
+                SubmissionDate = DateTime.UtcNow,
+                IPAddress = "",
+                Paid = false,
             };
 
             await Task.Delay(10);
@@ -57,7 +60,7 @@ namespace EventOfficeApi.Controllers
         [Route("/api/person", Name = "AddPerson")]
         [ProducesResponseType(StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        public async Task<IActionResult> CreatePerson(Person person)
+        public async Task<IActionResult> CreatePerson(Registrant person)
         {
             // TODO: Implement Database Access
 
