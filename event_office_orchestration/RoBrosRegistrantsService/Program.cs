@@ -45,9 +45,25 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 
 
 // Add services to the container.
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
+builder.Services.AddControllers();
+builder.Services.AddOpenApiDocument(options =>
+{
+    options.PostProcess = document =>
+    {
+        document.Info = new NSwag.OpenApiInfo
+        {
+            Title = "Event Office Registants Service",
+            Description = "API for Defining The Students and Chaperones registering for an Event",
+            Version = "v1",
+            Contact = new NSwag.OpenApiContact()
+            {
+                Name = "Mark Robison",
+                Email = "admin@robros.tech",
+                Url = "https://robros.tech"
+            },
+        };
+    };
+});
 
 var app = builder.Build();
 

@@ -4,8 +4,6 @@ using System.Diagnostics;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
-using EventOfficeApi.Models.Registrant;
-
 namespace EventOfficeApi.Student
 {
     public class Spectator

@@ -17,11 +17,11 @@ namespace EventOfficeApi.Models
 
         public string DietaryRestrictions { get; set; }
 
-        public Array[string] Allergies { get; set; }
+        public string[] Allergies { get; set; }
 
-        public Array[string] FoodAllergies { get; set; }
+        public string[] FoodAllergies { get; set; }
 
-        public Array[string] Medications { get; set; } // possible { medicine: xx; dose: xx }
+        public string[] Medications { get; set; } // possible { medicine: xx; dose: xx }
 
         [Required]
         public string GuardianFirstName { get; set; }
