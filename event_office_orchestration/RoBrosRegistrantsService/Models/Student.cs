@@ -3,17 +3,14 @@ using System.Diagnostics;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
+using EventOfficeApi.Models.Registrant;
+
 namespace EventOfficeApi.Models
 {
-    public class Student : Registrant
+    public class Student
     {
-        public Guid Id { get; set; }
-
         [Required]
-        required public Guid RegistrantId { get; set; }
-
-        [Required]
-        public string ParticpantRole { get; set; } = "Student"; // student/chaperone/volunteer
+        public string ParticipantRole { get; set; } = "Student" // student/chaperone/volunteer
 
         [Required]
         public string CompetitionStatus { get; set; } // competing/spectation enum
@@ -22,11 +19,11 @@ namespace EventOfficeApi.Models
 
         public string DietaryRestrictions { get; set; }
 
-        public string[] Allergies { get; set; }
+        public Array[string] Allergies { get; set; }
 
-        public string[] FoodAllergies { get; set; }
+        public Array[string] FoodAllergies { get; set; }
 
-        public string[] Medications { get; set; } // possible { medicine: xx; dose: xx }
+        public Array[string] Medications { get; set; } // possible { medicine: xx; dose: xx }
 
         [Required]
         public string GuardianFirstName { get; set; }
