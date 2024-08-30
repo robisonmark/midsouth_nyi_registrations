@@ -34,16 +34,13 @@ To run a .NET API locally for testing, you can follow these steps:
 Open a terminal or command prompt.
 Navigate to the directory where your API project is located.
 Build the project by running the following command:
-Copy
-Insert
 dotnet build
-Once the build is successful, navigate to the output directory. By default, the output directory is the bin folder within your project directory.
 Run the API using the following command:
-Copy
-Insert
 dotnet run
 The API will start running, and you should see output indicating that the server is listening on a specific port (usually http://localhost:5000 or https://localhost:5001).
 You can now test your API by making HTTP requests to the specified endpoint. For example, if you have an API endpoint /api/values, you can access it by opening a web browser and navigating to http://localhost:5000/api/values
+
+^ url defined in launchSettings.json
 ```
 ```
 dotnet add package NSwag.AspNetCore
