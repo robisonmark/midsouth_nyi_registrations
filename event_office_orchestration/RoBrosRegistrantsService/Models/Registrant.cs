@@ -21,6 +21,9 @@ namespace EventOfficeApi.Models
         public string ParticpantRole { get; set; } // student/chaperone/volunteer
 
         [Required]
+        public string CompetitionStatus { get; set; } // competing/spectation enum
+
+        [Required]
         required public Church Church { get; set; }
 
         public string YouthLeaderEmail { get; set; } // part of church?
@@ -34,7 +37,7 @@ namespace EventOfficeApi.Models
 
         public string? Mobile { get; set; }
 
-        public string? Email { get; set; }
+        public EmailAddress? Email { get; set; }
 
         [Required]
         public DateTime Birthday { get; set; }
@@ -51,10 +54,13 @@ namespace EventOfficeApi.Models
         public string Notes { get; set; }
 
         [Required]
-        required public DateTime SubmissionDate { get; set; } = DateTime.UtcNow;
+        public DateTime SubmissionDate { get; set; } = DateTime.UtcNow;
 
         [Required]
-        required public string IPAddress { get; set; }
+        public string IPAddress { get; set; }
+
+
+
     }
 
 }

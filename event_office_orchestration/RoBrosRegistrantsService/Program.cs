@@ -1,14 +1,11 @@
+
 using Microsoft.OpenApi.Models;
-<<<<<<< HEAD
 using Microsoft.Extensions.DependencyInjection;
-=======
->>>>>>> aaadf4e (Feature/addresses service (#8))
 using Npgsql;
 using NSwag;
 
 var builder = WebApplication.CreateBuilder(args);
 
-<<<<<<< HEAD
 // Register NpgsqlConnection as a singleton
 builder.Services.AddSingleton<NpgsqlConnection>(serviceProvider =>
 {
@@ -20,8 +17,6 @@ builder.Services.AddSingleton<NpgsqlConnection>(serviceProvider =>
     return connection;
 });
 
-=======
->>>>>>> aaadf4e (Feature/addresses service (#8))
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddOpenApiDocument(options =>
@@ -43,14 +38,17 @@ builder.Services.AddOpenApiDocument(options =>
     };
 });
 
-<<<<<<< HEAD
-=======
 // Register DbContext with Npgsql connection
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseNpgsql(connectionString));
 
->>>>>>> aaadf4e (Feature/addresses service (#8))
+
+// Add services to the container.
+// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen();
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
