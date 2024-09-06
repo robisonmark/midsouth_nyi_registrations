@@ -7,6 +7,11 @@ namespace EventOfficeApi.Student
 {
     public class Competitor
     {
+        public Guid Id { get; set; }
+
+        [Required]
+        required public Guid RegistrantId { get; set; }
+
         [Required]
         required public int District { get; set; }
         [Required]
