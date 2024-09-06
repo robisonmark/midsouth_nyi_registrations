@@ -10,11 +10,7 @@ using EventOfficeApi.Models;
 namespace EventOfficeApi.Controllers
 {
     [ApiController]
-<<<<<<< HEAD
-    public class RegistrantController : BaseController
-=======
     public class RegistrantController : ControllerBase
->>>>>>> aaadf4e (Feature/addresses service (#8))
     {
         // private readonly ILogger<ContactsController> _logger;
 
@@ -29,7 +25,6 @@ namespace EventOfficeApi.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateRegistrant(Registrant registrant)
         {
-<<<<<<< HEAD
             if (registrant.id == null)
             {
                 registrant.id = Guid.NewGuid().ToString();
@@ -73,16 +68,11 @@ namespace EventOfficeApi.Controllers
                 IPAddress = "",
                 Paid = false,
             };
-=======
-            // TODO: Implement Database Access
->>>>>>> aaadf4e (Feature/addresses service (#8))
 
             await Task.Delay(10);
 
             return Ok(registrant);
         }
-<<<<<<< HEAD
-=======
 
         private class Address : IAddress
         {
@@ -129,7 +119,6 @@ namespace EventOfficeApi.Controllers
         await Task.Delay(10);
 
         return Ok(registrant);
->>>>>>> aaadf4e (Feature/addresses service (#8))
     }
 
 }
