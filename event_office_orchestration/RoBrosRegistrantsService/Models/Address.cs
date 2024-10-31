@@ -7,6 +7,7 @@ public interface IAddress
     int PostalCode { get; set; }
     string Country { get; set; }
     string AdministrativeAreaLevel { get; set; }
+<<<<<<< HEAD
 }
 
 // not sure this is the way to do this
@@ -18,4 +19,6 @@ public class Address : IAddress
     public int PostalCode { get; set; }
     public string Country { get; set; }
     public string AdministrativeAreaLevel { get; set; }
+=======
+>>>>>>> aaadf4e (Feature/addresses service (#8))
 }

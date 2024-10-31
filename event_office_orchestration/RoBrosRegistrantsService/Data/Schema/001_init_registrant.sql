@@ -1,6 +1,10 @@
 -- 1. Create ENUM type for CompetitionStatus (optional)
 CREATE TYPE competition_status AS ENUM ('Competing', 'Spectating');
+<<<<<<< HEAD
 CREATE TYPE participant_role AS ENUM('Student', 'Chaperone', 'Volunteer');
+=======
+CREATE TYPE particpant_role AS ENUM('Student', 'Chaperone', 'Volunteer');
+>>>>>>> aaadf4e (Feature/addresses service (#8))
 
 -- 2. Create Address table
 CREATE TABLE IF NOT EXISTS Address (
@@ -41,7 +45,11 @@ CREATE TABLE IF NOT EXISTS Registrant (
     Id UUID PRIMARY KEY,
     GivenName VARCHAR(255) NOT NULL,
     FamilyName VARCHAR(255) NOT NULL,
+<<<<<<< HEAD
     ParticipantRole participant_role NOT NULL, -- student/chaperone/volunteer
+=======
+    ParticpantRole particpant_role NOT NULL, -- student/chaperone/volunteer
+>>>>>>> aaadf4e (Feature/addresses service (#8))
     ChurchId UUID NOT NULL,
     YouthLeaderEmail VARCHAR(255),
     YouthLeaderFirstName VARCHAR(255),
@@ -72,7 +80,11 @@ CREATE TABLE IF NOT EXISTS Registrant (
 -- 5. Create Student table
 CREATE TABLE IF NOT EXISTS Student (
     Id UUID PRIMARY KEY, -- Same as Registrant(Id) for inheritance
+<<<<<<< HEAD
     ParticpantRole participant_role NOT NULL DEFAULT 'Student',
+=======
+    ParticpantRole particpant_role NOT NULL DEFAULT 'Student',
+>>>>>>> aaadf4e (Feature/addresses service (#8))
     CompetitionStatus VARCHAR(50) NOT NULL,
     MedicalConditions TEXT,
     DietaryRestrictions TEXT,
