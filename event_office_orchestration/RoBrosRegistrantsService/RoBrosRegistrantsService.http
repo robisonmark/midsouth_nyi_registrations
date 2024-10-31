@@ -1,0 +1,6 @@
+@RoBrosRegistrantsService_HostAddress = http://localhost:5226
+
+GET {{RoBrosRegistrantsService_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
