@@ -1,8 +1,20 @@
 using Microsoft.OpenApi.Models;
+using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using NSwag;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Register NpgsqlConnection as a singleton
+builder.Services.AddSingleton<NpgsqlConnection>(serviceProvider =>
+{
+    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+    var connectionString = configuration.GetConnectionString("DefaultConnection");
+
+    var connection = new NpgsqlConnection(connectionString);
+    connection.Open(); // Open the connection when the singleton is created
+    return connection;
+});
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -24,11 +36,6 @@ builder.Services.AddOpenApiDocument(options =>
         };
     };
 });
-
-// Register DbContext with Npgsql connection
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(connectionString));
 
 var app = builder.Build();
 

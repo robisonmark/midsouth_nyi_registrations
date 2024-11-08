@@ -5,6 +5,7 @@
 /registration_numbers/files/**.*
 /registration_numbers/events/**/**.*
 /registration_numbers/.venv/*
-.venv/*
-church/**/**.*
-processed/**/**.*
+**/.venv/*
+**/church/**/**
+**/processed/**/**
+**/events/**/*

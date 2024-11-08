@@ -1,0 +1,30 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.002.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "event_office_orchestration", "event_office_orchestration", "{726985CD-24E0-4F24-AF82-40CB6F653C88}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "addressService", "event_office_orchestration\RoBrosAddressesService\addressService.csproj", "{52B136F2-EEB7-45A7-9A2F-C7236B04D8E2}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{52B136F2-EEB7-45A7-9A2F-C7236B04D8E2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{52B136F2-EEB7-45A7-9A2F-C7236B04D8E2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{52B136F2-EEB7-45A7-9A2F-C7236B04D8E2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{52B136F2-EEB7-45A7-9A2F-C7236B04D8E2}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{52B136F2-EEB7-45A7-9A2F-C7236B04D8E2} = {726985CD-24E0-4F24-AF82-40CB6F653C88}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {D098454A-807C-416E-8B71-5F508A96C24E}
+	EndGlobalSection
+EndGlobal
