@@ -65,11 +65,6 @@ builder.Services.AddOpenApiDocument(options =>
     };
 });
 
-// Register DbContext with Npgsql connection
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(connectionString));
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
