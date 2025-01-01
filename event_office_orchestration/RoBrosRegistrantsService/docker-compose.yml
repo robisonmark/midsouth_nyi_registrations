@@ -9,22 +9,14 @@ services:
       - 8080:8080
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-<<<<<<< HEAD
       - ConnectionStrings__DefaultConnection=Host=db;Database=RoBrosRegistrant;Username=postgres;Password=YourPassword
-=======
-      - ConnectionStrings__DefaultConnection=Host=db;Database=YourDatabaseName;Username=postgres;Password=YourPassword
->>>>>>> aaadf4e (Feature/addresses service (#8))
     depends_on:
       - db
 
   db:
     image: postgres:15-alpine
     environment:
-<<<<<<< HEAD
       POSTGRES_DB: RoBrosRegistrant
-=======
-      POSTGRES_DB: YourDatabaseName
->>>>>>> aaadf4e (Feature/addresses service (#8))
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: YourPassword
     ports:
