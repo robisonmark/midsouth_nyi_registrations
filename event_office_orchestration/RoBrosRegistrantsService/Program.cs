@@ -7,7 +7,7 @@ using NSwag;
 var builder = WebApplication.CreateBuilder(args);
 
 // Register NpgsqlConnection as a singleton
-builder.Services.AddSingleton<NpgsqlConnection>(serviceProvider =>
+builder.Services.AddSingleton<NgsqlConnection>(serviceProvider =>
 {
     var configuration = serviceProvider.GetRequiredService<IConfiguration>();
     var connectionString = configuration.GetConnectionString("DefaultConnection");
