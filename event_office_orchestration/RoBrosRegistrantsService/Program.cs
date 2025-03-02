@@ -1,5 +1,3 @@
-
-using Microsoft.OpenApi.Models;
 using Microsoft.Extensions.DependencyInjection;
 using Npgsql;
 using NSwag;
@@ -7,7 +5,7 @@ using NSwag;
 var builder = WebApplication.CreateBuilder(args);
 
 // Register NpgsqlConnection as a singleton
-builder.Services.AddSingleton<NgsqlConnection>(serviceProvider =>
+builder.Services.AddSingleton<NpgsqlConnection>(serviceProvider =>
 {
     var configuration = serviceProvider.GetRequiredService<IConfiguration>();
     var connectionString = configuration.GetConnectionString("DefaultConnection");
@@ -19,40 +17,15 @@ builder.Services.AddSingleton<NgsqlConnection>(serviceProvider =>
 
 // Add services to the container.
 builder.Services.AddControllers();
+
+// Register OpenAPI (NSwag) document configuration
 builder.Services.AddOpenApiDocument(options =>
 {
     options.PostProcess = document =>
     {
         document.Info = new NSwag.OpenApiInfo
         {
-            Title = "Event Office Registants Service",
-            Description = "API for Defining The Students and Chaperones registering for an Event",
-            Version = "v1",
-            Contact = new NSwag.OpenApiContact()
-            {
-                Name = "Mark Robison",
-                Email = "admin@robros.tech",
-                Url = "https://robros.tech"
-            },
-        };
-    };
-});
-
-// Register DbContext with Npgsql connection
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseNpgsql(connectionString));
-
-
-// Add services to the container.
-builder.Services.AddControllers();
-builder.Services.AddOpenApiDocument(options =>
-{
-    options.PostProcess = document =>
-    {
-        document.Info = new NSwag.OpenApiInfo
-        {
-            Title = "Event Office Registants Service",
+            Title = "Event Office Registrants Service",
             Description = "API for Defining The Students and Chaperones registering for an Event",
             Version = "v1",
             Contact = new NSwag.OpenApiContact()
@@ -70,24 +43,22 @@ var app = builder.Build();
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    // Add OpenAPI 3.0 document serving middleware
-    // Available at: http://localhost:<port>/swagger/v1/swagger.json
+    // Add OpenAPI document serving middleware
     app.UseOpenApi();
 
-    // Add web UIs to interact with the document
-    // Available at: http://localhost:<port>/swagger
-    app.UseSwaggerUi(); // UseSwaggerUI Protected by if (env.IsDevelopment())
+    // Add web UI for Swagger
+    app.UseSwaggerUi(); // Use Swagger UI (from NSwag)
 
-    // Add ReDoc UI to interact with the document
-    // Available at: http://localhost:<port>/redoc
+    // Optionally add ReDoc for another UI
     app.UseReDoc(settings =>
     {
         settings.DocumentTitle = "Registrants Service";
         settings.Path = "/redoc";
+        settings.DocumentPath = "/swagger/v1/swagger.json"; // Set the correct Swagger document path
     });
 }
 
-// app.UseHttpsRedirection();
+// Configure the routes
 app.MapControllers();
 
 app.Run();

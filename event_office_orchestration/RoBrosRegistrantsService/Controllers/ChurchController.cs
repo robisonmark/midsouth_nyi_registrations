@@ -6,18 +6,26 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
 using EventOfficeApi.Models;
+using EventOfficeApi.Services;
 
 namespace EventOfficeApi.Controllers
 {
     [ApiController]
     public class ChurchController : BaseController
     {
-        private readonly ILogger<ContactsController> _logger;
+        // private readonly ILogger<ContactsController> _logger;
 
-        public ContactsController(ILogger<ContactsController> logger)
-        {
-            _logger = logger;
-        }
+        // public ContactsController(ILogger<ContactsController> logger)
+        // {
+        //     _logger = logger;
+        // }
+
+        private readonly DatabaseService _databaseService;
+
+        // public ChurchRepository(DatabaseService databaseService)
+        // {
+        //     _databaseService = databaseService;
+        // }
 
         [HttpPost]
         [Route("/api/church", Name = "AddChurch")]
@@ -25,18 +33,24 @@ namespace EventOfficeApi.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateChurch(Church church)
         {
-            if (church.id == null)
+            if (church.Id == null)
             {
-                church.id = Guid.NewGuid().ToString();
+                church.Id = Guid.NewGuid();
             }
 
-            var sql = "INSERT INTO RoBrosRegistant.Church (Id, Name, Address) VALUES (@Name, @Email)";
-            var rowsAffected = await ExecuteAsync(sql, church);
+            var sql = "INSERT INTO RoBrosRegistrant.Church (Id, Name, Address, CreatedAt) VALUES (@Id, @Name, @Address, NOW())";
+            // var parameters = new { Id = Guid.NewGuid(), Name = name, Address = address };
+            // return await _databaseService.ExecuteAsync(sql, church);
+
+            int rowsAffected = await _databaseService.ExecuteAsync(sql, church);
 
             if (rowsAffected > 0)
-                return CreatedAtAction(nameof(GetUserById), new { id = user.Id }, user);
+            {
+                // return CreatedAtAction(nameof(GetChurch), new { id = church.Id }, church);
+                return Accepted();
+            }
 
-            return BadRequest();
+            return BadRequest("Failed to add registrant.");
         }
     }
 }
