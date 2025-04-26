@@ -1,4 +1,6 @@
+using System.Text.Json.Serialization;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
 using Npgsql;
 using NSwag;
 
@@ -16,7 +18,12 @@ builder.Services.AddSingleton<NpgsqlConnection>(serviceProvider =>
 });
 
 // Add services to the container.
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    });
 
 // Register OpenAPI (NSwag) document configuration
 builder.Services.AddOpenApiDocument(options =>
