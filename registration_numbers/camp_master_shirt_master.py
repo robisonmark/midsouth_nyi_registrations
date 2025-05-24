@@ -16,7 +16,7 @@ GENDER_COLUMN = 16
 STUDENT_CAMP_COLUMN = 4
 CHAPERONE_CAMP_COLUMN = 5
 PAYMENT_COLUMN = 48
-CAMP_COLUMN = 49
+CAMP_COLUMN = 52
 
 
 class AGE_GROUP:
@@ -46,7 +46,7 @@ class Church:
             church_count[age_group][church] += 1
 
 
-file_path = "./church/2024-06-03/"
+file_path = "./church/2025-05-17/"
 for root, dirs, files in os.walk(file_path, topdown=False):
     for name in files:
         # print(os.path.join(root, name))

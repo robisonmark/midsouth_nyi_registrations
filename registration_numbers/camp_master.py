@@ -15,14 +15,14 @@ GENDER_COLUMN = 16
 STUDENT_CAMP_COLUMN = 4
 CHAPERONE_CAMP_COLUMN = 5
 PAYMENT_COLUMN = 48
-CAMP_COLUMN = 49
+CAMP_COLUMN = 52
 
 CAMPS = {"high_school": [], "middle_school": []}
 
 
 hs_output_list = []
 ms_output_list = []
-file_path = "./church/2024-06-03/"
+file_path = "./church/2025-05-17/"
 for root, dirs, files in os.walk(file_path, topdown=False):
     for name in files:
         print(os.path.join(root, name))
@@ -63,15 +63,17 @@ for root, dirs, files in os.walk(file_path, topdown=False):
             af = (
                 1
                 if sh.cell_value(rowx=rx + 1, colx=GENDER_COLUMN) == "Female"
-                and sh.cell_value(rowx=rx + 1, colx=STUDENT_CHAPERONE_COLUMN)
-                == "Chaperone"
+                and (sh.cell_value(rowx=rx + 1, colx=STUDENT_CHAPERONE_COLUMN)
+                in ["Chaperone", "Staff"] or sh.cell_value(rowx=rx + 1, colx=STUDENT_CHAPERONE_COLUMN)
+                == "Staff")
                 else ""
             )
             am = (
                 1
                 if sh.cell_value(rowx=rx + 1, colx=GENDER_COLUMN) == "Male"
-                and sh.cell_value(rowx=rx + 1, colx=STUDENT_CHAPERONE_COLUMN)
-                == "Chaperone"
+                and (sh.cell_value(rowx=rx + 1, colx=STUDENT_CHAPERONE_COLUMN)
+                in ["Chaperone", "Staff"] or sh.cell_value(rowx=rx + 1, colx=STUDENT_CHAPERONE_COLUMN)
+                == "Staff")
                 else ""
             )
             datestr = sh.cell_value(rowx=rx + 1, colx=REGISTRATION_DATE_COLUMN)
@@ -81,14 +83,14 @@ for root, dirs, files in os.walk(file_path, topdown=False):
             first_date = (
                 1
                 if sh.cell_value(rowx=rx + 1, colx=STUDENT_CHAPERONE_COLUMN)
-                != "Chaperone"
+                not in ["Chaperone", "Staff"]
                 and date_parse <= datetime.datetime(2024, 5, 10)
                 else ""
             )
             second_date = (
                 1
                 if sh.cell_value(rowx=rx + 1, colx=STUDENT_CHAPERONE_COLUMN)
-                != "Chaperone"
+                not in ["Chaperone", "Staff"]
                 and date_parse > datetime.datetime(2024, 5, 10)
                 and date_parse <= datetime.datetime(2024, 5, 24)
                 else ""
@@ -96,7 +98,7 @@ for root, dirs, files in os.walk(file_path, topdown=False):
             late_date = (
                 1
                 if sh.cell_value(rowx=rx + 1, colx=STUDENT_CHAPERONE_COLUMN)
-                != "Chaperone"
+                not in ["Chaperone", "Staff"]
                 and date_parse > datetime.datetime(2024, 5, 24)
                 else ""
             )
@@ -104,14 +106,14 @@ for root, dirs, files in os.walk(file_path, topdown=False):
             adult_one = (
                 1
                 if sh.cell_value(rowx=rx + 1, colx=STUDENT_CHAPERONE_COLUMN)
-                == "Chaperone"
+                in ["Chaperone", "Staff"]
                 and sh.cell_value(rowx=rx + 1, colx=CAMP_COLUMN).lower() != "both camps"
                 else ""
             )
             adult_both = (
                 1
                 if sh.cell_value(rowx=rx + 1, colx=STUDENT_CHAPERONE_COLUMN)
-                == "Chaperone"
+                in ["Chaperone", "Staff"]
                 and sh.cell_value(rowx=rx + 1, colx=CAMP_COLUMN).lower() == "both camps"
                 else ""
             )
@@ -120,7 +122,7 @@ for root, dirs, files in os.walk(file_path, topdown=False):
                 if sh.cell_value(rowx=rx + 1, colx=PAYMENT_COLUMN) != ""
                 else ""
             )
-            # print(sh.cell_value(rowx=rx+1, colx=6).lower())
+            print(sh.cell_value(rowx=rx + 1, colx=CAMP_COLUMN).lower())
             if (
                 sh.cell_value(rowx=rx + 1, colx=CAMP_COLUMN).lower()
                 == "high school camp"

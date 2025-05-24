@@ -1,26 +1,41 @@
-from cement import shell
+from typing import OrderedDict, Any
 
-from trevecca_registration_sheet import Trevecca
-from registration_numbers.registration_numbers_breakdown import RegistrationNumbers
+from config import EVENT
+from FileManager import FileManager
+from ShirtManager import ShirtManager
+
+
+class CampWorksheets():
+    def __init__(self):
+        self._event = EVENT.CAMP
+        self.file_manager = FileManager(self._event)
+
+    def read_file(self) -> list[OrderedDict]:
+        files = self.file_manager.gather_files("./processed")
+        file_data = []
+        for file in files:
+            if "camp" in file.lower():
+                return self.file_manager.read_csv(file)
+
+        return file_data
+    
+    def process_data(self, raw_data: list[dict[str: str]]) -> list[dict[str: Any]]:
+        sm = ShirtManager(level_specific=True)
+        for data in raw_data:
+            sm.create_individual_entry(row_data=data)
+        
+        print(sm.get_shirt_master)
+
 
 if __name__ == "__main__":
-    process = shell.Prompt("Which process do you want to run?",
-                 options=[
-                     'Church Count Sheet',
-                     'General Camp Roster',
-                     'Shirt Lists - By Church',
-                     'Registration Numbers Breakdown',
-                     'Trevecca Student List',
-                 ],
-                 numbered = True)
+    run_camp_worksheets = CampWorksheets()
+    camp_data = run_camp_worksheets.read_file()
 
-    res = process.prompt()
+    run_camp_worksheets.process_data(camp_data)
 
-    if res == "Trevecca Student List":
-        tnu = Trevecca()
-        tnu.create_list()
-    
-    if res == "Registration Numbers Breakdown":
-        reg_report = RegistrationNumbers()
-        reg_report.create_excel()
-
+    # print(camp_data[0])
+    # TODO: Gather Each Church Roster to export into xlsx
+    # TODO: Separate Middle School and High School Camps, Making Sure to Only Charge Sponsors 1 time
+    # TODO: Create Shirt Master
+    # TODO: Create TNU Master
+    # TODO: Create Camp Master (Start from Template - Guess Rooming)
