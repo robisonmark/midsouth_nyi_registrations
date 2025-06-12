@@ -458,12 +458,11 @@ class CampWorksheets():
 
         #     accumulator.append(row_data)
         #     return accumulator
-
         for submission in submissions:
             # result = reduce(reduce_submission, submission['answers'].values(), [])
             registrant_submission = {}
             for answer in submission['answers'].values():
-                if "answer" in submission.keys():
+                if "answer" in answer.keys():
                     registrant_submission[answer["name"]] = answer["answer"]
                 
             processed_data.append(registrant_submission)
@@ -473,12 +472,12 @@ class CampWorksheets():
 
 if __name__ == "__main__":
     run_camp_worksheets = CampWorksheets()
-    camp_data = run_camp_worksheets.read_file()
-    run_camp_worksheets.process_data(camp_data)
-    # jotform = JotformAPIClient(API_KEY)
-    # submissions = jotform.get_form_submissions("250758652718164", limit=10)
-    # camp_data = run_camp_worksheets.generate_raw_data(submissions)
-    # print(camp_data)
+    # camp_data = run_camp_worksheets.read_file()
+    # run_camp_worksheets.process_data(camp_data)
+    jotform = JotformAPIClient(API_KEY)
+    submissions = jotform.get_form_submissions("250758652718164", limit=10)
+    camp_data = run_camp_worksheets.generate_raw_data(submissions)
+    print(camp_data)
 
     # print(camp_data[0])
     # TODO: Gather Each Church Roster to export into xlsx
