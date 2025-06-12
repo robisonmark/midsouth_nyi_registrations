@@ -2,9 +2,12 @@ import re
 from typing import OrderedDict, Any
 from datetime import datetime
 
-from config import EVENT
+from jotform import JotformAPIClient
+
+from config import EVENT, API_KEY
 from FileManager import FileManager
 from ShirtManager import ShirtManager
+from functools import reduce
 
 
 class CampWorksheets():
@@ -417,9 +420,13 @@ class CampWorksheets():
         self.file_manager.write_to_excel("camp", f"{datetime.now().year}_shirt_roster", self.shirts)
 
     def process_data(self, raw_data: list[dict[str: str]]) -> list[dict[str: Any]]:
+        online_payment = 0
         for data in raw_data:
             if data["What church are you a part of?"] == "":
                 data["What church are you a part of?"] = "Staff"
+            
+            if data["Payment"] != "":
+                online_payment += int(re.findall("[0-9]+", data["Payment"])[0]) if re.findall("[0-9]+", data["Payment"]) else 0
 
             # could this be to create my row entries so I don't have to loop twice
             self.shirt_manager.create_individual_entry(row_data=data)
@@ -431,14 +438,47 @@ class CampWorksheets():
         self.create_camp_master_workbook()
         self.create_shirt_master()
 
+        print(f"Total Online Payments: ${online_payment}")
+
         self.file_manager.write_to_txt_file("camp", "youth_leader_email", str(self.email_list))
+
+    def generate_raw_data(self, submissions: list[dict[str: str]]) -> list[dict[str: Any]]:
+        """
+        Generates raw data from Jotform submissions.
+        :param submissions: List of Jotform submissions.
+        :return: Processed data ready for further processing.
+        """
+        processed_data = []
+
+        # def reduce_submission(accumulator, submission):
+        #     row_data = []
+        #     registrant_submission = {}
+        #     if "answer" in submission.keys():
+        #         registrant_submission[submission["name"]] = submission["answer"]
+
+        #     accumulator.append(row_data)
+        #     return accumulator
+
+        for submission in submissions:
+            # result = reduce(reduce_submission, submission['answers'].values(), [])
+            registrant_submission = {}
+            for answer in submission['answers'].values():
+                if "answer" in submission.keys():
+                    registrant_submission[answer["name"]] = answer["answer"]
+                
+            processed_data.append(registrant_submission)
+
+        return processed_data
 
 
 if __name__ == "__main__":
     run_camp_worksheets = CampWorksheets()
     camp_data = run_camp_worksheets.read_file()
-
     run_camp_worksheets.process_data(camp_data)
+    # jotform = JotformAPIClient(API_KEY)
+    # submissions = jotform.get_form_submissions("250758652718164", limit=10)
+    # camp_data = run_camp_worksheets.generate_raw_data(submissions)
+    # print(camp_data)
 
     # print(camp_data[0])
     # TODO: Gather Each Church Roster to export into xlsx
