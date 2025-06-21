@@ -13,7 +13,7 @@ class CAMPS:
     HIGH_SCHOOL = "high school camp"
     MIDDLE_SCHOOL = "middle school camp"
     BOTH = "both camps"
-    
+
 
 class INDIVIDUAL_SPORTS_AGE_GROUPS:
     pass
@@ -22,6 +22,9 @@ class INDIVIDUAL_SPORTS_AGE_GROUPS:
 class ARTS_AGE_GROUPS:
     pass
 
+
+API_KEY = "a3c51639ac2edac87a796e522a1e7647"
+API_URL = "https://api.jotform.com/form/{formID}/submissions?apiKey={apiKey}"
 
 # class Configuration():
 #     def church_list():

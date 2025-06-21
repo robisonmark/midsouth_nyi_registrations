@@ -1,0 +1,53 @@
+from ..helpers import get_nested_value
+
+from models.camper import Camper
+
+
+def translate_camper(raw: dict) -> Camper:
+    return Camper(
+        submission_id=get_nested_value(raw, 'submission_id'),
+        submission_date=get_nested_value(raw, 'submission_id'),
+        approval_status=get_nested_value(raw, 'submission_id'),
+        registration_type=get_nested_value(raw, 'submission_id'),
+        camp=get_nested_value(raw, 'submission_id'),
+        first_name=get_nested_value(raw, 'submission_id'),
+        last_name=get_nested_value(raw, 'submission_id'),
+        birthday=get_nested_value(raw, 'submission_id'),
+        street_address=get_nested_value(raw, 'submission_id'),
+        street_address2=get_nested_value(raw, 'submission_id'),
+        city=get_nested_value(raw, 'submission_id'),
+        state=get_nested_value(raw, 'submission_id'),
+        zip_code=get_nested_value(raw, 'submission_id'),
+        cell_phone=get_nested_value(raw, 'submission_id'),
+        student_email=get_nested_value(raw, 'submission_id'),
+        gender=get_nested_value(raw, 'submission_id'),
+        shirt_size=get_nested_value(raw, 'submission_id'),
+        medical_conditions=get_nested_value(raw, 'submission_id'),
+        dietary_restrictions=get_nested_value(raw, 'submission_id'),
+        allergies=get_nested_value(raw, 'submission_id'),
+        food_allergies=get_nested_value(raw, 'submission_id'),
+        past_surgeries=get_nested_value(raw, 'submission_id'),
+        medications=get_nested_value(raw, 'submission_id'),
+        guardian_first_name=get_nested_value(raw, 'submission_id'),
+        guardian_last_name=get_nested_value(raw, 'submission_id'),
+        guardian_home_phone=get_nested_value(raw, 'submission_id'),
+        guardian_work_phone=get_nested_value(raw, 'submission_id'),
+        guardian_contact_phone=get_nested_value(raw, 'submission_id'),
+        insurance_company=get_nested_value(raw, 'submission_id'),
+        policy_number=get_nested_value(raw, 'submission_id'),
+        church=get_nested_value(raw, 'submission_id'),
+        youth_leader_first_name=get_nested_value(raw, 'submission_id'),
+        youth_leader_last_name=get_nested_value(raw, 'submission_id'),
+        youth_leader_email=get_nested_value(raw, 'submission_id'),
+        will_youth_leader_be_present=get_nested_value(raw, 'submission_id'),
+        room_with=get_nested_value(raw, 'submission_id'),
+        convicted_of_crime=get_nested_value(raw, 'submission_id'),
+        crime_details=get_nested_value(raw, 'submission_id'),
+        under_cps_investigation=get_nested_value(raw, 'submission_id'),
+        cps_investigation_details=get_nested_value(raw, 'submission_id'),
+        sexual_harassment=get_nested_value(raw, 'submission_id'),
+        sexual_harassment_details=get_nested_value(raw, 'submission_id'),
+        statement_of_faith=get_nested_value(raw, 'submission_id'),
+        reason_for_counselor=get_nested_value(raw, 'submission_id'),
+        payment=get_nested_value(raw, 'submission_id', default=0.0)
+    )

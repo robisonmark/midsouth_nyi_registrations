@@ -1,4 +1,5 @@
 import re
+import json
 from typing import OrderedDict, Any
 from datetime import datetime
 
@@ -7,7 +8,9 @@ from jotform import JotformAPIClient
 from config import EVENT, API_KEY
 from FileManager import FileManager
 from ShirtManager import ShirtManager
-from functools import reduce
+# from functools import reduce
+
+from models.camper import Camper
 
 
 class CampWorksheets():
@@ -51,22 +54,22 @@ class CampWorksheets():
                 file_data = self.file_manager.read_csv(file)
                 sorted_data = \
                     sorted(file_data,
-                           key=lambda x: (x.get('What church are you a part of?', 'Staff'),
-                                          x['Which Camp?'] if x['Which Camp?'] != "" else 
-                                          x['At which camp will you be a chaperone?'],
-                                          x['First Name'],
-                                          x['Last Name'],
-                                          x['Date']))
+                           key=lambda x: (x.get('whatChurch', 'Staff'),
+                                          x['whichCampStudent'] if x['whichCampStudent'] != "" else 
+                                          x['whichCampChaperone'],
+                                          x['yourName']['first'],
+                                          x['yourName']['first'],
+                                          x['submit_date_for_email_triggers']['datetime']))
                 return sorted_data
         return file_data
 
     def get_price(self, row):
         late_fee = 0
 
-        if row["Are you a student, chaperone, staff"] == "Chaperone":
-            return self.pricing_breakdown["chaperone"][row["At which camp will you be a chaperone?"]]
+        if row["registrationType"] == "Chaperone":
+            return self.pricing_breakdown["chaperone"][row["whichCampChaperone"]]
 
-        if row["Are you a student, chaperone, staff"] == "Staff":
+        if row["registrationType"] == "Staff":
             return 0
 
         submission_date_string = row['Date']
@@ -84,9 +87,9 @@ class CampWorksheets():
 
     def youth_leader_email_list(self, row_data: dict) -> dict[str, list[str]]:
         current_church = None
-        email = row_data["What is your youth leader/pastor's email?"].lower()
-        if current_church is None or current_church != row_data["What church are you a part of?"]:
-            current_church = row_data["What church are you a part of?"]
+        email = row_data["youthLeaderEmail"].lower()
+        if current_church is None or current_church != row_data["whatChurch"]:
+            current_church = row_data["whatChurch"]
             # if current_church not in self.email_list:
             # self.email_list[current_church] = []
 
@@ -95,14 +98,14 @@ class CampWorksheets():
 
     def create_church_worksheets(self, row_data: dict) -> None:
         current_church = None
-        camp = row_data["Which Camp?"] if row_data["Which Camp?"] != "" else \
-            row_data["At which camp will you be a chaperone?"]
+        camp = row_data["whichCampStudent"] if row_data["whichCampStudent"] != "" else \
+            row_data["whichCampChaperone"]
         price = self.get_price(row_data)
         paid = int(re.findall("[0-9]+", row_data["Payment"])[0]) if re.findall("[0-9]+", row_data["Payment"]) else 0
         entry = {
             "approval_status": row_data["Flow Status"],
             "date": row_data['\ufeff"Submission Date"'],
-            "are_you_a_student_chaperone_staff": row_data["Are you a student, chaperone, staff"],
+            "are_you_a_student_chaperone_staff": row_data["registrationType"],
             "camp": camp,
             "first_name": row_data["First Name"],
             "last_name": row_data["Last Name"],
@@ -111,8 +114,8 @@ class CampWorksheets():
             "paid": paid,
         }
 
-        if current_church is None or current_church != row_data["What church are you a part of?"]:
-            current_church = row_data["What church are you a part of?"]
+        if current_church is None or current_church != row_data["whatChurch"]:
+            current_church = row_data["whatChurch"]
 
             if self.church_roster_worksheet.get(current_church) is None:
                 self.church_roster_worksheet[current_church] = [
@@ -237,24 +240,24 @@ class CampWorksheets():
         )
 
     def create_camp_master_worksheets(self, row_data: dict) -> None:
-        camp = row_data["Which Camp?"] if row_data["Which Camp?"] != "" else \
-            row_data["At which camp will you be a chaperone?"]
+        camp = row_data["whichCampStudent"] if row_data["whichCampStudent"] != "" else \
+            row_data["whichCampChaperone"]
 
         registration_date = datetime.strptime(row_data["Date"], "%b %d, %Y")
-        teen = row_data["Are you a student, chaperone, staff"] == "Student"
-        adult = (row_data["Are you a student, chaperone, staff"] == "Chaperone"
-                 or row_data["Are you a student, chaperone, staff"] == "Staff")
+        teen = row_data["registrationType"] == "Student"
+        adult = (row_data["registrationType"] == "Chaperone"
+                 or row_data["registrationType"] == "Staff")
         
         entry = {
             "name": f"{row_data['First Name']} {row_data['Last Name']}",
-            "church": row_data["What church are you a part of?"],
-            "shirt_size": row_data["Shirt Size"],
+            "church": row_data["whatChurch"],
+            "shirt_size": row_data["shirtSize"],
             "medical_release": "",
             "tower_release": "",
-            "teen_female": 1 if row_data["Gender"] == "Female" and teen else "",
-            "teen_male": 1 if row_data["Gender"] == "Male" and teen else "",
-            "adult_female": 1 if row_data["Gender"] == "Female" and adult else "",
-            "adult_male": 1 if row_data["Gender"] == "Male" and adult else "",
+            "teen_female": 1 if row_data["gender"] == "Female" and teen else "",
+            "teen_male": 1 if row_data["gender"] == "Male" and teen else "",
+            "adult_female": 1 if row_data["gender"] == "Female" and adult else "",
+            "adult_male": 1 if row_data["gender"] == "Male" and adult else "",
             "first_deadline": 1 if teen and registration_date <= datetime(2025, 5, 2) else "",
             "second_deadline": 1 if teen and datetime(2025, 5, 2) < registration_date <= datetime(2025, 5, 16) else "",
             "final_deadline": 1 if teen and datetime(2025, 5, 16) < registration_date else "",
@@ -409,7 +412,7 @@ class CampWorksheets():
                         "type": "header",
                         "row": 0,
                         "col": 0,
-                        "values": ["Church", "", "Name", "Shirt Size"],
+                        "values": ["Church", "", "Name", "shirtSize"],
                         "format": {"bold": True}
                     },
                     *church_data
@@ -422,11 +425,13 @@ class CampWorksheets():
     def process_data(self, raw_data: list[dict[str: str]]) -> list[dict[str: Any]]:
         online_payment = 0
         for data in raw_data:
-            if data["What church are you a part of?"] == "":
-                data["What church are you a part of?"] = "Staff"
+            if data["whatChurch"] == "":
+                data["whatChurch"] = "Staff"
             
-            if data["Payment"] != "":
-                online_payment += int(re.findall("[0-9]+", data["Payment"])[0]) if re.findall("[0-9]+", data["Payment"]) else 0
+            payment = json.loads(data["paymentSent"]["paymentArray"])
+            if payment != "":
+
+                online_payment += float(payment["total"]) if payment != "" else 0
 
             # could this be to create my row entries so I don't have to loop twice
             self.shirt_manager.create_individual_entry(row_data=data)
@@ -450,22 +455,14 @@ class CampWorksheets():
         """
         processed_data = []
 
-        # def reduce_submission(accumulator, submission):
-        #     row_data = []
-        #     registrant_submission = {}
-        #     if "answer" in submission.keys():
-        #         registrant_submission[submission["name"]] = submission["answer"]
-
-        #     accumulator.append(row_data)
-        #     return accumulator
         for submission in submissions:
-            # result = reduce(reduce_submission, submission['answers'].values(), [])
             registrant_submission = {}
             for answer in submission['answers'].values():
                 if "answer" in answer.keys():
                     registrant_submission[answer["name"]] = answer["answer"]
-                
-            processed_data.append(registrant_submission)
+            camper = Camper(**registrant_submission)  # Validate the data with Camper model
+            print(camper)
+            processed_data.append(camper)
 
         return processed_data
 
@@ -478,6 +475,7 @@ if __name__ == "__main__":
     submissions = jotform.get_form_submissions("250758652718164", limit=10)
     camp_data = run_camp_worksheets.generate_raw_data(submissions)
     print(camp_data)
+    run_camp_worksheets.process_data(camp_data)
 
     # print(camp_data[0])
     # TODO: Gather Each Church Roster to export into xlsx
@@ -485,3 +483,4 @@ if __name__ == "__main__":
     # TODO: Create Shirt Master
     # TODO: Create TNU Master
     # TODO: Create Camp Master (Start from Template - Guess Rooming)
+    # TODO: Create Translation Layer
