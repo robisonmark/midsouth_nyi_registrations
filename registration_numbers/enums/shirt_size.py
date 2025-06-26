@@ -2,9 +2,9 @@ from enum import Enum
 
 
 class ShirtSize(Enum):
-    SMALL = "S"
-    MEDIUM = "M"
-    LARGE = "L"
+    SMALL = "Small"
+    MEDIUM = "Medium"
+    LARGE = "Large"
     XLARGE = "XL"
     XXLARGE = "2X"
     XXXLARGE = "3X"

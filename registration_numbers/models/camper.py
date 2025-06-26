@@ -19,7 +19,7 @@ class Camper(BaseModel):
     city: str
     state: str
     zip_code: str
-    cell_phone: str
+    cell_phone: Union[str, None] = None
     student_email: EmailStr
     gender: Gender
     shirt_size: ShirtSize
@@ -29,13 +29,13 @@ class Camper(BaseModel):
     food_allergies: Union[str, None] = None
     past_surgeries: Union[str, None] = None
     medications: Union[str, None] = None
-    guardian_first_name: str
-    guardian_last_name: str
-    guardian_home_phone: str
-    guardian_work_phone: str
-    guardian_contact_phone: str
-    insurance_company: str
-    policy_number: str
+    guardian_first_name: Union[str, None] = None  # Should these be nullable or only added for student
+    guardian_last_name: Union[str, None] = None  # Should these be nullable or only added for student
+    guardian_home_phone: Union[str, None] = None  # Should these be nullable or only added for student
+    guardian_work_phone: Union[str, None] = None  # Should these be nullable or only added for student
+    guardian_contact_phone: Union[str, None] = None  # Should these be nullable or only added for student
+    insurance_company: Union[str, None] = None  # Should these be nullable or only added for student
+    policy_number: Union[str, None] = None  # Should these be nullable or only added for student
     church: Union[str, None] = None
     youth_leader_first_name: Union[str, None] = None
     youth_leader_last_name: Union[str, None] = None

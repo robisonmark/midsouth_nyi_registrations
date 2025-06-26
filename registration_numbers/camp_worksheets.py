@@ -10,7 +10,8 @@ from FileManager import FileManager
 from ShirtManager import ShirtManager
 # from functools import reduce
 
-from models.camper import Camper
+from models.campers import Campers
+from translators.camp_jotform import translate_camper
 
 
 class CampWorksheets():
@@ -453,16 +454,21 @@ class CampWorksheets():
         :param submissions: List of Jotform submissions.
         :return: Processed data ready for further processing.
         """
-        processed_data = []
+        processed_data = Campers()
 
         for submission in submissions:
-            registrant_submission = {}
+            registrant_submission = { 
+                "id": submission['id'],
+                "submission_date": submission['created_at'],
+                "status": submission['status'],
+            }
+
             for answer in submission['answers'].values():
                 if "answer" in answer.keys():
                     registrant_submission[answer["name"]] = answer["answer"]
-            camper = Camper(**registrant_submission)  # Validate the data with Camper model
-            print(camper)
-            processed_data.append(camper)
+
+            camper = translate_camper(registrant_submission)
+            processed_data.add_camper(camper)
 
         return processed_data
 
@@ -472,10 +478,10 @@ if __name__ == "__main__":
     # camp_data = run_camp_worksheets.read_file()
     # run_camp_worksheets.process_data(camp_data)
     jotform = JotformAPIClient(API_KEY)
-    submissions = jotform.get_form_submissions("250758652718164", limit=10)
+    submissions = jotform.get_form_submissions("250758652718164", limit=5)
     camp_data = run_camp_worksheets.generate_raw_data(submissions)
-    print(camp_data)
-    run_camp_worksheets.process_data(camp_data)
+    print(camp_data.model_dump_json(indent=4))
+    # run_camp_worksheets.process_data(camp_data)
 
     # print(camp_data[0])
     # TODO: Gather Each Church Roster to export into xlsx
