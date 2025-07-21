@@ -14,14 +14,16 @@ def translate_camper(raw: dict) -> Camper:
     if payment_array is not None:
         payment += float(get_nested_value(json.loads(payment_array), "total", 0.00))
 
-    # online_payment += float(get_nested_value(payment_array["total"]) if payment != "" else 0
+    registration_type_date = get_nested_value(raw, "submit_date_for_email_triggers.datetime")
+    if registration_type_date is None:
+        registration_type_date = get_nested_value(raw, "submission_date")
 
     return Camper(
         submission_id=get_nested_value(raw, "id"),
         submission_date=get_nested_value(raw, "submission_date"),
         approval_status=get_nested_value(raw, "status"),
         registration_type=get_nested_value(raw, "registrationType").lower(),
-        registration_type_date=get_nested_value(raw, "submit_date_for_email_triggers.datetime"),
+        registration_type_date=registration_type_date,
         camp=camp,
         first_name=get_nested_value(raw, "yourName.first"),
         last_name=get_nested_value(raw, "yourName.last"),

@@ -2,7 +2,7 @@ from typing import Union
 from pydantic import BaseModel, EmailStr  # type: ignore
 from datetime import datetime
 
-from enums import Camp, Gender, ShirtSize, RegistrationType
+from enums import Gender, ShirtSize, RegistrationType, Camp
 
 
 class Camper(BaseModel):

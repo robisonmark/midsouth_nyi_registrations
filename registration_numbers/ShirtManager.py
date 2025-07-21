@@ -1,5 +1,6 @@
 from typing import Any
 from config import AGE_GROUPS, CAMPS
+from enums import Camp
 
 
 class ShirtManager():
@@ -37,28 +38,29 @@ class ShirtManager():
 
     def create_individual_entry(self, row_data: dict[str: str]) -> None:
         age_group = CAMPS.HIGH_SCHOOL
-        attending_camp = row_data["Which Camp?"].lower() \
-            if row_data["Which Camp?"] != "" \
-            else row_data["At which camp will you be a chaperone?"].lower()
-        church = row_data["What church are you a part of?"]
-        name = f"{row_data['First Name']} {row_data['Last Name']}"
+        attending_camp = row_data.camp
 
-        if attending_camp == CAMPS.HIGH_SCHOOL:
+        church = row_data.church
+
+        name = f"{row_data.first_name} {row_data.last_name}"
+        shirt_size = row_data.shirt_size.value
+
+        if attending_camp == Camp.HIGH_SCHOOL:
             age_group = AGE_GROUPS.HIGH_SCHOOL
             self.add_to_church_count(age_group, church)
-            self.add_to_shirt_roster(name, row_data["Shirt Size"], age_group, church)
+            self.add_to_shirt_roster(name, shirt_size, age_group, church)
 
-        elif attending_camp == CAMPS.MIDDLE_SCHOOL:
+        elif attending_camp == Camp.MIDDLE_SCHOOL:
             age_group = AGE_GROUPS.MIDDLE_SCHOOL
             self.add_to_church_count(age_group, church)
-            self.add_to_shirt_roster(name, row_data["Shirt Size"], age_group, church)
+            self.add_to_shirt_roster(name, shirt_size, age_group, church)
 
         else:
             self.add_to_church_count(AGE_GROUPS.MIDDLE_SCHOOL, church)
-            self.add_to_shirt_roster(name, row_data["Shirt Size"], AGE_GROUPS.MIDDLE_SCHOOL, church)
+            self.add_to_shirt_roster(name, shirt_size, AGE_GROUPS.MIDDLE_SCHOOL, church)
             
             self.add_to_church_count(AGE_GROUPS.HIGH_SCHOOL, church)
-            self.add_to_shirt_roster(name, row_data["Shirt Size"], AGE_GROUPS.HIGH_SCHOOL, church)
+            self.add_to_shirt_roster(name, shirt_size, AGE_GROUPS.HIGH_SCHOOL, church)
 
     @property
     def get_shirt_master(self) -> dict[str: Any]:

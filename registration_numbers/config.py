@@ -26,6 +26,8 @@ class ARTS_AGE_GROUPS:
 API_KEY = "a3c51639ac2edac87a796e522a1e7647"
 API_URL = "https://api.jotform.com/form/{formID}/submissions?apiKey={apiKey}"
 
+MOMENTUM_FORM_ID = "251575366309160"
+
 # class Configuration():
 #     def church_list():
 #         # gather from csv file

@@ -2,16 +2,19 @@ from typing import Union
 from pydantic import BaseModel, EmailStr  # type: ignore
 from datetime import datetime
 
-from enums import Camp, Gender, ShirtSize, RegistrationType
+from enums import Gender, ShirtSize, RegistrationType, AgeRangeIndividual, AgeRangeTalent, ParticipationStatus
 
 
-class Camper(BaseModel):
+class Momentum(BaseModel):
     submission_id: str
     submission_date: datetime
     approval_status: str
     registration_type: RegistrationType
     registration_type_date: Union[datetime, None] = None  # Can be None if not provided
-    camp: Camp
+    grade_level: int
+    age_range_talent: AgeRangeTalent
+    age_range_individual: AgeRangeIndividual
+    participation_status: ParticipationStatus
     first_name: str
     last_name: str
     birthday: datetime
@@ -27,7 +30,6 @@ class Camper(BaseModel):
     medical_conditions: Union[str, None] = None
     dietary_restrictions: Union[str, None] = None
     allergies: Union[str, None] = None
-    food_allergies: Union[str, None] = None
     past_surgeries: Union[str, None] = None
     medications: Union[str, None] = None
     guardian_first_name: Union[str, None] = None  # Should these be nullable or only added for student
@@ -52,3 +54,6 @@ class Camper(BaseModel):
     statement_of_faith: Union[str, None] = None
     reason_for_counselor: Union[str, None] = None
     payment: float
+
+    # events
+
