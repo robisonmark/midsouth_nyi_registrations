@@ -39,9 +39,9 @@ def translate_camper(raw: dict) -> Camper:
         gender=get_nested_value(raw, "gender").lower(),
         shirt_size=get_nested_value(raw, "shirtSize"),
         medical_concerns=get_nested_value(raw, "medicalConcerns"),
-        dietary_restrictions=get_nested_value(raw, "submission_id"),
+        dietary_restrictions=get_nested_value(raw, "submission_id"),  # Needs Updated
         allergies=get_nested_value(raw, "generalAllergies"),
-        food_allergies=get_nested_value(raw, "submission_id"),
+        food_allergies=get_nested_value(raw, "submission_id"),  # Needs Updated
         past_surgeries=get_nested_value(raw, "pastSurgeries"),
         medications=get_nested_value(raw, "medications"),
         guardian_first_name=get_nested_value(raw, "emergencyContactPerson.first"),
@@ -65,5 +65,5 @@ def translate_camper(raw: dict) -> Camper:
         sexual_harassment_details=get_nested_value(raw, "harassmentExplanation"),  # Needs Updated
         statement_of_faith=get_nested_value(raw, "statementOf"),
         reason_for_counselor=get_nested_value(raw, "whyDo"),
-        payment=payment
+        payment=payment,
     )

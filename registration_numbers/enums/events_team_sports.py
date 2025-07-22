@@ -13,4 +13,4 @@ class EventsTeamSports(Enum):
     MENS_BASKETBALL = "Men's Basketball"
     MENS_BEACH = "Men's Beach Volleyball"
     MENS_FLAG = "Men's Flag Football"
-MENS_SOCCER = "Men's Soccer"
+    MENS_SOCCER = "Men's Soccer"

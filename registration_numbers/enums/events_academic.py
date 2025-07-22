@@ -1,3 +1,7 @@
-Math
-Accounting (Sr. Youth Only)
-Science (Sr. Youth Only)
+from enum import Enum
+
+
+class EventsAcademic(Enum):
+    MATH = "Math"
+    ACCOUNTING = "Accounting"
+    SCIENCE = "Science"

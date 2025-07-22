@@ -2,5 +2,5 @@ from enum import Enum
 
 
 class AgeRangeTalent(Enum):
-    EARLY_YOUTH = 9
-    SENIOR_YOUTH = 12
+    EARLY_YOUTH = "Early Youth"
+    SENIOR_YOUTH = "Senior Youth"
