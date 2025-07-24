@@ -14,6 +14,8 @@ class MomentumWorksheets:
     def __init__(self, shirt_manager):
         self.shirt_manager = shirt_manager
 
+    # bring this into jotform client, take in submissions and pydantic_model
+    # and return a list of pydantic models
     def parse_raw_data(self, submissions: list[dict[str:str]]) -> list[dict[str:Any]]:
         """
         Generates raw data from Jotform submissions.
