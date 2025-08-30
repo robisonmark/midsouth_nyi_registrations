@@ -65,16 +65,28 @@ class MomentumRegistrant(BaseModel):
     youth_leader_email: Union[EmailStr, None] = None
     attending_tnt: Union[bool, None] = None  # Should this be nullable or only added for student
     payment: float
-    academic: Union[list[EventsAcademic], None] = None  # Should this be nullable or only added for student
-    art: Union[list[EventsArt], None] = None  # Should this be nullable or only added for student
-    creative_ministries: Union[list[EventsCreativeMinistries], None] = (
+    academic_events: Union[list[EventsAcademic], None] = None  # Should this be nullable or only added for student
+    art_events: Union[list[EventsArt], None] = None  # Should this be nullable or only added for student
+    creative_ministries_events: Union[list[EventsCreativeMinistries], None] = (
         None  # Should this be nullable or only added for student
     )
-    music: Union[list[EventsMusic], None] = None  # Should this be nullable or only added for student
-    quizzing: Union[list[EventsQuizzing], None] = None  # Should this be nullable or only added for student
-    individual_sports: Union[list[EventsIndividualSports], None] = None  # Should this be nullable or only added for student
-    team_sports: Union[list[EventsTeamSports], None] = None  # Should this be nullable or only added for student
+    # math_and_business_events: Union[list[EventsAcademic.ACCOUNTING, EventsAcademic.MATH], None] = (
+    #     None  # Should this be nullable or only added for student
+    # )
+    music_events: Union[list[EventsMusic], None] = None  # Should this be nullable or only added for student
+    quizzing_events: Union[list[EventsQuizzing], None] = None  # Should this be nullable or only added for student
+    individual_sports_events: Union[list[EventsIndividualSports], None] = (
+        None  # Should this be nullable or only added for student
+    )
+    # science_events: Union[list[EventsAcademic.SCIENCE], None] = None  # Should this be nullable or only added for student
+    team_sports_events: Union[list[EventsTeamSports], None] = None  # Should this be nullable or only added for student
     event_errors: Union[list[str], None] = None  # List of errors for events if any
+
+    # @classmethod
+    # def create_event_error(cls, error: str):
+    #     if cls.event_errors is None:
+    #         cls.event_errors = []
+    #     cls.event_errors.append(error)
 
     @field_validator("registration_type", mode="before")
     @classmethod
@@ -142,3 +154,100 @@ class MomentumRegistrant(BaseModel):
             return True
 
         return False
+
+    @model_validator(mode="after")
+    @classmethod
+    def validate_event_registration(cls, data: "MomentumRegistrant"):
+        if data.registration_type == RegistrationType.STAFF or data.registration_type == RegistrationType.CHAPERONE:
+            return data
+
+        if data.participation_status == ParticipationStatus.SPECTATOR:
+            data.art_events = []
+            data.creative_ministries_events = []
+            # data.math_and_business_events = []
+            data.music_events = []
+            data.quizzing_events = []
+            data.individual_sports_events = []
+            # data.science_events = []
+            data.team_sports_events = []
+
+            # TODO: Create error helper function
+            if data.event_errors is None:
+                data.event_errors = []
+
+            data.event_errors.append("Spectators cannot register for events")
+            return data
+
+        if data.art_events is not None:
+            if len(data.art_events) > 3:
+
+                if data.event_errors is None:
+                    data.event_errors = []
+
+                data.event_errors.append(
+                    f"Art events cannot exceed 3: {data.first_name} {data.last_name} is registered for {len(data.art_events)} art events including {', '.join([event.value for event in data.art_events])}"
+                )
+
+        if data.creative_ministries_events is not None:
+            if len(data.creative_ministries_events) > 3:
+
+                if data.event_errors is None:
+                    data.event_errors = []
+
+                data.event_errors.append(
+                    f"Creative Ministry events cannot exceed 3: {data.first_name} {data.last_name} is registered for {len(data.creative_ministries_events)} creative ministry events including {', '.join([event.value for event in data.creative_ministries_events])}"
+                )
+
+        if data.music_events is not None:
+            vocal_music = [
+                EventsMusic.VOCAL_SOLO,
+                EventsMusic.VOCAL_DUET,
+                EventsMusic.VOCAL_SMALL_GROUP,
+                EventsMusic.VOCAL_ENSEMBLE,
+                EventsMusic.VOCAL_CHOIR,
+            ]
+
+            instrumental_music = [
+                EventsMusic.BRASS,
+                EventsMusic.KEYBOARD,
+                EventsMusic.PERCUSSION,
+                EventsMusic.STRINGS,
+                EventsMusic.WOODWINDS,
+                EventsMusic.INS_GROUP,
+            ]
+
+            if data.event_errors is None:
+                data.event_errors = []
+
+            if len(vocal_music) > 3:
+                data.event_errors.append(
+                    f"Vocal Music events cannot exceed 3: {data.first_name} {data.last_name} is registered for {len(vocal_music)} art events including {', '.join([event.value for event in vocal_music])}"
+                )
+
+            if len(instrumental_music) > 3:
+                data.event_errors.append(
+                    f"Vocal Music events cannot exceed 3: {data.first_name} {data.last_name} is registered for {len(instrumental_music)} art events including {', '.join([event.value for event in instrumental_music])}"
+                )
+
+        if data.individual_sports_events is not None:
+            if len(data.individual_sports_events) > 3:
+
+                if data.event_errors is None:
+                    data.event_errors = []
+
+                data.event_errors.append(
+                    f"Creative Ministry events cannot exceed 3: {data.first_name} {data.last_name} is registered for {len(data.individual_sports_events)} individual sport events including {', '.join([event.value for event in data.individual_sports_events])}"
+                )
+
+        if len(data.team_sports_events) > 0:
+            # bracketed events
+            if len(data.team_sports_events) > 3:
+
+                if data.event_errors is None:
+                    data.event_errors = []
+
+                data.event_errors.append(
+                    f"Creative Ministry events cannot exceed 3: {data.first_name} {data.last_name} is registered for {len(data.team_sports_events)} team sport events including {', '.join([event.value for event in data.team_sports_events])}"
+                )
+
+        return data

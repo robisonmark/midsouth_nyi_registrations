@@ -1,5 +1,21 @@
 import json
+import re
 
+from enums import (
+    AgeRangeIndividualSports,
+    AgeRangeTalent,
+    EventsAcademic,
+    EventsArt,
+    EventsCreativeMinistries,
+    EventsIndividualSports,
+    EventsMusic,
+    EventsQuizzing,
+    EventsTeamSports,
+    Gender,
+    ParticipationStatus,
+    RegistrationType,
+    ShirtSize,
+)
 from helpers import get_nested_value
 from models.momentum import MomentumRegistrant
 
@@ -14,13 +30,55 @@ def translate_registrant(registrant_data: dict) -> MomentumRegistrant:
     if registration_type_date is None:
         registration_type_date = get_nested_value(registrant_data, "submission_date")
 
+    participation_status = get_nested_value(registrant_data, "participant_spectator", "")
+    if participation_status is not None:
+        participation_status = participation_status.split("(")[0].strip()
+
+    academics = [
+        EventsAcademic(re.sub(r"[*]", "", academic_event).strip())
+        for academic_event in get_nested_value(registrant_data, "academics", [])
+    ]
+
+    arts = [EventsArt(re.sub(r"[*]", "", art_event).strip()) for art_event in get_nested_value(registrant_data, "art", [])]
+    academics = [
+        EventsAcademic(re.sub(r"[*]", "", academic_event).strip())
+        for academic_event in get_nested_value(registrant_data, "academics", [])
+    ]
+
+    creative_ministries = [
+        EventsCreativeMinistries(re.sub(r"[*]", "", creative_event).strip())
+        for creative_event in [
+            *get_nested_value(registrant_data, "creative_ministries", []),
+            *get_nested_value(registrant_data, "creative_writing", []),
+            *get_nested_value(registrant_data, "speech", []),
+        ]
+    ]
+
+    music = [
+        EventsMusic(re.sub(r"[*]", "", creative_event).strip())
+        for creative_event in [
+            *get_nested_value(registrant_data, "vocal_music", []),
+            *get_nested_value(registrant_data, "instrumental_music", []),
+        ]
+    ]
+
+    individual_sports = [
+        EventsIndividualSports(re.sub(r"[*]", "", indv_sport).strip())
+        for indv_sport in get_nested_value(registrant_data, "individual_sports", [])
+    ]
+
+    team_sports = [
+        EventsTeamSports(re.sub(r"[*]", "", team_sport).strip())
+        for team_sport in get_nested_value(registrant_data, "team_sports", [])
+    ]
+
     return MomentumRegistrant(
         submission_id=get_nested_value(registrant_data, "id"),
         submission_date=get_nested_value(registrant_data, "submission_date"),
         approval_status=get_nested_value(registrant_data, "status"),
         registration_type=get_nested_value(registrant_data, "registration_type"),
         registration_type_date=registration_type_date,  # Update eventually
-        participation_status=get_nested_value(registrant_data, "participant_spectator"),
+        participation_status=participation_status,
         grade_level=get_nested_value(registrant_data, "grade_level"),  # This should be a calculated field based on birthday
         age_range_talent=get_nested_value(
             registrant_data, "age_level"
@@ -64,13 +122,17 @@ def translate_registrant(registrant_data: dict) -> MomentumRegistrant:
         attending_tnt=get_nested_value(
             registrant_data, "attending_tnt", False
         ),  # Should this be nullable or only added for student
-        academic_events=get_nested_value(registrant_data, "academic_events", []),
-        art_events=get_nested_value(registrant_data, "art_events", []),
-        creative_ministries_events=get_nested_value(registrant_data, "creative_ministries_events", []),
-        music_events=get_nested_value(registrant_data, "music_events", []),
-        quizzing_events=get_nested_value(registrant_data, "quizzing_events", []),
-        individual_sports_events=get_nested_value(registrant_data, "individual_sports_events", []),
-        team_sports_events=get_nested_value(registrant_data, "team_sports_events", []),
+        academic_events=academics,  # This probably needs to be split in the model
+        art_events=arts,
+        creative_ministries_events=creative_ministries,
+        music_events=music,
+        quizzing_events=(
+            []
+            if get_nested_value(registrant_data, "quizzing") == "Neither"
+            else get_nested_value(registrant_data, "quizzing")
+        ),
+        individual_sports_events=individual_sports,
+        team_sports_events=team_sports,
         event_errors=get_nested_value(registrant_data, "event_errors", []),  # List of errors for events if any
         payment=payment,
     )

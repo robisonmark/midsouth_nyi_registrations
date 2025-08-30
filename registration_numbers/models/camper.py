@@ -1,8 +1,14 @@
-from typing import Union
-from pydantic import BaseModel, EmailStr  # type: ignore
 from datetime import datetime
+from typing import Union
 
-from enums import Camp, Gender, ShirtSize, RegistrationType
+from enums import Camp, Gender, RegistrationType, ShirtSize
+from pydantic import (  # type: ignore
+    BaseModel,
+    EmailStr,
+    FieldValidationInfo,
+    field_validator,
+    model_validator,
+)
 
 
 class Camper(BaseModel):
@@ -52,3 +58,9 @@ class Camper(BaseModel):
     statement_of_faith: Union[str, None] = None
     reason_for_counselor: Union[str, None] = None
     payment: float
+
+    @field_validator("registration_type", mode="before")
+    @classmethod
+    def validate_registration_type(cls, value):
+        if value is not None:
+            return value.lower()

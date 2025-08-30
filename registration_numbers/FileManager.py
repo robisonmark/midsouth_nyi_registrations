@@ -6,25 +6,23 @@ import csv
 import os
 import shutil
 from datetime import date
-from typing import OrderedDict
 from operator import attrgetter
+from typing import OrderedDict
 
 import xlsxwriter
-
 from config import EVENT
 
 DEFAULT_FILE_ROOT = "."
 
 
-class FileManager():
+class FileManager:
     def __init__(self, event: EVENT):
         self.event = event
         # self.age_group = age_group
 
     def gather_files(self, file_root: str = DEFAULT_FILE_ROOT) -> list[str]:
         files = os.listdir(file_root)
-        files = [f for f in files if os.path.isfile(
-            f'{file_root}/{f}') and f != '.DS_Store']
+        files = [f for f in files if os.path.isfile(f"{file_root}/{f}") and f != ".DS_Store"]
 
         return files
 
@@ -33,12 +31,12 @@ class FileManager():
 
         if not os.path.exists(outdir):
             os.makedirs(outdir)
-        
+
         return outdir
 
     def read_csv(self, filename: str) -> OrderedDict:
         # change the root to an initialization property
-        with open(f"./files/{filename}", newline='') as csv_file:
+        with open(f"./files/{filename}", newline="") as csv_file:
             # Or csv.reader(csvfile) for list rows
             reader = csv.DictReader(csv_file)
             file_data = []
@@ -51,7 +49,7 @@ class FileManager():
 
     def write_to_csv(self, df, df_name, process, filename: str) -> None:
         self.create_directory(process)
-        df.to_csv(f'{date.today()}_{filename}.csv')
+        df.to_csv(f"{date.today()}_{filename}.csv")
 
     def write_to_excel(self, process, filename, worksheets) -> None:
         """
@@ -111,12 +109,12 @@ class FileManager():
         :param content: Content to write into the file.
         """
         output_loc = self.create_directory(process)
-        with open(f"{output_loc}/{filename}.txt", 'w') as file:
+        with open(f"{output_loc}/{filename}.txt", "w") as file:
             file.write(content)
-    
+
     def move_file_to_complete(self, filename: str, file_root: str = DEFAULT_FILE_ROOT) -> None:
-        src_file = f'{file_root}/{filename}'
-        dst_file = f'./{self.event}/processed/{filename}'
+        src_file = f"{file_root}/{filename}"
+        dst_file = f"./{self.event}/processed/{filename}"
 
         shutil.move(src_file, dst_file)
 

@@ -22,7 +22,7 @@ def translate_camper(raw: dict) -> Camper:
         submission_id=get_nested_value(raw, "id"),
         submission_date=get_nested_value(raw, "submission_date"),
         approval_status=get_nested_value(raw, "status"),
-        registration_type=get_nested_value(raw, "registrationType").lower(),
+        registration_type=get_nested_value(raw, "registrationType"),
         registration_type_date=registration_type_date,
         camp=camp,
         first_name=get_nested_value(raw, "yourName.first"),
