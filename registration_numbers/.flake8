@@ -1,0 +1,7 @@
+[flake8]
+max-line-length = 125
+exclude =
+    __init__.py
+    __pycache__
+    .c9
+    *_insert.py

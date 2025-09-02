@@ -1,30 +1,30 @@
-# Use the official .NET Core SDK image to build the app
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+# Use the .NET 9 SDK as the build image
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 
-# Set the working directory
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy the project file and restore dependencies
-COPY *.csproj .
+# Copy the csproj file and restore the dependencies
+COPY *.csproj ./
 RUN dotnet restore
 
-# Copy the rest of the application code
-COPY . .
+# Copy the rest of the application files
+COPY . ./
 
 # Build the application
-RUN dotnet publish -c Release -o out
+RUN dotnet publish -c Release -o /app/publish
 
-# Use the official ASP.NET Core runtime image for the runtime environment
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+# Use the .NET 9 runtime as the base image for the final container
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 
 # Set the working directory
 WORKDIR /app
 
-# Copy the build output from the build stage
-COPY --from=build /app/out .
-
-# Expose the port the app runs on
+# Expose the port your app will run on
 EXPOSE 80
 
-# Define the entry point for the application
+# Copy the published files from the build stage
+COPY --from=build /app/publish .
+
+# Set the entry point to run the app
 ENTRYPOINT ["dotnet", "RoBrosRegistrantsService.dll"]

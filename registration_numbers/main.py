@@ -1,6 +1,6 @@
 import csv
 import sys
-=
+
 from cement import shell
 
 import camp_registrations
@@ -15,7 +15,7 @@ if __name__ == "__main__":
         numbered=True,
     )
     file_prompt = shell.Prompt(
-        "For which event are you running registration numbers?",
+        "Where are your files located?",
         options=["Camp", "Momentum"],
         numbered=True,
     )

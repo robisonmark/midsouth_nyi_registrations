@@ -7,8 +7,6 @@ namespace EventOfficeApi.Models
 {
     public class Student : Registrant
     {
-        public Guid Id { get; set; }
-
         [Required]
         required public Guid RegistrantId { get; set; }
 

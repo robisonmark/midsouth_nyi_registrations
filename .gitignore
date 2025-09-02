@@ -9,4 +9,9 @@
 **/church/**/**
 **/processed/**/**
 **/events/**/*
+**/output/**/**
 **.xlsx
+
+.env
+*.pyc
+__pycache__/

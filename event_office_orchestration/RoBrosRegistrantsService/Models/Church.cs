@@ -2,9 +2,9 @@ namespace EventOfficeApi.Models
 {
     public class Church
     {
-        public int Id { get; set; }
+        public Guid? Id { get; set; }
         required public string Name { get; set; }
-        public IAddress? Address { get; set; }
+        public Address? Address { get; set; }
     }
 
 }

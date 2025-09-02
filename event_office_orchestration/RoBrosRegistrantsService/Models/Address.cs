@@ -14,8 +14,8 @@ public class Address : IAddress
 {
     public string StreetAddress1 { get; set; }
     public string? StreetAddress2 { get; set; }
-    public string Locality { get; set; }
+    public string Locality { get; set; } // city
     public int PostalCode { get; set; }
     public string Country { get; set; }
-    public string AdministrativeAreaLevel { get; set; }
+    public string AdministrativeAreaLevel { get; set; } // state
 }
