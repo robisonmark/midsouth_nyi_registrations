@@ -14,3 +14,6 @@
         church_id: uuid
     }
 ```
+
+## Permissioning 
+https://www.josephguadagno.net/2020/07/01/no-route-matches-the-supplied-values

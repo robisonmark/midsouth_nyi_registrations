@@ -22,10 +22,10 @@ namespace EventOfficeApi.Controllers
 
         private readonly DatabaseService _databaseService;
 
-        // public ChurchRepository(DatabaseService databaseService)
-        // {
-        //     _databaseService = databaseService;
-        // }
+        public RegistrantController(DatabaseService databaseService)
+        {
+            _databaseService = databaseService;
+        }
 
         [HttpPost]
         [Route("/api/registrant", Name = "AddRegistrant")]
@@ -33,24 +33,35 @@ namespace EventOfficeApi.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         public async Task<IActionResult> CreateRegistrant(Registrant registrant)
         {
-            if (registrant.Id == null)
-            {
-                registrant.Id = Guid.NewGuid();
-            }
-            var sql = "INSERT INTO RoBrosRegistant.Registrant (Id, GivenName, FamilyName, Participant) VALUES (@Name, @Email)";
-            // return await _databaseService.ExecuteAsync(sql, registrant);
-            int rowsAffected = await _databaseService.ExecuteAsync(sql, registrant);
+            // if (registrant.Id == null)
+            // {
+            //     registrant.Id = Guid.NewGuid();
+            // }
 
+            registrant.Id = Guid.NewGuid();
+
+            if (registrant.Address == null)
+            {
+                registrant.Address = new Address.NewAddress();
+            }
+            Console.WriteLine($"Creating registrant with ID: {registrant.Address}");
+
+            var sql = "INSERT INTO registrant (Id, GivenName, FamilyName, ParticipantRole, ChurchId, YouthLeaderEmail, YouthLeaderFirstName, YouthLeaderLastName, AddressId, Mobile, Email, Birthday, Gender, ShirtSize, Price, Paid, Notes, SubmissionDate, IPAddress) VALUES (@Id, @GivenName, @FamilyName, @ParticipantRole, @Church, @YouthLeaderEmail, @YouthLeaderFirstName, @YouthLeaderLastName, @Address, @Mobile, @Email, @Birthday, @Gender, @ShirtSize, @Price, @Paid, @Notes, @SubmissionDate, @IPAddress)";
+            // return await _databaseService.ExecuteAsync(sql, registrant);
+
+            int rowsAffected = await _databaseService.ExecuteAsync(sql, registrant);
+            Console.WriteLine($"Rows affected: {rowsAffected}");
             if (rowsAffected > 0)
             {
-                return CreatedAtAction(nameof(GetRegistrant), new { id = registrant.Id }, registrant);
+                return CreatedAtAction(nameof(GetRegistrant), new { registrantId = registrant.Id }, registrant);
             }
 
             return BadRequest("Failed to add registrant.");
         }
 
         [HttpGet]
-        [Route("/api/registrant", Name = "GetRegistrantById")]
+        [ActionName(nameof(GetRegistrant))]
+        [Route("/api/registrant/{registrantId}", Name = "GetRegistrantById")]
         [ProducesResponseType(typeof(Registrant), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetRegistrant(Guid registrantId)
@@ -58,15 +69,16 @@ namespace EventOfficeApi.Controllers
             // TODO: Implement Database Access
             Registrant registrant = new Registrant
             {
-                Id = Guid.NewGuid(),
+                Id = registrantId,
                 GivenName = "John",
                 FamilyName = "Doe",
-                ParticpantRole = "Competitor",
-                Church = new Church
-                {
-                    Id = Guid.NewGuid(),
-                    Name = "Church"
-                },
+                ParticipantRole = "Competitor",
+                // Church = new Church
+                // {
+                //     Id = Guid.NewGuid(),
+                //     Name = "Church"
+                // },
+                Church = "Hendersonville Church of the Nazarene",
                 Address = new Address
                 {
                     StreetAddress1 = "123 Main Street",

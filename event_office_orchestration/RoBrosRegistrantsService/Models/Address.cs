@@ -7,6 +7,8 @@ public interface IAddress
     int PostalCode { get; set; }
     string Country { get; set; }
     string AdministrativeAreaLevel { get; set; }
+
+    Address NewAddress { set; }
 }
 
 // not sure this is the way to do this
@@ -18,4 +20,16 @@ public class Address : IAddress
     public int PostalCode { get; set; }
     public string Country { get; set; }
     public string AdministrativeAreaLevel { get; set; } // state
+
+    // SETTER - figure out proper way to do this
+    public Address NewAddress()
+    {
+        address = new Address();
+        address.StreetAddress1 = string.Empty;
+        address.Locality = string.Empty;
+        address.PostalCode = 0;
+        address.Country = string.Empty;
+        address.AdministrativeAreaLevel = string.Empty;
+        return address;
+    }
 }

@@ -11,7 +11,7 @@ namespace EventOfficeApi.Services
 
         public DatabaseService(IConfiguration configuration)
         {
-            _connectionString = configuration.GetConnectionString("PostgresDb");
+            _connectionString = configuration.GetConnectionString("DefaultConnection");
             _connection = new NpgsqlConnection(_connectionString);
             _connection.Open();
         }
@@ -28,6 +28,7 @@ namespace EventOfficeApi.Services
 
         public async Task<int> ExecuteAsync(string sql, object? parameters = null)
         {
+            Console.WriteLine($"Executing SQL: {sql} with parameters: {parameters}");
             return await _connection.ExecuteAsync(sql, parameters);
         }
 

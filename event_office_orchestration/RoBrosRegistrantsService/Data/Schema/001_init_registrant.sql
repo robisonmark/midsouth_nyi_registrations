@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS Address (
 );
 
 -- 3. Create Church table
-CREATE TABLE IF NOT EXISTS Church (
+CREATE TABLE IF NOT EXISTS church (
     Id UUID PRIMARY KEY,
     Name VARCHAR(255) NOT NULL,
     AddressId UUID,
