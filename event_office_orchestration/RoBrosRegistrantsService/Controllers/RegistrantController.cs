@@ -42,7 +42,7 @@ namespace EventOfficeApi.Controllers
 
             if (registrant.Address == null)
             {
-                registrant.Address = new Address.NewAddress();
+                registrant.Address = new Address();
             }
             Console.WriteLine($"Creating registrant with ID: {registrant.Address}");
 

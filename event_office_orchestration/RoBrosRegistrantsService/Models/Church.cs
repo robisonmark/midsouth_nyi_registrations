@@ -12,6 +12,8 @@ namespace EventOfficeApi.Models
         public DateTime? createdAt { get; set; }
         public string? updatedBy { get; set; }
         public DateTime? updatedAt { get; set; }
+
+        // Do we need small church/large church division?
     }
 
 }

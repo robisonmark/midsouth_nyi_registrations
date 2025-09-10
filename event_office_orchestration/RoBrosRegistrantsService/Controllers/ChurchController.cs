@@ -43,15 +43,19 @@ namespace EventOfficeApi.Controllers
 
             if (church.Address == null)
             {
+                // This would need to call the address service to create a new address and return the ID
                 church.Address = new Address();
+                // This should also create a look up table for addresses
             }
+
+            Guid addressId = Guid.NewGuid();
             church.createdBy = "Mark"; // replace with actual user
             church.updatedBy = "Mark"; // replace with actual user
 
-            Console.WriteLine($"Creating church with ID: {church.Id}, Name: {church.Name}, Address: {church.Address}");
+            Console.WriteLine($"Creating church with ID: {church.Id}, Name: {church.Name}, Address: {addressId}");
 
             var sql = "INSERT INTO church (Id, Name, CreatedBy, CreatedAt, UpdatedBy, UpdatedAt, Version) VALUES (@Id, @Name, 'Mark', NOW(), 'Mark', NOW(), 1)";
-            var parameters = new { Id = Guid.NewGuid(), Name = church.Name, Address = church.Address };
+            var parameters = new { Id = Guid.NewGuid(), Name = church.Name, AddressId = addressId };
             // return await _databaseService.ExecuteAsync(sql, church);
 
             int rowsAffected = await _databaseService.ExecuteAsync(sql, parameters);
