@@ -1,0 +1,286 @@
+using EventOfficeApi.AddressService.Interfaces;
+using EventOfficeApi.AddressService.Models;
+using Microsoft.Extensions.Logging;
+using Npgsql;
+using System.Data;
+
+namespace EventOfficeApi.AddressService.Data;
+
+public class AddressRepository : IAddressRepository
+{
+    private readonly string _connectionString;
+    private readonly ISqlProvider _sqlProvider;
+    private readonly ILogger<AddressRepository> _logger;
+
+    public AddressRepository(string connectionString, ISqlProvider sqlProvider, ILogger<AddressRepository> logger)
+    {
+        _connectionString = connectionString;
+        _sqlProvider = sqlProvider;
+        _logger = logger;
+    }
+
+    public async Task<Address?> GetByIdAsync(Guid id)
+    {
+        using var connection = new NpgsqlConnection(_connectionString);
+        await connection.OpenAsync();
+
+        using var command = new NpgsqlCommand(_sqlProvider.GetSelectAddressByIdQuery(), connection);
+        command.Parameters.AddWithValue("Id", id);
+
+        using var reader = await command.ExecuteReaderAsync();
+        return await MapAddressWithMappings(reader);
+    }
+
+    public async Task<IEnumerable<Address>> GetByEntityAsync(Guid entityId, string entityType)
+    {
+        using var connection = new NpgsqlConnection(_connectionString);
+        await connection.OpenAsync();
+
+        using var command = new NpgsqlCommand(_sqlProvider.GetSelectAddressByEntityQuery(), connection);
+        command.Parameters.AddWithValue("EntityId", entityId);
+        command.Parameters.AddWithValue("EntityType", entityType);
+
+        using var reader = await command.ExecuteReaderAsync();
+        return await MapAddressesWithMappings(reader);
+    }
+
+    public async Task<Address> CreateAsync(CreateAddressRequest request)
+    {
+        var address = new Address
+        {
+            Id = Guid.NewGuid(),
+            Street = request.Street,
+            Street2 = request.Street2,
+            City = request.City,
+            State = request.State,
+            PostalCode = request.PostalCode,
+            Country = request.Country,
+            CreatedAt = DateTime.UtcNow,
+            UpdatedAt = DateTime.UtcNow
+        };
+
+        using var connection = new NpgsqlConnection(_connectionString);
+        await connection.OpenAsync();
+
+        using var command = new NpgsqlCommand(_sqlProvider.GetCreateAddressQuery(), connection);
+        AddAddressParameters(command, address);
+
+        using var reader = await command.ExecuteReaderAsync();
+        if (await reader.ReadAsync())
+        {
+            return MapAddressFromReader(reader);
+        }
+
+        throw new InvalidOperationException("Failed to create address");
+    }
+
+    public async Task<Address?> UpdateAsync(Guid id, UpdateAddressRequest request)
+    {
+        using var connection = new NpgsqlConnection(_connectionString);
+        await connection.OpenAsync();
+
+        using var command = new NpgsqlCommand(_sqlProvider.GetUpdateAddressQuery(), connection);
+        command.Parameters.AddWithValue("Id", id);
+        command.Parameters.AddWithValue("Street", (object?)request.Street ?? DBNull.Value);
+        command.Parameters.AddWithValue("Street2", (object?)request.Street2 ?? DBNull.Value);
+        command.Parameters.AddWithValue("City", (object?)request.City ?? DBNull.Value);
+        command.Parameters.AddWithValue("State", (object?)request.State ?? DBNull.Value);
+        command.Parameters.AddWithValue("PostalCode", (object?)request.PostalCode ?? DBNull.Value);
+        command.Parameters.AddWithValue("Country", (object?)request.Country ?? DBNull.Value);
+        command.Parameters.AddWithValue("UpdatedAt", DateTime.UtcNow);
+
+        using var reader = await command.ExecuteReaderAsync();
+        if (await reader.ReadAsync())
+        {
+            return MapAddressFromReader(reader);
+        }
+
+        return null;
+    }
+
+    public async Task<bool> DeleteAsync(Guid id)
+    {
+        using var connection = new NpgsqlConnection(_connectionString);
+        await connection.OpenAsync();
+
+        using var command = new NpgsqlCommand(_sqlProvider.GetDeleteAddressQuery(), connection);
+        command.Parameters.AddWithValue("Id", id);
+
+        var rowsAffected = await command.ExecuteNonQueryAsync();
+        return rowsAffected > 0;
+    }
+
+    public async Task<AddressEntityMapping> MapToEntityAsync(Guid addressId, Guid entityId, string entityType, string? addressType = null)
+    {
+        var mapping = new AddressEntityMapping
+        {
+            Id = Guid.NewGuid(),
+            AddressId = addressId,
+            EntityId = entityId,
+            EntityType = entityType,
+            AddressType = addressType,
+            CreatedAt = DateTime.UtcNow
+        };
+
+        using var connection = new NpgsqlConnection(_connectionString);
+        await connection.OpenAsync();
+
+        using var command = new NpgsqlCommand(_sqlProvider.GetCreateMappingQuery(), connection);
+        command.Parameters.AddWithValue("Id", mapping.Id);
+        command.Parameters.AddWithValue("AddressId", mapping.AddressId);
+        command.Parameters.AddWithValue("EntityId", mapping.EntityId);
+        command.Parameters.AddWithValue("EntityType", mapping.EntityType);
+        command.Parameters.AddWithValue("AddressType", (object?)mapping.AddressType ?? DBNull.Value);
+        command.Parameters.AddWithValue("CreatedAt", mapping.CreatedAt);
+
+        using var reader = await command.ExecuteReaderAsync();
+        if (await reader.ReadAsync())
+        {
+            return MapMappingFromReader(reader);
+        }
+
+        throw new InvalidOperationException("Failed to create address mapping");
+    }
+
+    public async Task<bool> UnmapFromEntityAsync(Guid addressId, Guid entityId, string entityType)
+    {
+        using var connection = new NpgsqlConnection(_connectionString);
+        await connection.OpenAsync();
+
+        using var command = new NpgsqlCommand(_sqlProvider.GetDeleteMappingQuery(), connection);
+        command.Parameters.AddWithValue("AddressId", addressId);
+        command.Parameters.AddWithValue("EntityId", entityId);
+        command.Parameters.AddWithValue("EntityType", entityType);
+
+        var rowsAffected = await command.ExecuteNonQueryAsync();
+        return rowsAffected > 0;
+    }
+
+    public async Task<IEnumerable<AddressEntityMapping>> GetMappingsByEntityAsync(Guid entityId, string entityType)
+    {
+        using var connection = new NpgsqlConnection(_connectionString);
+        await connection.OpenAsync();
+
+        using var command = new NpgsqlCommand(_sqlProvider.GetSelectMappingsByEntityQuery(), connection);
+        command.Parameters.AddWithValue("EntityId", entityId);
+        command.Parameters.AddWithValue("EntityType", entityType);
+
+        using var reader = await command.ExecuteReaderAsync();
+        var mappings = new List<AddressEntityMapping>();
+
+        while (await reader.ReadAsync())
+        {
+            mappings.Add(MapMappingFromReader(reader));
+        }
+
+        return mappings;
+    }
+
+    public async Task<IEnumerable<Address>> SearchAsync(string? city = null, string? state = null, string? postalCode = null)
+    {
+        using var connection = new NpgsqlConnection(_connectionString);
+        await connection.OpenAsync();
+
+        using var command = new NpgsqlCommand(_sqlProvider.GetSearchAddressesQuery(), connection);
+        command.Parameters.AddWithValue("City", (object?)city ?? DBNull.Value);
+        command.Parameters.AddWithValue("State", (object?)state ?? DBNull.Value);
+        command.Parameters.AddWithValue("PostalCode", (object?)postalCode ?? DBNull.Value);
+
+        using var reader = await command.ExecuteReaderAsync();
+        return await MapAddressesWithMappings(reader);
+    }
+
+    public async Task<bool> ExistsAsync(Guid id)
+    {
+        using var connection = new NpgsqlConnection(_connectionString);
+        await connection.OpenAsync();
+
+        using var command = new NpgsqlCommand(_sqlProvider.GetAddressExistsQuery(), connection);
+        command.Parameters.AddWithValue("Id", id);
+
+        var result = await command.ExecuteScalarAsync();
+        return result is bool exists && exists;
+    }
+
+    private static void AddAddressParameters(NpgsqlCommand command, Address address)
+    {
+        command.Parameters.AddWithValue("Id", address.Id);
+        command.Parameters.AddWithValue("Street", address.Street);
+        command.Parameters.AddWithValue("Street2", (object?)address.Street2 ?? DBNull.Value);
+        command.Parameters.AddWithValue("City", address.City);
+        command.Parameters.AddWithValue("State", address.State);
+        command.Parameters.AddWithValue("PostalCode", address.PostalCode);
+        command.Parameters.AddWithValue("Country", address.Country);
+        command.Parameters.AddWithValue("CreatedAt", address.CreatedAt);
+        command.Parameters.AddWithValue("UpdatedAt", address.UpdatedAt);
+    }
+
+    private static Address MapAddressFromReader(IDataReader reader)
+    {
+        return new Address
+        {
+            Id = reader.GetGuid("id"),
+            Street = reader.GetString("street"),
+            Street2 = reader.IsDBNull("street2") ? null : reader.GetString("street2"),
+            City = reader.GetString("city"),
+            State = reader.GetString("state"),
+            PostalCode = reader.GetString("postal_code"),
+            Country = reader.GetString("country"),
+            CreatedAt = reader.GetDateTime("created_at"),
+            UpdatedAt = reader.GetDateTime("updated_at")
+        };
+    }
+
+    private static AddressEntityMapping MapMappingFromReader(IDataReader reader)
+    {
+        return new AddressEntityMapping
+        {
+            Id = reader.GetGuid("id"),
+            AddressId = reader.GetGuid("address_id"),
+            EntityId = reader.GetGuid("entity_id"),
+            EntityType = reader.GetString("entity_type"),
+            AddressType = reader.IsDBNull("address_type") ? null : reader.GetString("address_type"),
+            CreatedAt = reader.GetDateTime("created_at")
+        };
+    }
+
+    private static async Task<Address?> MapAddressWithMappings(IDataReader reader)
+    {
+        var addresses = await MapAddressesWithMappings(reader);
+        return addresses.FirstOrDefault();
+    }
+
+    private static async Task<List<Address>> MapAddressesWithMappings(IDataReader reader)
+    {
+        var addressDict = new Dictionary<Guid, Address>();
+
+        while (await reader.ReadAsync())
+        {
+            var addressId = reader.GetGuid("id");
+            
+            if (!addressDict.TryGetValue(addressId, out var address))
+            {
+                address = MapAddressFromReader(reader);
+                addressDict[addressId] = address;
+            }
+
+            // Check if there's a mapping
+            if (!reader.IsDBNull("mapping_id"))
+            {
+                var mapping = new AddressEntityMapping
+                {
+                    Id = reader.GetGuid("mapping_id"),
+                    AddressId = addressId,
+                    EntityId = reader.GetGuid("entity_id"),
+                    EntityType = reader.GetString("entity_type"),
+                    AddressType = reader.IsDBNull("address_type") ? null : reader.GetString("address_type"),
+                    CreatedAt = reader.GetDateTime("mapping_created_at")
+                };
+
+                address.EntityMappings.Add(mapping);
+            }
+        }
+
+        return addressDict.Values.ToList();
+    }
+}

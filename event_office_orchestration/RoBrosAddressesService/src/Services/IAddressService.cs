@@ -1,6 +1,6 @@
-using YourCompany.AddressService.Models;
+using EventOfficeApi.AddressService.Models;
 
-namespace YourCompany.AddressService.Services;
+namespace EventOfficeApi.AddressService.Services;
 
 public interface IAddressService
 {

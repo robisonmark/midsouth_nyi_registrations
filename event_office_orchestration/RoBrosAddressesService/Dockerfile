@@ -6,11 +6,11 @@ FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
 # Copy project files -- rearrange folder structure as needed or point these correctly
-COPY ["samples/AddressService.Sample/AddressService.Sample.csproj", "samples/AddressService.Sample/"]
+COPY ["src/samples/AddressService.Sample/AddressService.Sample.csproj", "src/samples/AddressService.Sample/"]
 COPY ["src/RoBrosAddressesService.csproj", "src/"]
 
 # Restore dependencies
-RUN dotnet restore "samples/AddressService.Sample/AddressService.Sample.csproj"
+RUN dotnet restore "src/samples/AddressService.Sample/AddressService.Sample.csproj"
 
 # Copy everything else
 COPY . .

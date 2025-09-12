@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   addressservice-sample:
     build:
@@ -25,6 +23,47 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U devuser -d addressdev"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Not sure if I am going to do this yet 
+  postgres_test:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: addresstest
+      POSTGRES_USER: testuser
+      POSTGRES_PASSWORD: testpass
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U testuser -d addresstest"]
+      interval: 5s
+      timeout: 3s
+      retries: 3
+
+  # Example consumer service for testing Not Sure If I am going to do this
+  consumer-api:
+    build:
+      context: ./samples/ConsumerApi
+      dockerfile: Dockerfile
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=addressdev;Username=devuser;Password=devpass
+      - ASPNETCORE_ENVIRONMENT=Development
+    ports:
+      - "5000:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./samples/ConsumerApi:/app
+      - /app/bin
+      - /app/obj
 
 volumes:
   pgdata:

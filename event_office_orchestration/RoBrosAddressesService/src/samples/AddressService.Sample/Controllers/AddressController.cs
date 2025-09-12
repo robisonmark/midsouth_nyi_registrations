@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using YourCompany.AddressService.Services;
-using YourCompany.AddressService.Models;
+using EventOfficeApi.AddressService.Services;
+using EventOfficeApi.AddressService.Models;
 
 namespace AddressService.Sample.Controllers;
 
