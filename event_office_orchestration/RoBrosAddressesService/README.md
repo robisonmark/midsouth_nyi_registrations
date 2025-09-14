@@ -321,3 +321,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 ## Support
 
 For issues, questions, or contributions, please open an issue on the GitHub repository.
+
+## Rebuild Solution 
+dotnet new sln --name RoBrosAddressesService --force        
+dotnet sln add **/*.csproj
