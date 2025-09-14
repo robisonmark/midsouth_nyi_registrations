@@ -1,6 +1,6 @@
-using AddressPackage.Models;
+using EventOfficeApi.RoBrosAddressesService.Models;
 
-namespace EventOfficeApi.AddressService.Interfaces;
+namespace EventOfficeApi.RoBrosAddressesService.Interfaces;
 
 public interface IAddressRepository
 {

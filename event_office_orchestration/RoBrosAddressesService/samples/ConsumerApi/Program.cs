@@ -1,6 +1,6 @@
-using AddressPackage.Extensions;
-using AddressPackage.Models;
-using AddressPackage.Services;
+using EventOfficeApi.RoBrosAddressesService.Extensions;
+using EventOfficeApi.RoBrosAddressesService.Models;
+using EventOfficeApi.RoBrosAddressesService.Services;
 using Microsoft.AspNetCore.Mvc;
 
 var builder = WebApplication.CreateBuilder(args);

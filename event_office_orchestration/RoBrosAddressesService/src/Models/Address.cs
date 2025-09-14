@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace AddressPackage.Models;
+namespace EventOfficeApi.RoBrosAddressesService.Models;
 
 public class Address
 {
@@ -15,11 +15,11 @@ public class Address
     
     [Required]
     [MaxLength(100)]
-    public string Locality { get; set; } = string.Empty; // city
+    public string City { get; set; } = string.Empty; // Locality
     
     [Required]
     [MaxLength(100)]
-    public string AdministrativeAreaLevel { get; set; } = string.Empty; // state - how can I map these to match
+    public string State { get; set; } = string.Empty; // AdministrativeAreaLevel - how can I map these to match
     
     [Required]
     [MaxLength(20)]

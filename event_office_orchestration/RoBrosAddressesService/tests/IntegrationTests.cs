@@ -1,12 +1,12 @@
-using AddressPackage.Data;
-using AddressPackage.Models;
+using EventOfficeApi.RoBrosAddressesService.Data;
+using EventOfficeApi.RoBrosAddressesService.Models;
 using Microsoft.Extensions.Logging;
 using Testcontainers.PostgreSql;
 using Xunit;
 using FluentAssertions;
 using Npgsql;
 
-namespace AddressPackage.Tests;
+namespace Tests;
 
 public class IntegrationTests : IAsyncLifetime
 {
@@ -50,8 +50,8 @@ public class IntegrationTests : IAsyncLifetime
         // Arrange
         var request = new CreateAddressRequest
         {
-            Street = "123 Main St",
-            Street2 = "Apt 4B",
+            StreetAddress1 = "123 Main St",
+            StreetAddress2 = "Apt 4B",
             City = "Nashville",
             State = "TN",
             PostalCode = "37203",
@@ -64,7 +64,7 @@ public class IntegrationTests : IAsyncLifetime
         // Assert
         result.Should().NotBeNull();
         result.Id.Should().NotBe(Guid.Empty);
-        result.Street.Should().Be(request.Street);
+        result.StreetAddress1.Should().Be(request.StreetAddress1);
         result.City.Should().Be(request.City);
         result.State.Should().Be(request.State);
         result.PostalCode.Should().Be(request.PostalCode);
@@ -77,7 +77,7 @@ public class IntegrationTests : IAsyncLifetime
         // Arrange
         var request = new CreateAddressRequest
         {
-            Street = "456 Oak Ave",
+            StreetAddress1 = "456 Oak Ave",
             City = "Memphis",
             State = "TN",
             PostalCode = "38103",
@@ -91,7 +91,7 @@ public class IntegrationTests : IAsyncLifetime
         // Assert
         result.Should().NotBeNull();
         result!.Id.Should().Be(created.Id);
-        result.Street.Should().Be(request.Street);
+        result.StreetAddress1.Should().Be(request.StreetAddress1);
     }
 
     [Fact]
@@ -152,7 +152,7 @@ public class IntegrationTests : IAsyncLifetime
         var address = await CreateTestAddress();
         var updateRequest = new UpdateAddressRequest
         {
-            Street = "Updated Street",
+            StreetAddress1 = "Updated Street",
             City = "Updated City"
         };
 
@@ -161,7 +161,7 @@ public class IntegrationTests : IAsyncLifetime
 
         // Assert
         result.Should().NotBeNull();
-        result!.Street.Should().Be(updateRequest.Street);
+        result!.StreetAddress1.Should().Be(updateRequest.StreetAddress1);
         result.City.Should().Be(updateRequest.City);
         result.State.Should().Be(address.State); // Unchanged
     }
@@ -203,7 +203,7 @@ public class IntegrationTests : IAsyncLifetime
     {
         var request = new CreateAddressRequest
         {
-            Street = "123 Test St",
+            StreetAddress1 = "123 Test St",
             City = city,
             State = state,
             PostalCode = "12345",

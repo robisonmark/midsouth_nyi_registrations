@@ -1,37 +1,41 @@
 using System.Data;
 
-using EventOfficeApi.AddressService.Data;
-using EventOfficeApi.AddressService.Interfaces;
-using EventOfficeApi.AddressService.Services;
+using EventOfficeApi.RoBrosAddressesService.Data;
+using EventOfficeApi.RoBrosAddressesService.Interfaces;
+using EventOfficeApi.RoBrosAddressesService.Services;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace EventOfficeApi.AddressService.Extensions;
+namespace EventOfficeApi.RoBrosAddressesService.Extensions;
 
 public static class ServiceCollectionExtensions
 {
-    public static IServiceCollection AddAddressService(
-        this IServiceCollection services,
-        Action<AddressServiceOptions>? configureOptions = null)
-    {
-        var options = new AddressServiceOptions();
-        configureOptions?.Invoke(options);
+    // public static IServiceCollection AddAddressService(
+    //     this IServiceCollection services,
+    //     Action<AddressServiceOptions>? configureOptions = null)
+    // {
+    //     var options = new AddressServiceOptions();
+    //     configureOptions?.Invoke(options);
+    // 
+    // 
+    // NOTE: HANGING ON BECAUSE OF SINGLETON
+    // 
+    // 
+    //     services.AddSingleton(options);
+    //     services.AddScoped<IAddressService, Services.AddressService>();
 
-        services.AddSingleton(options);
-        services.AddScoped<IAddressService, Services.AddressService>();
+    //     return services;
+    // }
 
-        return services;
-    }
+    // public static IServiceCollection AddAddressService(
+    //     this IServiceCollection services,
+    //     Func<IServiceProvider, IDbConnection> connectionFactory,
+    //     Action<AddressServiceOptions>? configureOptions = null)
+    // {
+    //     services.AddAddressService(configureOptions);
+    //     services.AddScoped(connectionFactory);
 
-    public static IServiceCollection AddAddressService(
-        this IServiceCollection services,
-        Func<IServiceProvider, IDbConnection> connectionFactory,
-        Action<AddressServiceOptions>? configureOptions = null)
-    {
-        services.AddAddressService(configureOptions);
-        services.AddScoped(connectionFactory);
-
-        return services;
-    }
+    //     return services;
+    // }
 
     //New From Claude 
     public static IServiceCollection AddAddressPackage(

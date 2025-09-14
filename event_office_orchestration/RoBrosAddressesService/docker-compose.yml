@@ -48,22 +48,22 @@ services:
       retries: 3
 
   # Example consumer service for testing Not Sure If I am going to do this
-  consumer-api:
-    build:
-      context: ./samples/ConsumerApi
-      dockerfile: Dockerfile
-    environment:
-      - ConnectionStrings__DefaultConnection=Host=postgres;Database=addressdev;Username=devuser;Password=devpass
-      - ASPNETCORE_ENVIRONMENT=Development
-    ports:
-      - "5000:8080"
-    depends_on:
-      postgres:
-        condition: service_healthy
-    volumes:
-      - ./samples/ConsumerApi:/app
-      - /app/bin
-      - /app/obj
+  # consumer-api:
+  #   build:
+  #     context: ./samples/ConsumerApi
+  #     dockerfile: Dockerfile
+  #   environment:
+  #     - ConnectionStrings__DefaultConnection=Host=postgres;Database=addressdev;Username=devuser;Password=devpass
+  #     - ASPNETCORE_ENVIRONMENT=Development
+  #   ports:
+  #     - "5000:8080"
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+  #   volumes:
+  #     - ./samples/ConsumerApi:/app
+  #     - /app/bin
+  #     - /app/obj
 
 volumes:
   pgdata:

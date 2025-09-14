@@ -1,10 +1,11 @@
-using EventOfficeApi.AddressService.Interfaces;
-using EventOfficeApi.AddressService.Models;
+using EventOfficeApi.RoBrosAddressesService.Interfaces;
+using EventOfficeApi.RoBrosAddressesService.Models;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using System.Data;
+using System.Data.Common;
 
-namespace EventOfficeApi.AddressService.Data;
+namespace EventOfficeApi.RoBrosAddressesService.Data;
 
 public class AddressRepository : IAddressRepository
 {
@@ -49,8 +50,8 @@ public class AddressRepository : IAddressRepository
         var address = new Address
         {
             Id = Guid.NewGuid(),
-            Street = request.Street,
-            Street2 = request.Street2,
+            StreetAddress1 = request.StreetAddress1,
+            StreetAddress2 = request.StreetAddress2,
             City = request.City,
             State = request.State,
             PostalCode = request.PostalCode,
@@ -81,8 +82,8 @@ public class AddressRepository : IAddressRepository
 
         using var command = new NpgsqlCommand(_sqlProvider.GetUpdateAddressQuery(), connection);
         command.Parameters.AddWithValue("Id", id);
-        command.Parameters.AddWithValue("Street", (object?)request.Street ?? DBNull.Value);
-        command.Parameters.AddWithValue("Street2", (object?)request.Street2 ?? DBNull.Value);
+        command.Parameters.AddWithValue("StreetAddress1", (object?)request.StreetAddress1 ?? DBNull.Value);
+        command.Parameters.AddWithValue("StreetAddress2", (object?)request.StreetAddress2 ?? DBNull.Value);
         command.Parameters.AddWithValue("City", (object?)request.City ?? DBNull.Value);
         command.Parameters.AddWithValue("State", (object?)request.State ?? DBNull.Value);
         command.Parameters.AddWithValue("PostalCode", (object?)request.PostalCode ?? DBNull.Value);
@@ -205,8 +206,8 @@ public class AddressRepository : IAddressRepository
     private static void AddAddressParameters(NpgsqlCommand command, Address address)
     {
         command.Parameters.AddWithValue("Id", address.Id);
-        command.Parameters.AddWithValue("Street", address.Street);
-        command.Parameters.AddWithValue("Street2", (object?)address.Street2 ?? DBNull.Value);
+        command.Parameters.AddWithValue("StreetAddress1", address.StreetAddress1);
+        command.Parameters.AddWithValue("StreetAddress2", (object?)address.StreetAddress2 ?? DBNull.Value);
         command.Parameters.AddWithValue("City", address.City);
         command.Parameters.AddWithValue("State", address.State);
         command.Parameters.AddWithValue("PostalCode", address.PostalCode);
@@ -215,13 +216,13 @@ public class AddressRepository : IAddressRepository
         command.Parameters.AddWithValue("UpdatedAt", address.UpdatedAt);
     }
 
-    private static Address MapAddressFromReader(IDataReader reader)
+    private static Address MapAddressFromReader(DbDataReader reader)
     {
         return new Address
         {
             Id = reader.GetGuid("id"),
-            Street = reader.GetString("street"),
-            Street2 = reader.IsDBNull("street2") ? null : reader.GetString("street2"),
+            StreetAddress1 = reader.GetString("streetAddress1"),
+            StreetAddress2 = reader.IsDBNull("streetAddress2") ? null : reader.GetString("streetAddress2"),
             City = reader.GetString("city"),
             State = reader.GetString("state"),
             PostalCode = reader.GetString("postal_code"),
@@ -231,7 +232,7 @@ public class AddressRepository : IAddressRepository
         };
     }
 
-    private static AddressEntityMapping MapMappingFromReader(IDataReader reader)
+    private static AddressEntityMapping MapMappingFromReader(DbDataReader reader)
     {
         return new AddressEntityMapping
         {
@@ -244,13 +245,13 @@ public class AddressRepository : IAddressRepository
         };
     }
 
-    private static async Task<Address?> MapAddressWithMappings(IDataReader reader)
+    private static async Task<Address?> MapAddressWithMappings(DbDataReader reader)
     {
         var addresses = await MapAddressesWithMappings(reader);
         return addresses.FirstOrDefault();
     }
 
-    private static async Task<List<Address>> MapAddressesWithMappings(IDataReader reader)
+    private static async Task<List<Address>> MapAddressesWithMappings(DbDataReader reader)
     {
         var addressDict = new Dictionary<Guid, Address>();
 

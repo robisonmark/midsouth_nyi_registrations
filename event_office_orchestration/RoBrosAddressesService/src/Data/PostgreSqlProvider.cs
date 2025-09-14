@@ -1,6 +1,6 @@
-using EventOfficeApi.AddressService.Interfaces;
+using EventOfficeApi.RoBrosAddressesService.Interfaces;
 
-namespace EventOfficeApi.AddressService.Data;
+namespace EventOfficeApi.RoBrosAddressesService.Data;
 
 public class PostgreSqlProvider : ISqlProvider
 {
