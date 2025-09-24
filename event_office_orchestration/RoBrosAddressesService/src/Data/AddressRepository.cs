@@ -9,24 +9,34 @@ namespace EventOfficeApi.RoBrosAddressesService.Data;
 
 public class AddressRepository : IAddressRepository
 {
-    private readonly string _connectionString;
+    // private readonly string _connectionString;
     private readonly ISqlProvider _sqlProvider;
+
+    private readonly DbDataSource _dataSource;
+    
     private readonly ILogger<AddressRepository> _logger;
 
-    public AddressRepository(string connectionString, ISqlProvider sqlProvider, ILogger<AddressRepository> logger)
+    // public AddressRepository(string connectionString, ISqlProvider sqlProvider, ILogger<AddressRepository> logger)
+    public AddressRepository(NpgsqlDataSource dataSource, ISqlProvider sqlProvider, ILogger<AddressRepository> logger)
     {
-        _connectionString = connectionString;
+        _dataSource = dataSource;
+        // _connectionString = connectionString;
         _sqlProvider = sqlProvider;
         _logger = logger;
     }
+    
 
     public async Task<Address?> GetByIdAsync(Guid id)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
-        await connection.OpenAsync();
+        // using var connection = new NpgsqlConnection(_connectionString);
+        // await connection.OpenAsync();
 
-        using var command = new NpgsqlCommand(_sqlProvider.GetSelectAddressByIdQuery(), connection);
+
+        await using var connection = await _dataSource.OpenConnectionAsync();
+        using var command = new NpgsqlCommand(_sqlProvider.GetSelectAddressByIdQuery());
+
         command.Parameters.AddWithValue("Id", id);
+
 
         using var reader = await command.ExecuteReaderAsync();
         return await MapAddressWithMappings(reader);
@@ -34,10 +44,11 @@ public class AddressRepository : IAddressRepository
 
     public async Task<IEnumerable<Address>> GetByEntityAsync(Guid entityId, string entityType)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
-        await connection.OpenAsync();
+        // using var connection = new NpgsqlConnection(_connectionString);
+        // await connection.OpenAsync();
+        await using var connection = await _dataSource.OpenConnectionAsync();
 
-        using var command = new NpgsqlCommand(_sqlProvider.GetSelectAddressByEntityQuery(), connection);
+        using var command = new NpgsqlCommand(_sqlProvider.GetSelectAddressByEntityQuery());
         command.Parameters.AddWithValue("EntityId", entityId);
         command.Parameters.AddWithValue("EntityType", entityType);
 
@@ -46,7 +57,7 @@ public class AddressRepository : IAddressRepository
     }
 
     public async Task<Address> CreateAsync(CreateAddressRequest request)
-    {
+    {        
         var address = new Address
         {
             Id = Guid.NewGuid(),
@@ -60,10 +71,24 @@ public class AddressRepository : IAddressRepository
             UpdatedAt = DateTime.UtcNow
         };
 
-        using var connection = new NpgsqlConnection(_connectionString);
-        await connection.OpenAsync();
+        // await using var connection = new NpgsqlConnection(_connectionString);
+        // try
+        // {
+        //     if (connection.State != System.Data.ConnectionState.Open)
+        //         Console.WriteLine("Connection: " + connection.ConnectionString);
+        // await connection.OpenAsync();
+        // connection.Open();
+        // }
+        // catch (Exception ex)
+        // {
+        //     Console.WriteLine("test " + ex);
+        // }
 
-        using var command = new NpgsqlCommand(_sqlProvider.GetCreateAddressQuery(), connection);
+        await using var connection = await _dataSource.OpenConnectionAsync();
+        Console.WriteLine("Connection: " + connection.ConnectionString);
+        using var command = new NpgsqlCommand(_sqlProvider.GetCreateAddressQuery());
+
+        Console.WriteLine("--- I MADE IT HERE ----");
         AddAddressParameters(command, address);
 
         using var reader = await command.ExecuteReaderAsync();
@@ -77,10 +102,11 @@ public class AddressRepository : IAddressRepository
 
     public async Task<Address?> UpdateAsync(Guid id, UpdateAddressRequest request)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
-        await connection.OpenAsync();
+        // using var connection = new NpgsqlConnection(_connectionString);
+        // await connection.OpenAsync();
+        await using var connection = await _dataSource.OpenConnectionAsync();
 
-        using var command = new NpgsqlCommand(_sqlProvider.GetUpdateAddressQuery(), connection);
+        using var command = new NpgsqlCommand(_sqlProvider.GetUpdateAddressQuery());
         command.Parameters.AddWithValue("Id", id);
         command.Parameters.AddWithValue("StreetAddress1", (object?)request.StreetAddress1 ?? DBNull.Value);
         command.Parameters.AddWithValue("StreetAddress2", (object?)request.StreetAddress2 ?? DBNull.Value);
@@ -101,10 +127,11 @@ public class AddressRepository : IAddressRepository
 
     public async Task<bool> DeleteAsync(Guid id)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
-        await connection.OpenAsync();
+        // using var connection = new NpgsqlConnection(_connectionString);
+        // await connection.OpenAsync();
+        await using var connection = await _dataSource.OpenConnectionAsync();
 
-        using var command = new NpgsqlCommand(_sqlProvider.GetDeleteAddressQuery(), connection);
+        using var command = new NpgsqlCommand(_sqlProvider.GetDeleteAddressQuery());
         command.Parameters.AddWithValue("Id", id);
 
         var rowsAffected = await command.ExecuteNonQueryAsync();
@@ -123,10 +150,11 @@ public class AddressRepository : IAddressRepository
             CreatedAt = DateTime.UtcNow
         };
 
-        using var connection = new NpgsqlConnection(_connectionString);
-        await connection.OpenAsync();
+        // using var connection = new NpgsqlConnection(_connectionString);
+        // await connection.OpenAsync();
+        await using var connection = await _dataSource.OpenConnectionAsync();
 
-        using var command = new NpgsqlCommand(_sqlProvider.GetCreateMappingQuery(), connection);
+        using var command = new NpgsqlCommand(_sqlProvider.GetCreateMappingQuery());
         command.Parameters.AddWithValue("Id", mapping.Id);
         command.Parameters.AddWithValue("AddressId", mapping.AddressId);
         command.Parameters.AddWithValue("EntityId", mapping.EntityId);
@@ -145,10 +173,11 @@ public class AddressRepository : IAddressRepository
 
     public async Task<bool> UnmapFromEntityAsync(Guid addressId, Guid entityId, string entityType)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
-        await connection.OpenAsync();
+        // using var connection = new NpgsqlConnection(_connectionString);
+        // await connection.OpenAsync();
+        await using var connection = await _dataSource.OpenConnectionAsync();
 
-        using var command = new NpgsqlCommand(_sqlProvider.GetDeleteMappingQuery(), connection);
+        using var command = new NpgsqlCommand(_sqlProvider.GetDeleteMappingQuery());
         command.Parameters.AddWithValue("AddressId", addressId);
         command.Parameters.AddWithValue("EntityId", entityId);
         command.Parameters.AddWithValue("EntityType", entityType);
@@ -159,10 +188,11 @@ public class AddressRepository : IAddressRepository
 
     public async Task<IEnumerable<AddressEntityMapping>> GetMappingsByEntityAsync(Guid entityId, string entityType)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
-        await connection.OpenAsync();
+        // using var connection = new NpgsqlConnection(_connectionString);
+        // await connection.OpenAsync();
+        await using var connection = await _dataSource.OpenConnectionAsync();
 
-        using var command = new NpgsqlCommand(_sqlProvider.GetSelectMappingsByEntityQuery(), connection);
+        using var command = new NpgsqlCommand(_sqlProvider.GetSelectMappingsByEntityQuery());
         command.Parameters.AddWithValue("EntityId", entityId);
         command.Parameters.AddWithValue("EntityType", entityType);
 
@@ -179,10 +209,11 @@ public class AddressRepository : IAddressRepository
 
     public async Task<IEnumerable<Address>> SearchAsync(string? city = null, string? state = null, string? postalCode = null)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
-        await connection.OpenAsync();
+        // using var connection = new NpgsqlConnection(_connectionString);
+        // await connection.OpenAsync();
+        await using var connection = await _dataSource.OpenConnectionAsync();
 
-        using var command = new NpgsqlCommand(_sqlProvider.GetSearchAddressesQuery(), connection);
+        using var command = new NpgsqlCommand(_sqlProvider.GetSearchAddressesQuery());
         command.Parameters.AddWithValue("City", (object?)city ?? DBNull.Value);
         command.Parameters.AddWithValue("State", (object?)state ?? DBNull.Value);
         command.Parameters.AddWithValue("PostalCode", (object?)postalCode ?? DBNull.Value);
@@ -193,10 +224,11 @@ public class AddressRepository : IAddressRepository
 
     public async Task<bool> ExistsAsync(Guid id)
     {
-        using var connection = new NpgsqlConnection(_connectionString);
-        await connection.OpenAsync();
+        // using var connection = new NpgsqlConnection(_connectionString);
+        // await connection.OpenAsync();
+        await using var connection = await _dataSource.OpenConnectionAsync();
 
-        using var command = new NpgsqlCommand(_sqlProvider.GetAddressExistsQuery(), connection);
+        using var command = new NpgsqlCommand(_sqlProvider.GetAddressExistsQuery());
         command.Parameters.AddWithValue("Id", id);
 
         var result = await command.ExecuteScalarAsync();

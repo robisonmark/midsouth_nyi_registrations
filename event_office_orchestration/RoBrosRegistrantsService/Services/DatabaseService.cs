@@ -14,6 +14,9 @@ namespace EventOfficeApi.Services
             _connectionString = configuration.GetConnectionString("DefaultConnection");
             _connection = new NpgsqlConnection(_connectionString);
             _connection.Open();
+            // This probably needs to update because it is not the recommended way to use Npgsql
+            // https://www.npgsql.org/doc/basic-usage.html#connections-without-a-data-source
+            // recommended - https://www.npgsql.org/doc/basic-usage.html#data-source
         }
 
         public async Task<T?> QuerySingleAsync<T>(string sql, object? parameters = null)

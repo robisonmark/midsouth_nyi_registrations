@@ -3,6 +3,12 @@ using EventOfficeApi.RoBrosAddressesService.Models;
 using EventOfficeApi.RoBrosAddressesService.Services;
 using Microsoft.AspNetCore.Mvc;
 
+using System.Text.Json.Serialization;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Configuration;
+using Npgsql;
+using NSwag;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container
@@ -12,9 +18,41 @@ builder.Services.AddSwaggerGen();
 
 // Add Address Package with default PostgreSQL provider
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? "Host=localhost;Database=addressdev;Username=devuser;Password=devpass";
+    ?? "Host=localhost;Database=RoBrosAddresses;Username=postgres;Password=YourPassword;Timeout=30;";
 
-builder.Services.AddAddressPackage(connectionString);
+using var dataSource = NpgsqlDataSource.Create(connectionString);
+
+// This should inject a logger and anything else that comes from the consuming service
+builder.Services.AddAddressPackage(dataSource);
+
+// Add services to the container.
+builder.Services.AddControllers()
+    .AddNewtonsoftJson()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;
+        options.JsonSerializerOptions.PropertyNameCaseInsensitive = true;
+    });
+
+// Register OpenAPI (NSwag) document configuration
+builder.Services.AddOpenApiDocument(options =>
+{
+    options.PostProcess = document =>
+    {
+        document.Info = new NSwag.OpenApiInfo
+        {
+            Title = "Event Office Addresses Service",
+            Description = "API for Defining The Students and Chaperones registering for an Event",
+            Version = "v1",
+            Contact = new NSwag.OpenApiContact()
+            {
+                Name = "Mark Robison",
+                Email = "admin@robros.tech",
+                Url = "https://robros.tech"
+            },
+        };
+    };
+});
 
 var app = builder.Build();
 
@@ -23,6 +61,16 @@ if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
     app.UseSwaggerUI();
+
+    app.UseSwaggerUi(); // Use Swagger UI (from NSwag)
+
+    // Optionally add ReDoc for another UI
+    app.UseReDoc(settings =>
+    {
+        settings.DocumentTitle = "Addresses Service";
+        settings.Path = "/redoc";
+        settings.DocumentPath = "/swagger/v1/swagger.json"; // Set the correct Swagger document path
+    });
 }
 
 app.UseHttpsRedirection();
@@ -42,6 +90,7 @@ app.MapPost("/addresses", async ([FromBody] CreateAddressRequest request, IAddre
 {
     try
     {
+        Console.WriteLine("----- Creating address... -----");
         var address = await addressService.CreateAddressAsync(request);
         return Results.Created($"/addresses/{address.Id}", address);
     }

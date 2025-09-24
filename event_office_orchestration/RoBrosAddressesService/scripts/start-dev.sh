@@ -11,7 +11,7 @@ sleep 30
 
 # Run database initialization if needed
 echo "🗄️ Initializing database..."
-docker-compose -f docker-compose.yml exec db /pgdata -S localhost -U postgres -P YourPassword -Q "CREATE DATABASE AddressServiceTest"
+docker-compose -f docker-compose.yml exec db /pgdata -S localhost -U postgres -P YourPassword -Q "CREATE DATABASE RoBrosAddresses"
 
 echo "✅ Development environment ready!"
 echo "📊 Swagger UI: http://localhost:5000/swagger"

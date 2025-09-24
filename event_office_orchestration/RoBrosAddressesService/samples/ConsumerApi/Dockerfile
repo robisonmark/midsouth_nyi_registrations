@@ -6,11 +6,15 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["samples/ConsumerApi/ConsumerApi.csproj", "ConsumerApi/"]
-COPY ["AddressPackage.csproj", "AddressPackage/"]
-RUN dotnet restore "ConsumerApi/ConsumerApi.csproj"
+
+COPY ["./samples/ConsumerApi/ConsumerApi.csproj", "./samples/ConsumerApi/"]
+COPY ["./src/RoBrosAddressesService.csproj", "/src/"]
+
+RUN dotnet restore "samples/ConsumerApi/ConsumerApi.csproj"
+
 COPY . .
-WORKDIR "/src/ConsumerApi"
+
+WORKDIR "/src/samples/ConsumerApi"
 RUN dotnet build "ConsumerApi.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 FROM build AS publish
