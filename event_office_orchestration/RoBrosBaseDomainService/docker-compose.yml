@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: robros-journal-postgres
+    environment:
+      POSTGRES_DB: robros_journal_db
+      POSTGRES_USER: robros_user
+      POSTGRES_PASSWORD: robros_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U robros_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  robros-service:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: robros-journal-service
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=robros_journal_db;Username=robros_user;Password=robros_password
+    volumes:
+      - ./:/src
+      - nuget_cache:/root/.nuget/packages
+    command: tail -f /dev/null
+
+volumes:
+  postgres_data:
+  nuget_cache:

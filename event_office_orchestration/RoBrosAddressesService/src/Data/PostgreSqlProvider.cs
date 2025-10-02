@@ -4,11 +4,24 @@ namespace EventOfficeApi.RoBrosAddressesService.Data;
 
 public class PostgreSqlProvider : ISqlProvider
 {
+    // should version start with 0 or 1
     public virtual string GetCreateAddressQuery()
     {
         return @"
-            INSERT INTO addresses (id, street, street2, city, state, postal_code, country, created_at, updated_at)
-            VALUES (@Id, @Street, @Street2, @City, @State, @PostalCode, @Country, @CreatedAt, @UpdatedAt)
+            INSERT INTO addresses (id, street_address_1, street_address_2, locality, administrative_area_level, postal_code, country, created_at, created_by, updated_at, updated_by, version)
+            VALUES (
+                @Id, 
+                @StreetAddress1, 
+                @StreetAddress2, 
+                @City, 
+                @State, 
+                @PostalCode, 
+                @Country, 
+                @CreatedAt,
+                @CreatedBy,
+                @UpdatedAt,
+                @UpdatedBy,
+                1)
             RETURNING *;";
     }
 
@@ -16,8 +29,8 @@ public class PostgreSqlProvider : ISqlProvider
     {
         return @"
             UPDATE addresses 
-            SET street = COALESCE(@Street, street),
-                street2 = COALESCE(@Street2, street2),
+            SET street_address_1 = COALESCE(@StreetAddress1, street_address_1),
+                street_address_2 = COALESCE(@StreetAddress2, street_address_2),
                 city = COALESCE(@City, city),
                 state = COALESCE(@State, state),
                 postal_code = COALESCE(@PostalCode, postal_code),
@@ -85,7 +98,12 @@ public class PostgreSqlProvider : ISqlProvider
 
     public virtual string GetAddressExistsQuery()
     {
-        return "SELECT EXISTS(SELECT 1 FROM addresses WHERE id = @Id);";
+        return @"
+            SELECT EXISTS(
+                SELECT 1 FROM addresses WHERE id = @Id
+                UNION 
+                SELECT 1 FROM addresses WHERE street_address_1 = @StreetAddress1 AND locality = @City AND postal_code = @PostalCode
+            );";
     }
 
     public virtual string GetCreateTablesScript()
@@ -95,8 +113,8 @@ public class PostgreSqlProvider : ISqlProvider
 
             CREATE TABLE IF NOT EXISTS addresses (
                 id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                street VARCHAR(255) NOT NULL,
-                street2 VARCHAR(255),
+                street_address_1 VARCHAR(255) NOT NULL,
+                street_address_2 VARCHAR(255),
                 city VARCHAR(100) NOT NULL,
                 state VARCHAR(100) NOT NULL,
                 postal_code VARCHAR(20) NOT NULL,

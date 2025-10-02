@@ -1,19 +1,4 @@
 services:
-  # addressservice-sample:
-  #   build:
-  #     context: .
-  #     dockerfile: Dockerfile
-  #   ports:
-  #     - "8080:8080"
-  #   environment:
-  #     - ASPNETCORE_ENVIRONMENT=Development
-  #     - ConnectionStrings__DefaultConnection=Host=localhost;Database=YourDatabaseName;Username=postgres;Password=YourPassword
-  #     - ASPNETCORE_HTTP_PORTS=8080
-  #   depends_on:
-  #     - db
-  #   networks:
-  #     - addressservice-network
-
   db:
     image: postgres:15-alpine
     environment:
@@ -47,22 +32,21 @@ services:
   #     timeout: 3s
   #     retries: 3
 
-  # Example consumer service for testing Not Sure If I am going to do this
-  consumer-api:
-    build:
-      context: .
-      dockerfile: samples/ConsumerApi/Dockerfile
-    environment:
-      - ConnectionStrings__DefaultConnection=Host=localhost;Database=YourDatabaseName;Username=postgres;Password=YourPassword
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_HTTP_PORTS=8080
-    ports:
-      - "8080:8080"
-    depends_on:
-      db:
-        condition: service_healthy
-    networks:
-      - addressservice-network
+  # consumer-api:
+  #   build:
+  #     context: .
+  #     dockerfile: samples/ConsumerApi/Dockerfile
+  #   environment:
+  #     # - ConnectionStrings__DefaultConnection=Host=localhost;Database=YourDatabaseName;Username=postgres;Password=YourPassword
+  #     - ASPNETCORE_ENVIRONMENT=Development
+  #     - ASPNETCORE_HTTP_PORTS=8080
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     db:
+  #       condition: service_healthy
+  #   networks:
+  #     - addressservice-network
 
 volumes:
   pgdata:

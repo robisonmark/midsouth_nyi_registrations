@@ -30,7 +30,12 @@ public class Address
     public string Country { get; set; } = "USA";
     
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    public string CreatedBy { get; set; } = "Mark";
+
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    public string UpdatedBy { get; set; } = "Mark";
     
     // Navigation property for entity mappings - I am not sure this is how to handle this
     public virtual ICollection<AddressEntityMapping> EntityMappings { get; set; } = new List<AddressEntityMapping>();

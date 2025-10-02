@@ -20,7 +20,9 @@ builder.Services.AddSwaggerGen();
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
     ?? "Host=localhost;Database=RoBrosAddresses;Username=postgres;Password=YourPassword;Timeout=30;";
 
-using var dataSource = NpgsqlDataSource.Create(connectionString);
+var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
+// using var dataSource = NpgsqlDataSource.Create(connectionString);
+var dataSource = dataSourceBuilder.Build();
 
 // This should inject a logger and anything else that comes from the consuming service
 builder.Services.AddAddressPackage(dataSource);
@@ -80,6 +82,7 @@ app.MapControllers();
 // Minimal API endpoints for address operations
 app.MapGet("/addresses/{id:guid}", async (Guid id, IAddressService addressService) =>
 {
+    Console.WriteLine("---------- Grabbing Address ---------------");
     var address = await addressService.GetAddressAsync(id);
     return address is not null ? Results.Ok(address) : Results.NotFound();
 })

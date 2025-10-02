@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: robros-journal-postgres-dev
+    environment:
+      POSTGRES_DB: robros_journal_db
+      POSTGRES_USER: robros_user
+      POSTGRES_PASSWORD: robros_password
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U robros_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  robros-service-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    container_name: robros-journal-service-dev
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ConnectionStrings__DefaultConnection=Host=postgres;Database=robros_journal_db;Username=robros_user;Password=robros_password
+      - DOTNET_USE_POLLING_FILE_WATCHER=true
+      - ASPNETCORE_URLS=http://+:5000
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./:/app
+      - nuget_cache_dev:/root/.nuget/packages
+    working_dir: /app
+    command: >
+      sh -c "dotnet restore &&
+             dotnet watch run --no-restore --non-interactive"
+
+volumes:
+  postgres_data_dev:
+  nuget_cache_dev:
