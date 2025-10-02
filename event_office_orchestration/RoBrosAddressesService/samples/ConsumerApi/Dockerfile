@@ -1,0 +1,27 @@
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
+WORKDIR /app
+EXPOSE 8080
+EXPOSE 8081
+
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+ARG BUILD_CONFIGURATION=Release
+WORKDIR /src
+
+COPY ["./samples/ConsumerApi/ConsumerApi.csproj", "./samples/ConsumerApi/"]
+COPY ["./src/RoBrosAddressesService.csproj", "/src/"]
+
+RUN dotnet restore "samples/ConsumerApi/ConsumerApi.csproj"
+
+COPY . .
+
+WORKDIR "/src/samples/ConsumerApi"
+RUN dotnet build "ConsumerApi.csproj" -c $BUILD_CONFIGURATION -o /app/build
+
+FROM build AS publish
+ARG BUILD_CONFIGURATION=Release
+RUN dotnet publish "ConsumerApi.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+
+FROM base AS final
+WORKDIR /app
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "ConsumerApi.dll"]

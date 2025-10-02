@@ -18,10 +18,10 @@ namespace EventOfficeApi.Models
         required public string FamilyName { get; set; }
 
         [Required]
-        public string ParticpantRole { get; set; } // student/chaperone/volunteer
+        public string ParticipantRole { get; set; } // student/chaperone/volunteer
 
         [Required]
-        required public Church Church { get; set; }
+        required public string Church { get; set; } // This needs to match a church in the database but should use a string to get it.
 
         public string YouthLeaderEmail { get; set; } // part of church?
 
@@ -29,8 +29,8 @@ namespace EventOfficeApi.Models
 
         public string YouthLeaderLastName { get; set; }  // part of church?
 
-        [Required]
-        required public IAddress Address { get; set; }
+        // [Required]
+        required public Address Address { get; set; }
 
         public string? Mobile { get; set; }
 

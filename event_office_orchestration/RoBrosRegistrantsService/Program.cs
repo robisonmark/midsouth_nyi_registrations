@@ -7,18 +7,29 @@ using NSwag;
 var builder = WebApplication.CreateBuilder(args);
 
 // Register NpgsqlConnection as a singleton
-builder.Services.AddSingleton<NpgsqlConnection>(serviceProvider =>
-{
-    var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-    var connectionString = configuration.GetConnectionString("DefaultConnection");
+// builder.Services.AddSingleton<NpgsqlConnection>(serviceProvider =>
+// {
+//     var configuration = serviceProvider.GetRequiredService<IConfiguration>();
+//     Console.WriteLine("Configuration: " + configuration);
+//     var connectionString = configuration.GetConnectionString("DefaultConnection");
 
-    var connection = new NpgsqlConnection(connectionString);
-    connection.Open(); // Open the connection when the singleton is created
-    return connection;
+//     var connection = new NpgsqlConnection(connectionString);
+//     connection.Open(); // Open the connection when the singleton is created
+//     return connection;
+// });
+
+
+builder.Services.AddSingleton<NpgsqlDataSource>(provider =>
+{
+    // var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+    var dataSourceBuilder = new NpgsqlDataSourceBuilder("Host=localhost;Database=RoBrosRegistrant;Username=postgres;Password=YourPassword");
+    return dataSourceBuilder.Build();
 });
+builder.Services.AddScoped<EventOfficeApi.Services.DatabaseService>();
 
 // Add services to the container.
 builder.Services.AddControllers()
+    .AddNewtonsoftJson()
     .AddJsonOptions(options =>
     {
         options.JsonSerializerOptions.DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull;

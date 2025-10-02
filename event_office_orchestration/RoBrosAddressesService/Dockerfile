@@ -1,30 +1,28 @@
-# Use the official .NET Core SDK image to build the app
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-
-# Set the working directory
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
 WORKDIR /app
+EXPOSE 8080
 
-# Copy the project file and restore dependencies
-COPY *.csproj .
-RUN dotnet restore
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
 
-# Copy the rest of the application code
+# Copy project files -- rearrange folder structure as needed or point these correctly
+COPY ["samples/ConsumerApi/ConsumerApi.csproj", "./samples/ConsumerApi/"]
+COPY ["src/RoBrosAddressesService.csproj", "/src/"]
+
+# Restore dependencies
+RUN dotnet restore "samples/ConsumerApi/ConsumerApi.csproj"
+
+# Copy everything else
 COPY . .
 
-# Build the application
-RUN dotnet publish -c Release -o out
+# Build the sample app
+WORKDIR "/src/samples/ConsumerApi"
+RUN dotnet build "ConsumerApi.csproj" -c Release -o /app/build
 
-# Use the official ASP.NET Core runtime image for the runtime environment
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
+FROM build AS publish
+RUN dotnet publish "ConsumerApi.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-# Set the working directory
+FROM base AS final
 WORKDIR /app
-
-# Copy the build output from the build stage
-COPY --from=build /app/out .
-
-# Expose the port the app runs on
-EXPOSE 80
-
-# Define the entry point for the application
-ENTRYPOINT ["dotnet", "RoBrosAddressesService.dll"]
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "ConsumerApi.dll"]

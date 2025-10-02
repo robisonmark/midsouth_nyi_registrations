@@ -18,4 +18,14 @@ public class Address : IAddress
     public int PostalCode { get; set; }
     public string Country { get; set; }
     public string AdministrativeAreaLevel { get; set; } // state
+
+    // Constructor to ensure required properties are set
+    public Address()
+    {
+        StreetAddress1 = string.Empty;
+        Locality = string.Empty;
+        PostalCode = 0;
+        Country = string.Empty;
+        AdministrativeAreaLevel = string.Empty;
+    }
 }
