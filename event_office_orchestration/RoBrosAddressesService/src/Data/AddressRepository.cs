@@ -2,6 +2,7 @@ using EventOfficeApi.RoBrosAddressesService.Interfaces;
 using EventOfficeApi.RoBrosAddressesService.Models;
 using Microsoft.Extensions.Logging;
 using Npgsql;
+using System;
 using System.Data;
 using System.Data.Common;
 
@@ -28,12 +29,8 @@ public class AddressRepository : IAddressRepository
 
     public async Task<Address?> GetByIdAsync(Guid id)
     {
-        // using var connection = new NpgsqlConnection(_connectionString);
-        // await connection.OpenAsync();
-
-
         await using var connection = await _dataSource.OpenConnectionAsync();
-        using var command = new NpgsqlCommand(_sqlProvider.GetSelectAddressByIdQuery());
+        using var command = new NpgsqlCommand(_sqlProvider.GetSelectAddressByIdQuery(), connection);
 
         command.Parameters.AddWithValue("Id", id);
 
@@ -58,6 +55,7 @@ public class AddressRepository : IAddressRepository
 
     public async Task<Address> CreateAsync(CreateAddressRequest request)
     {
+        // Should this be a try{} catch{} block?
         var address = new Address
         {
             Id = Guid.NewGuid(),
@@ -74,11 +72,10 @@ public class AddressRepository : IAddressRepository
         };
 
         var exists = await CheckExistsBeforeCreate(address);
-        Console.WriteLine(exists);
         if (exists)
         {
-            _logger("Address already exists");
-            throw new Exception("Address Already Exists");
+            _logger.LogInformation("Address already exists");
+            throw new FileNotFoundException("Address Already Exists");
         }
 
         // await using var connection = new NpgsqlConnection(_connectionString);
