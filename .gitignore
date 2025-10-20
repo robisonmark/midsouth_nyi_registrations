@@ -15,3 +15,5 @@
 .env
 *.pyc
 __pycache__/
+**/bin/**/*
+**/obj/**/*
