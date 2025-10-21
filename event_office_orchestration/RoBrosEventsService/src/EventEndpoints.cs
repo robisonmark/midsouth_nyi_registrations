@@ -29,8 +29,8 @@ namespace RoBrosEventsService.Endpoints
 
             group.MapGet("/{eventId:guid}/time_slots", async (Guid eventId, IEventService EventService) =>
             {
-                var events = await EventService.GetEventAsync(eventId);
-                return Results.Ok(events);
+                var time_slots = await EventService.GetTimeSlotsAsync(eventId);
+                return Results.Ok(time_slots);
             });
         }
     }

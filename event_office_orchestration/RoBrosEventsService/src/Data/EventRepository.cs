@@ -55,10 +55,12 @@ public class EventRepository : IEventRepository
         await using var connection = await _dataSource.OpenConnectionAsync();
         using var command = new NpgsqlCommand(_sqlProvider.GetEventTimeSlotsQuery(), connection);
         
+        command.Parameters.AddWithValue("@eventId", id);
+        
         using var reader = await command.ExecuteReaderAsync();
         while (await reader.ReadAsync())
         {
-            // events.Add(MapEventFromReader(reader));
+            times.Add(MaptTimeSlotFromReader(reader));
         }
         return times;
     }
@@ -76,6 +78,18 @@ public class EventRepository : IEventRepository
         };
     }
 
-    private static TimeSlots
+    private static EventSlot MaptTimeSlotFromReader(DbDataReader reader)
+    {
+        return new EventSlot
+        {
+            Id = reader.GetGuid("id"),
+            EventId = reader.GetGuid("event_id"),
+            StartTime = reader.GetDateTime("start_time"),
+            EndTime = reader.GetDateTime("end_time"),
+            Capacity = reader.GetInt32("capacity"),
+            ReservedCount = reader.GetInt32("reserved_count"),
+            Status = reader.GetString("status"),
+        };
+    }
 
 }

@@ -25,7 +25,10 @@ public class PostgresProvider : ISqlProvider
     {
         return @"
         SELECT * 
-        FROM event_slots;
+        FROM event_slots
+        INNER JOIN event_time_blocks
+            ON event_slots.time_block_id = event_time_blocks.id
+        WHERE event_slots.event_id = @eventId;
         ";
     }
 
