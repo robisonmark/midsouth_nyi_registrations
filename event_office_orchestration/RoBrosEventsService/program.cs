@@ -37,33 +37,34 @@ await using var dataSource = dataSourceBuilder.Build();
 // This should inject a logger and anything else that comes from the consuming service
 builder.Services.AddEventPackage(dataSource);
 
-// builder.Services.AddOpenApiDocument(options =>
-// {
-//     options.PostProcess = document =>
-//     {
-//         document.Info = new NSwag.OpenApiInfo
-//         {
-//             Title = "Event Office Addresses Service",
-//             Description = "API for Defining The Students and Chaperones registering for an Event",
-//             Version = "v1",
-//             Contact = new NSwag.OpenApiContact()
-//             {
-//                 Name = "Mark Robison",
-//                 Email = "admin@robros.tech",
-//                 Url = "https://robros.tech"
-//             },
-//         };
-//     };
-// });
+builder.Services.AddOpenApiDocument(options =>
+{
+    options.PostProcess = document =>
+    {
+        document.Info = new NSwag.OpenApiInfo
+        {
+            Title = "Event Office Event Service",
+            Description = "API for Defining The Students and Chaperones registering for an Event",
+            Version = "v1",
+            Contact = new NSwag.OpenApiContact()
+            {
+                Name = "Mark Robison",
+                Email = "admin@robros.tech",
+                Url = "https://robros.dev"
+            },
+        };
+    };
+});
 
 var app = builder.Build();
 
+app.MapReservationEndpoints();
 app.MapEventEndpoints();
 
 // if (app.Environment.IsDevelopment())
 // {
-    // app.UseSwagger();
-    // app.UseSwaggerUI();
+app.UseSwagger();
+app.UseSwaggerUI();
 // }
 
 app.Run();
