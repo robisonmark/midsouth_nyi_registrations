@@ -17,74 +17,70 @@ public class Event
     public Guid Id { get; set; }
     public string Name { get; set; } = default!;
     public string Category { get; set; } = default!;
+    public string? Type { get; set; }
     public DateTime? MasterStart { get; set; }
     public DateTime? MasterEnd { get; set; }
     public bool IsActive { get; set; } = true;
-
-    // public ICollection<EventSlot> Slots { get; set; } = new List<EventSlot>();
+    public DateTime CreatedAt { get; set; }
+    public DateTime UpdatedAt { get; set; }
 }
 
 public class EventSlot
 {
     public Guid Id { get; set; }
     public Guid EventId { get; set; }
-    // public Event? Event { get; set; }
-
+    public Guid TimeBlockId { get; set; }
+    public Guid LocationId { get; set; }
     public DateTime StartTime { get; set; }
     public DateTime EndTime { get; set; }
-
     public int Capacity { get; set; } = 1;
     public int ReservedCount { get; set; } = 0;
-    public string Status { get; set; } = "open"; // open, full, closed
-
-    public ICollection<SlotReservation> Reservations { get; set; } = new List<SlotReservation>();
+    public string Status { get; set; } = "open";
+    public DateTime CreatedAt { get; set; }
 }
 
 public class SlotReservation
 {
     public Guid Id { get; set; }
-
     public Guid SlotId { get; set; }
-    public EventSlot? Slot { get; set; }
-
-    public Guid? ParticipantId { get; set; }
-    // public Participant? Participant { get; set; }
-
+    public Guid ParticipantId { get; set; }
     public string ReservedName { get; set; } = default!;
     public string ReservedContact { get; set; } = default!;
-
-    public string Status { get; set; } = "reserved"; // reserved, cancelled, checked_in
-
-    public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+    public string Status { get; set; } = "reserved";
+    public DateTime CreatedAt { get; set; }
+    public int Version { get; set; } = 1;
 }
 
-public class EventSignUp
-{
-    public Guid Id { get; set; } = Guid.NewGuid();
-
-    [Required]
-    public int RegistrantId { get; set; } 
-
-    [Required]
-    public Guid TimeSlotId { get; set; }
-
-}
-
-public class EventLevel
+public class Location
 {
     public Guid Id { get; set; }
-    
-    [Required]
-    public string LevelName { get; set; }
-
-    // Should this have the confgurations based off of age/grade level
+    public string Name { get; set; } = default!;
+    public string? Building { get; set; }
+    public DateTime CreatedAt { get; set; }
 }
 
-public class EventType
+public class EventTimeBlock
 {
-    // Should this even exidost Here? 
     public Guid Id { get; set; }
-    
-    [Required]
-    public string TypeName { get; set; }
+    public Guid EventId { get; set; }
+    public string? Level { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+
+public class Participant
+{
+    public Guid Id { get; set; }
+    public string? Name { get; set; }
+    public int? Grade { get; set; }
+    public DateTime? BirthDate { get; set; }
+    public DateTime CreatedAt { get; set; }
+}
+
+public class EventRule
+{
+    public Guid Id { get; set; }
+    public Guid EventId { get; set; }
+    public string? Eligibility { get; set; }
+    public string? Structure { get; set; }
+    public DateTime CreatedAt { get; set; }
 }
