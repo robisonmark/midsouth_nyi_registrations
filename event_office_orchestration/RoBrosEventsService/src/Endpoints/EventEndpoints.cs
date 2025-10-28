@@ -13,6 +13,14 @@ namespace RoBrosEventsService.Endpoints
         public static void MapEventEndpoints(this IEndpointRouteBuilder app)
         {
             var group = app.MapGroup("/api/events");
+            
+            group.MapPost("/", async (Event newEvent, IEventService EventService) =>
+            {
+                // Logic to create a new event
+                await EventService.CreateEventAsync(newEvent);
+                // This is a placeholder; actual implementation would involve calling a method on EventService
+                return Results.Created($"/api/events/{newEvent.Id}", newEvent);
+            });
 
             // GET /api/events
             group.MapGet("/", async (IEventService EventService) =>
@@ -32,8 +40,7 @@ namespace RoBrosEventsService.Endpoints
                 var time_slots = await EventService.GetTimeSlotsAsync(eventId);
                 return Results.Ok(time_slots);
             });
+
         }
     }
-
-    // public record SignupRequest(Guid? ParticipantId, string ReservedName, string ReservedContact);
 }
