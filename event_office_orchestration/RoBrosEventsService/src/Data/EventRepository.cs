@@ -65,6 +65,43 @@ public class EventRepository : IEventRepository
         return times;
     }
 
+    public async Task<SlotReservation> CreateReservation(SlotReservation reservation)
+    {
+        await using var connection = await _dataSource.OpenConnectionAsync();
+        using var command = new NpgsqlCommand(_sqlProvider.CreateReservationQuery(), connection);
+
+        command.Parameters.AddWithValue("@slotId", reservation.SlotId);
+        command.Parameters.AddWithValue("@participantId", reservation.ParticipantId);
+        command.Parameters.AddWithValue("@reservedName", reservation.ReservedName);
+        command.Parameters.AddWithValue("@reservedContact", reservation.ReservedContact);
+        command.Parameters.AddWithValue("@Status", "reserved");
+        command.Parameters.AddWithValue("@CreatedAt", DateTime.UtcNow);
+
+        await command.ExecuteNonQueryAsync(); 
+
+        return reservation;
+    }
+
+    public async Task<bool> CreateEvent(Event newEvent)
+    {
+        await using var connection = await _dataSource.OpenConnectionAsync();
+        using var command = new NpgsqlCommand(_sqlProvider.CreateEvent(), connection);
+
+        command.Parameters.AddWithValue("@category", newEvent.Category);
+        command.Parameters.AddWithValue("@name", newEvent.Name);
+        command.Parameters.AddWithValue("@masterStart", newEvent.MasterStart ?? (object)DBNull.Value);
+        command.Parameters.AddWithValue("@masterEnd", newEvent.MasterEnd ?? (object)DBNull.Value);
+        await command.ExecuteNonQueryAsync();
+        return true;
+
+    }
+
+    public async Task<bool> CreateEventTimeSlots(EventSlot newTimeSlot)
+    {
+        // Implementation for creating event time slots would go here
+        return true;
+    }
+
     private static Event MapEventFromReader(DbDataReader reader)
     {
         return new Event
