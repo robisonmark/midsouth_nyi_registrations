@@ -3,15 +3,16 @@ using System.Diagnostics;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
-namespace EventOfficeApi.Models
+namespace RoBrosRegistrantsService.Models
 {
     public class Student : Registrant
     {
         [Required]
         required public Guid RegistrantId { get; set; }
 
-        [Required]
-        public string ParticipantRole { get; set; } = "Student"; // student/chaperone/volunteer
+        // How do I default
+        // [Required]
+        // public string ParticipantRole { get; set; } = "Student"; // student/chaperone/volunteer
 
         [Required]
         public string CompetitionStatus { get; set; } // competing/spectation enum

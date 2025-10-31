@@ -28,8 +28,15 @@ class MomentumWorksheets:
         self.church_roster_worksheet = {}
         self.church_shirt_worksheet = {}
         self.event_roster_by_category = {}
+        self.church_summary_worksheet = {}
 
-        self.pricing_breakdown = {"student": {"09-02-25": 225, "10-16-25": 250, "10-23-25": 300}, "chaperone": 75}
+        # define pricing as when price expires.  the last date defines the walk up price
+        self.pricing_breakdown = {
+            "student": {"10-24-25": 85, "11-14-25": 130, "11-14-25": 175},
+            "chaperone": 35,
+            "spectator": 55,
+        }
+        self.late_fee = 0
 
     def get_price(self, row):
         if row.registration_type == RegistrationType.CHAPERONE:
@@ -39,6 +46,10 @@ class MomentumWorksheets:
             return 0
 
         price_dates = self.pricing_breakdown["student"].keys()
+
+        if row.participation_status == ParticipationStatus.SPECTATOR:
+            return self.pricing_breakdown["spectator"]
+
         max_date = datetime.strptime(list(price_dates)[-1], "%m-%d-%y")
 
         for price_date_string in price_dates:
@@ -48,11 +59,12 @@ class MomentumWorksheets:
                 submission_date = row.registration_type_date
 
             price_date = datetime.strptime(price_date_string, "%m-%d-%y")
+
             if submission_date <= price_date:
                 return self.pricing_breakdown["student"][price_date_string]
 
             elif submission_date > max_date:
-                return self.pricing_breakdown["student"][list(price_dates)[-1]] + late_fee
+                return self.pricing_breakdown["student"][list(price_dates)[-1]] + self.late_fee
 
     def create_church_worksheets(self, row_data: dict) -> None:
         current_church = None
@@ -138,7 +150,7 @@ class MomentumWorksheets:
                     "col": 0,
                     "values": (
                         row_data.approval_status,
-                        entry["date"],
+                        str(row_data.submission_date.date()),
                         row_data.registration_type.value,
                         row_data.participation_status.value,
                         row_data.first_name,
@@ -153,7 +165,7 @@ class MomentumWorksheets:
                         team_sports_events,
                         event_errors,
                         "",
-                        entry["paid_online"],
+                        str(row_data.payment > 0.0),
                         self.get_price(row_data),
                         entry["paid"],
                         f"=SUM(R{row_index + 1}-S{row_index + 1})",
@@ -175,9 +187,9 @@ class MomentumWorksheets:
                     "values": [
                         "Total Due at Registration",
                         "",
-                        f"=SUM(R2:Q{str(current_row_index)})",
-                        f"=SUM(S2:R{str(current_row_index)})",
-                        f"=SUM(T2:S{str(current_row_index)})",
+                        f"=SUM(R2:R{str(current_row_index)})",
+                        f"=SUM(S2:S{str(current_row_index)})",
+                        f"=SUM(T2:T{str(current_row_index)})",
                     ],
                     "format": {"bold": True},
                 },
@@ -187,8 +199,8 @@ class MomentumWorksheets:
                 {
                     "type": "row",
                     "row": 0,
-                    "col": 22,
-                    "values": ["Payment Details", "", "", "Total Due", f"=S{current_row_index + 1}"],
+                    "col": 21,
+                    "values": ["Payment Details", "", "", "Total Due", f"=T{current_row_index + 1}"],
                     "format": {"bold": True},
                 },
             )
@@ -198,14 +210,17 @@ class MomentumWorksheets:
                 {
                     "type": "row",
                     "row": 1,
-                    "col": 22,
+                    "col": 21,
                     "values": ["Check Number", "", "", "Check Amount", ""],
                     "format": {"bold": True},
                 },
             )
 
             self.file_manager.write_to_excel(
-                "church_roster", f"{datetime.now().strftime('%Y_%m_%d')}_{church}", self.church_roster_worksheet[church]
+                "church_roster",
+                f"{datetime.now().strftime('%Y_%m_%d')}_{church}",
+                self.church_roster_worksheet[church],
+                church=church,
             )
 
     def create_roster_by_category_worksheets(self, row_data: dict) -> None:
@@ -240,6 +255,14 @@ class MomentumWorksheets:
 
                     if self.event_roster_by_category[category].get(event) is None:
                         excel_safe_name = event.replace("/", "-").replace("\\", "-")
+
+                        # Names for these too are too long for Excel worksheets
+                        # and at max length they are the same
+                        if excel_safe_name == "Human Video-Interpretive Worship Group":
+                            excel_safe_name = "Human Video - Group"
+                        if excel_safe_name == "Human Video-Interpretive Worship Solo":
+                            excel_safe_name = "Human Video - Solo"
+
                         self.event_roster_by_category[category][event] = [
                             {
                                 "worksheet_name": excel_safe_name if len(excel_safe_name) < 30 else excel_safe_name[:30],
@@ -277,6 +300,21 @@ class MomentumWorksheets:
                 worksheet_values,
             )
 
+    def create_church_summary(self, row_data: dict) -> None:
+        current_church = None
+
+        if current_church is None or current_church != row_data.church:
+            current_church = row_data.church
+
+            if self.church_summary_worksheet.get(current_church) is None:
+                self.church_summary_worksheet[current_church] = []
+
+            self.church_summary_worksheet[current_church].append(row_data.first_name + " " + row_data.last_name)
+
+    def create_church_summary_pdf(self) -> None:
+        data = self.church_summary_worksheet
+        self.file_manager.create_pdf_from_dict(data, "summaries.pdf")
+
     def process_data(self, raw_data: list[dict[str:Any]]) -> None:
         """
         Processes the raw data and generates the necessary worksheets.
@@ -288,9 +326,11 @@ class MomentumWorksheets:
 
             self.create_church_worksheets(data)
             self.create_roster_by_category_worksheets(data)
+            self.create_church_summary(data)
 
         self.create_church_workbook()
         self.create_roster_workbook()
+        self.create_church_summary_pdf()
 
 
 if __name__ == "__main__":

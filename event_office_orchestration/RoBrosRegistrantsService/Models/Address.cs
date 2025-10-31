@@ -1,6 +1,7 @@
 using System;
 public interface IAddress
 {
+    Guid Id { get; set; }
     string StreetAddress1 { get; set; }
     string? StreetAddress2 { get; set; }
     string Locality { get; set; }
@@ -12,6 +13,7 @@ public interface IAddress
 // not sure this is the way to do this
 public class Address : IAddress
 {
+    public Guid Id { get; set; }
     public string StreetAddress1 { get; set; }
     public string? StreetAddress2 { get; set; }
     public string Locality { get; set; } // city
@@ -22,6 +24,7 @@ public class Address : IAddress
     // Constructor to ensure required properties are set
     public Address()
     {
+        Id = Guid.NewGuid();
         StreetAddress1 = string.Empty;
         Locality = string.Empty;
         PostalCode = 0;

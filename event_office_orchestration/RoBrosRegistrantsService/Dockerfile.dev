@@ -1,31 +1,50 @@
-# Use the .NET 9 SDK as the build image
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+# # Use the .NET 9 SDK as the build image
+# FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 
-# Set the working directory inside the container
+# # Set the working directory inside the container
+# WORKDIR /app
+
+# # Copy the csproj file and restore the dependencies
+# COPY *.csproj ./
+# RUN dotnet restore
+
+# # Copy the rest of the application files
+# COPY . ./
+
+# # Build the application
+# RUN dotnet publish -c Release -o /app/publish
+
+# # Use the .NET 9 runtime as the base image for the final container
+# FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
+
+# # Set the working directory
+# WORKDIR /app
+
+# # Expose the port your app will run on
+# EXPOSE 80
+
+# # Copy the published files from the build stage
+# COPY --from=build /app/publish .
+
+# # Set the entry point to run the app
+# # ENTRYPOINT ["dotnet", "RoBrosRegistrantsService.dll"]
+# CMD ["dotnet", "watch", "run"]
+
+
+# # Dev container: Use full SDK
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS dev
+
 WORKDIR /app
 
-# Copy the csproj file and restore the dependencies
+# Copy csproj and restore separately for caching
 COPY *.csproj ./
 RUN dotnet restore
 
-# Copy the rest of the application files
+# Copy everything
 COPY . ./
 
-# Build the application
-RUN dotnet publish -c Release -o /app/publish
+# Expose the dev port
+EXPOSE 8080
 
-# Use the .NET 9 runtime as the base image for the final container
-FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
-
-# Set the working directory
-WORKDIR /app
-
-# Expose the port your app will run on
-EXPOSE 80
-
-# Copy the published files from the build stage
-COPY --from=build /app/publish .
-
-# Set the entry point to run the app
-# ENTRYPOINT ["dotnet", "RoBrosRegistrantsService.dll"]
-CMD ["dotnet", "watch", "run", "--no-launch-profile"]
+# Run with hot reload
+ENTRYPOINT ["dotnet", "watch", "run", "--urls", "http://0.0.0.0:8080"]

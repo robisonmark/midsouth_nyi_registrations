@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Npgsql;
 using NSwag;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Register NpgsqlConnection as a singleton
@@ -25,7 +26,12 @@ builder.Services.AddSingleton<NpgsqlDataSource>(provider =>
     var dataSourceBuilder = new NpgsqlDataSourceBuilder("Host=localhost;Database=RoBrosRegistrant;Username=postgres;Password=YourPassword");
     return dataSourceBuilder.Build();
 });
-builder.Services.AddScoped<EventOfficeApi.Services.DatabaseService>();
+
+// Register application services
+// I Need to understand this better. ChatGPT explains
+builder.Services.AddScoped<RoBrosRegistrantsService.Services.DatabaseService>();
+builder.Services.AddScoped<RoBrosRegistrantsService.Services.IRegistrantService, RoBrosRegistrantsService.Services.RegistrantService>();
+builder.Services.AddScoped<RoBrosRegistrantsService.Data.IRegistrantRepository, RoBrosRegistrantsService.Data.RegistrantRepository>();
 
 // Add services to the container.
 builder.Services.AddControllers()

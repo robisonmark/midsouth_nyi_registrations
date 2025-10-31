@@ -1,4 +1,5 @@
 -- 1. Create ENUM type for CompetitionStatus (optional)
+-- need to update this... ask Matt.  I think he said config or join table
 CREATE TYPE competition_status AS ENUM ('Competing', 'Spectating');
 CREATE TYPE participant_role AS ENUM('Student', 'Chaperone', 'Volunteer');
 
@@ -41,7 +42,7 @@ CREATE TABLE IF NOT EXISTS Registrant (
     Id UUID PRIMARY KEY,
     GivenName VARCHAR(255) NOT NULL,
     FamilyName VARCHAR(255) NOT NULL,
-    ParticipantRole participant_role NOT NULL, -- student/chaperone/volunteer
+    ParticipantRole TEXT NOT NULL, -- student/chaperone/volunteer
     ChurchId UUID NOT NULL,
     YouthLeaderEmail VARCHAR(255),
     YouthLeaderFirstName VARCHAR(255),
@@ -72,7 +73,7 @@ CREATE TABLE IF NOT EXISTS Registrant (
 -- 5. Create Student table
 CREATE TABLE IF NOT EXISTS Student (
     Id UUID PRIMARY KEY, -- Same as Registrant(Id) for inheritance
-    ParticipantRole participant_role NOT NULL DEFAULT 'Student',
+    ParticipantRole TEXT NOT NULL DEFAULT 'Student',
     CompetitionStatus VARCHAR(50) NOT NULL,
     MedicalConditions TEXT,
     DietaryRestrictions TEXT,

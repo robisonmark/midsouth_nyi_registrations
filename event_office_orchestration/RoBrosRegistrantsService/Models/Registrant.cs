@@ -3,9 +3,9 @@ using System.Diagnostics;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
-using EventOfficeApi.Models;
+using RoBrosRegistrantsService.Models;
 
-namespace EventOfficeApi.Models
+namespace RoBrosRegistrantsService.Models
 {
     public class Registrant
     {
@@ -18,10 +18,12 @@ namespace EventOfficeApi.Models
         required public string FamilyName { get; set; }
 
         [Required]
-        public string ParticipantRole { get; set; } // student/chaperone/volunteer
+        required public Church Church { get; set; } // This needs to match a church in the database but should use a string to get it.
+        
+        public Guid? ChurchId { get; set; }
 
         [Required]
-        required public string Church { get; set; } // This needs to match a church in the database but should use a string to get it.
+        public string ParticipantRole { get; set; } 
 
         public string YouthLeaderEmail { get; set; } // part of church?
 
@@ -31,6 +33,8 @@ namespace EventOfficeApi.Models
 
         // [Required]
         required public Address Address { get; set; }
+
+        public Guid AddressId { get; set; }
 
         public string? Mobile { get; set; }
 
@@ -55,8 +59,15 @@ namespace EventOfficeApi.Models
 
         [Required]
         required public string IPAddress { get; set; }
-    }
 
+        public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+        public string CreatedBy { get; set; } = "Mark";
+
+        public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+        public string UpdatedBy { get; set; } = "Mark";
+    }
 }
 
 // Particpant

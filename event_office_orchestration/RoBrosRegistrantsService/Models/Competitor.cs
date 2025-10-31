@@ -3,7 +3,7 @@ using System.Diagnostics;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
-namespace EventOfficeApi.Student
+namespace RoBrosRegistrantsService.Student
 {
     public class Competitor
     {
@@ -15,10 +15,10 @@ namespace EventOfficeApi.Student
         [Required]
         required public int District { get; set; }
         [Required]
-        required public string CompetitionStatus { get; set; } = "Competiting"; // competing/spectation enum
+        required public string CompetitionStatus { get; set; } = "Competing"; // competing/spectation enum
 
         [Required]
-        required public bool Quzzing { get; set; } = false;
+        required public bool Quizzing { get; set; } = false;
 
         public string[] ArtCategories { get; set; }
 

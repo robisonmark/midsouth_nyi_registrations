@@ -1,4 +1,4 @@
-namespace EventOfficeApi.Models
+namespace RoBrosRegistrantsService.Models
 {
     public class Church
     {
@@ -14,6 +14,10 @@ namespace EventOfficeApi.Models
         public DateTime? updatedAt { get; set; }
 
         // Do we need small church/large church division?
+        public Church()
+        {
+            Id = Guid.NewGuid();
+            Name = string.Empty;
+        }
     }
-
 }

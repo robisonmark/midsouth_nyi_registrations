@@ -12,6 +12,17 @@ from typing import OrderedDict
 import xlsxwriter
 from config import EVENT
 
+# PDF
+from reportlab.lib.pagesizes import LETTER
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.platypus import (
+    ListFlowable,
+    ListItem,
+    Paragraph,
+    SimpleDocTemplate,
+    Spacer,
+)
+
 DEFAULT_FILE_ROOT = "."
 
 
@@ -26,8 +37,10 @@ class FileManager:
 
         return files
 
-    def create_directory(self, process, file_root: str = DEFAULT_FILE_ROOT) -> str:
+    def create_directory(self, process, file_root: str = DEFAULT_FILE_ROOT, church: str = None) -> str:
         outdir = f"{file_root}/output/{self.event.lower()}/{process}/{date.today()}/"
+        if church:
+            outdir += f"{church}/"
 
         if not os.path.exists(outdir):
             os.makedirs(outdir)
@@ -51,7 +64,7 @@ class FileManager:
         self.create_directory(process)
         df.to_csv(f"{date.today()}_{filename}.csv")
 
-    def write_to_excel(self, process, filename, worksheets) -> None:
+    def write_to_excel(self, process, filename, worksheets, church: str = None) -> None:
         """
         Writes data to an Excel file with multiple worksheets.
 
@@ -78,11 +91,12 @@ class FileManager:
         Raises:
             Any exceptions raised by xlsxwriter or file operations will propagate.
         """
-        output_loc = self.create_directory(process)
+        output_loc = self.create_directory(process, church=church)
+
         workbook = xlsxwriter.Workbook(f"{output_loc}/{filename}.xlsx")
 
         for worksheet_data in worksheets:
-            # print(f"Creating worksheet: {worksheet_data['worksheet_name']}")
+            print(f"Creating worksheet: {worksheet_data['worksheet_name']}")
             worksheet = workbook.add_worksheet(worksheet_data["worksheet_name"])
             for data in worksheet_data["data"]:
                 cell_format = None
@@ -137,3 +151,29 @@ class FileManager:
         for key, reverse in reversed(specs):
             xs.sort(key=attrgetter(key), reverse=reverse)
         return xs
+
+    def create_pdf_from_dict(self, data: dict, filename: str):
+        output_loc = self.create_directory("church_summaries")
+
+        # Create the PDF document
+        doc = SimpleDocTemplate(f"{output_loc}/{filename}", pagesize=LETTER)
+        elements = []
+
+        # Define styles
+        styles = getSampleStyleSheet()
+        header_style = ParagraphStyle("HeaderStyle", parent=styles["Heading2"], fontName="Helvetica-Bold", spaceAfter=6)
+        list_style = ParagraphStyle("ListStyle", parent=styles["Normal"], leftIndent=20, spaceAfter=4)
+
+        # Iterate through dictionary and build PDF content
+        for key, values in data.items():
+            # Add section header
+            elements.append(Paragraph(key, header_style))
+
+            # Add list of items
+            list_items = [ListItem(Paragraph(item, list_style)) for item in values]
+            elements.append(ListFlowable(list_items, bulletType="bullet"))
+            elements.append(Spacer(1, 12))  # Add space between sections
+
+        # Build PDF
+        doc.build(elements)
+        print(f"✅ PDF '{filename}' created successfully.")

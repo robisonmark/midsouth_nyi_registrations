@@ -18,6 +18,9 @@
     <PackageReference Include="Npgsql" Version="9.0.3" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
     <PackageReference Include="NSwag.AspNetCore" Version="14.2.0" />
+
+    <!-- Work on loading this reference -->
+    <!-- <ProjectReference Include="..\..\..\src\RoBrosAddressesService.csproj" /> -->
   </ItemGroup>
 
 </Project>

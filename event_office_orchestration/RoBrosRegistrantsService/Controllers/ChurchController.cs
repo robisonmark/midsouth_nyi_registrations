@@ -6,10 +6,11 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
-using EventOfficeApi.Models;
-using EventOfficeApi.Services;
+using RoBrosRegistrantsService.Models;
+using RoBrosRegistrantsService.Services;
+// using RoBrosRegistrantsService.Data;
 
-namespace EventOfficeApi.Controllers
+namespace RoBrosRegistrantsService.Controllers
 {
     [ApiController]
     public class ChurchController : ControllerBase
@@ -54,11 +55,14 @@ namespace EventOfficeApi.Controllers
 
             Console.WriteLine($"Creating church with ID: {church.Id}, Name: {church.Name}, Address: {addressId}");
 
-            var sql = "INSERT INTO church (Id, Name, CreatedBy, CreatedAt, UpdatedBy, UpdatedAt, Version) VALUES (@Id, @Name, 'Mark', NOW(), 'Mark', NOW(), 1)";
+            var sql = @"INSERT INTO church 
+                        (Id, Name, CreatedBy, CreatedAt, UpdatedBy, UpdatedAt, Version) 
+                        VALUES (@Id, @Name, 'Mark', NOW(), 'Mark', NOW(), 1)
+                        RETURNING Id;";
             var parameters = new { Id = Guid.NewGuid(), Name = church.Name, AddressId = addressId };
             // return await _databaseService.ExecuteAsync(sql, church);
 
-            int rowsAffected = await _databaseService.ExecuteAsync(sql, parameters);
+            int rowsAffected = await _databaseService.ExecuteAsync(sql, church);
 
             if (rowsAffected > 0)
             {
