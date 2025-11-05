@@ -71,7 +71,7 @@ class FileManager:
         Args:
             process (str): The name of the process, used to create a directory for the file.
             filename (str): The name of the Excel file to be created (without extension).
-            worksheets (list): A list of dictionaries, where each dictionary represents a worksheet.
+            worksheets (dict[list]): A list of dictionaries, where each dictionary represents a worksheet.
                 Each dictionary should have the following structure:
                     {
                         "data": list,  # List of data entries for the worksheet.

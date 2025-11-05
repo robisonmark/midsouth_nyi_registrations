@@ -29,6 +29,7 @@ class MomentumWorksheets:
         self.church_shirt_worksheet = {}
         self.event_roster_by_category = {}
         self.church_summary_worksheet = {}
+        self.momentum_main_worksheet = {}
 
         # define pricing as when price expires.  the last date defines the walk up price
         self.pricing_breakdown = {
@@ -315,6 +316,153 @@ class MomentumWorksheets:
         data = self.church_summary_worksheet
         self.file_manager.create_pdf_from_dict(data, "summaries.pdf")
 
+    def aggregate_momentum_main_sheet(self, row_data: dict) -> None:
+        current_church = None
+
+        if current_church is None or current_church != row_data.church:
+            current_church = row_data.church
+
+            if self.momentum_main_worksheet.get(current_church) is None:
+                self.momentum_main_worksheet[current_church] = [
+                    {
+                        "worksheet_name": current_church if len(current_church) < 30 else current_church[:30],
+                        "data": [
+                            {
+                                "type": "header",
+                                "row": 0,
+                                "col": 0,
+                                "values": [
+                                    "Uploaded to TNT",
+                                    "Church",
+                                    "First Name",
+                                    "last Name",
+                                    "Gender",
+                                    "Registration Type",
+                                    "Participation Status",
+                                    "Grade Level",
+                                    "",
+                                    "Events",
+                                    "Arts",
+                                    "Academics",
+                                    "Creative Ministries",
+                                    "Music",
+                                    "Individual Sports",
+                                    "Team Sports",
+                                    "Event Errors",
+                                ],
+                                "format": {"bold": True},
+                            }
+                        ],
+                    }
+                ]
+
+            row_index = len(self.momentum_main_worksheet[current_church][0]["data"])
+
+            art_events = ", ".join([member.value for member in row_data.art_events])
+            academic_events = ", ".join([member.value for member in row_data.academic_events])
+            creative_ministries_events = ", ".join([member.value for member in row_data.creative_ministries_events])
+            music_events = ", ".join([member.value for member in row_data.music_events])
+            individual_sports_events = ", ".join([member.value for member in row_data.individual_sports_events])
+            team_sports_events = ", ".join([member.value for member in row_data.team_sports_events])
+            event_errors = ", ".join([member for member in row_data.event_errors])
+
+            self.momentum_main_worksheet[current_church][0]["data"].insert(
+                row_index,
+                {
+                    "type": "row",
+                    "row": row_index,
+                    "col": 0,
+                    "values": (
+                        False,
+                        row_data.church,
+                        row_data.first_name,
+                        row_data.last_name,
+                        row_data.gender.value,
+                        row_data.registration_type.value,
+                        row_data.participation_status.value,
+                        row_data.grade_level,
+                        "",
+                        art_events,
+                        academic_events,
+                        creative_ministries_events,
+                        music_events,
+                        individual_sports_events,
+                        team_sports_events,
+                        event_errors,
+                    ),
+                    "format": None,
+                },
+            )
+
+    def create_momentum_main_workbook(self) -> None:
+        # TODO: Add church roster worksheets to this workbook after these worksheets
+        all_rows = [
+            {
+                "worksheet_name": "Momentum Main",
+                "data": [
+                    {
+                        "type": "header",
+                        "row": 0,
+                        "col": 0,
+                        "values": [
+                            "Uploaded to TNT",
+                            "Church",
+                            "First Name",
+                            "last Name",
+                            "Gender",
+                            "Registration Type",
+                            "Participation Status",
+                            "Grade Level",
+                            "",
+                            "Events",
+                            "Arts",
+                            "Academics",
+                            "Creative Ministries",
+                            "Music",
+                            "Individual Sports",
+                            "Team Sports",
+                            "Event Errors",
+                        ],
+                        "format": {"bold": True},
+                    }
+                ],
+            }
+        ]
+
+        # Iterate churches in alphabetical order and sort each sheet's rows by last name (values[2]).
+        for church in sorted(self.momentum_main_worksheet.keys(), key=lambda s: s.lower()):
+            sheet = self.momentum_main_worksheet[church][0]
+
+            data = sheet.get("data", [])
+            if not data:
+                # nothing to write
+                continue
+
+            header = data[0]
+            rows = data[1:]
+
+            # Sort rows by the last-name column which is at values[2]. Fall back to empty string if missing.
+            def _last_name_key(row):
+                vals = row.get("values", ())
+                try:
+                    return (str(vals[3]) or "").strip().lower()
+                except Exception:
+                    return ""
+
+            rows.sort(key=_last_name_key)
+
+            sheet["data"] = [header] + rows
+
+            all_rows[0]["data"].extend(sheet["data"][1:])  # Exclude header for now
+
+        # Re-index row numbers so any downstream code relying on row indices stays consistent.
+        for idx, r in enumerate(all_rows[0]["data"], start=1):
+            r["row"] = idx
+
+        self.file_manager.write_to_excel(
+            "momentum_main_sheet", f"{datetime.now().strftime('%Y_%m_%d')}_momentum_main", all_rows
+        )
+
     def process_data(self, raw_data: list[dict[str:Any]]) -> None:
         """
         Processes the raw data and generates the necessary worksheets.
@@ -327,10 +475,12 @@ class MomentumWorksheets:
             self.create_church_worksheets(data)
             self.create_roster_by_category_worksheets(data)
             self.create_church_summary(data)
+            self.aggregate_momentum_main_sheet(data)
 
         self.create_church_workbook()
         self.create_roster_workbook()
         self.create_church_summary_pdf()
+        self.create_momentum_main_workbook()
 
 
 if __name__ == "__main__":
