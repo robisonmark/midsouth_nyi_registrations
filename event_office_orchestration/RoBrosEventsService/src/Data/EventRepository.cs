@@ -78,6 +78,10 @@ public class EventRepository : IEventRepository
         command.Parameters.AddWithValue("@CreatedAt", DateTime.UtcNow);
 
         await command.ExecuteNonQueryAsync(); 
+        
+        using var update = new NpgsqlCommand(_sqlProvider.UpdateReservedCountQuery(), connection);
+        update.Parameters.AddWithValue("@slotId", reservation.SlotId);
+        await update.ExecuteNonQueryAsync();
 
         return reservation;
     }
@@ -100,6 +104,30 @@ public class EventRepository : IEventRepository
     {
         // Implementation for creating event time slots would go here
         return true;
+    }
+
+    public async Task<SlotReservation?> GetReservationById(Guid reservationId)
+    {
+        await using var connection = await _dataSource.OpenConnectionAsync();
+        using var command = new NpgsqlCommand(_sqlProvider.GetReservationByIdQuery(), connection);
+        
+        command.Parameters.AddWithValue("@reservationId", reservationId);
+        using var reader = await command.ExecuteReaderAsync();
+        if (await reader.ReadAsync())
+        {
+            return new SlotReservation
+            {
+                Id = reader.GetGuid("id"),
+                SlotId = reader.GetGuid("slot_id"),
+                ParticipantId = reader.GetGuid("participant_id"),
+                ReservedName = reader.GetString("reserved_name"),
+                ReservedContact = reader.GetString("reserved_contact"),
+                Status = reader.GetString("status"),
+                CreatedAt = reader.GetDateTime("created_at")
+            };
+        }
+
+        return null;
     }
 
     private static Event MapEventFromReader(DbDataReader reader)
