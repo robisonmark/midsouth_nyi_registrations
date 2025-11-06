@@ -3,14 +3,19 @@ import { apiFetch } from '../api/client';
 import { useParams } from 'react-router-dom';
 import { useAppSelector } from '../store/hooks';
 import svgPaths from "../imports/svg-n6pltu4jyi";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
-import { Input } from './ui/input';
+import ParticipantSearch from './ParticipantSearch';
+import type { Reservation } from '../models/Reservation';
 import type { EventCategory, Church } from '../store/slices/appSlice';
 
 type AgeCategory = 'early-youth' | 'senior-youth';
 type EventType = 'Vocal Solo' | 'Sign Language' | 'Preaching' | 'Flag Football' | 'Instrumental Solo' | 'Drama';
 
 interface TimeSlot {
+  id: any;
+  capacity: any;
+  reservedCount: any;
+  startTime: string;
+  endTime: string;
   time: string;
   studentName?: string;
   eventType: EventType;
@@ -37,10 +42,12 @@ const mockParticipants = [
   { id: 8, name: 'Rachel Martinez', church: 'Hendersonville' },
   { id: 9, name: 'David Thompson', church: 'Goodlettsville' },
   { id: 10, name: 'Sophie Anderson', church: 'Clarksville Grace' },
+  { id: "e156e71a-3398-4b56-aa79-1aab837bec9f", name: 'Matt Robison', church: 'Hendersonville' },
 ];
 
 // Helper function to get AM/PM indicator
 const getTimePeriod = (time: string): string => {
+  
   const hour = parseInt(time.split(':')[0]);
   // Assume 9-11 are AM, 1-8 are PM (typical event schedule)
   if (hour >= 9 && hour <= 11) return 'a';
@@ -72,6 +79,7 @@ export default function SignUpView() {
   const [timeslots, setTimeslots] = useState<TimeSlot[]>([]);
   const [loadingTimeslots, setLoadingTimeslots] = useState(false);
   const [timeslotError, setTimeslotError] = useState<string | null>(null);
+  const [reservations, setReservations] = useState<{ [key: string]: any }>({});
 
 
     // Fetch events for the event type select
@@ -111,6 +119,18 @@ export default function SignUpView() {
       .finally(() => setLoadingTimeslots(false));
   }, [selectedEventType, events]);
 
+  // After timeslots are loaded, fetch reservations for reserved slots
+  useEffect(() => {
+    const reservedSlots = timeslots.filter(slot => slot.reservedCount >= slot.capacity && !reservations[slot.id]);
+    if (reservedSlots.length === 0) return;
+
+    reservedSlots.forEach(slot => {
+      apiFetch<Reservation>(`/api/reservations/${slot.id}`)
+        .then(res => setReservations(prev => ({ ...prev, [slot.id]: res })))
+        .catch(() => setReservations(prev => ({ ...prev, [slot.id]: null })));
+    });
+  }, [timeslots, reservations]);
+
   // Mock API call to search participants
   const searchParticipants = async (query: string) => {
     setIsSearching(true);
@@ -144,15 +164,29 @@ export default function SignUpView() {
     }
   }, [searchQuery]);
 
-  const handleSignUp = (time: string) => {
-    setSelectedTimeSlot(time);
+  const handleSignUp = (id: string) => {
+    setSelectedTimeSlot(id);
     setIsModalOpen(true);
     setSearchQuery('');
     setSearchResults([]);
   };
 
-  const handleSelectParticipant = (participant: { id: number; name: string; church: string }) => {
-    alert(`Signing up ${participant.name} from ${participant.church} for ${selectedTimeSlot} slot!`);
+  const handleSelectParticipant = async (participant: { id: number; name: string; church: string }) => {
+    if (!selectedTimeSlot) return;
+    try {
+      await apiFetch(`/api/reservations/${selectedTimeSlot}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          participantId: participant.id,
+          reservedName: participant.name,
+          reservedContact: participant.name
+        })
+      });
+      // Optionally, you could show a success message or refresh reservations here
+    } catch (err) {
+      // Optionally, handle error (e.g., show error message)
+    }
     setIsModalOpen(false);
     setSearchQuery('');
     setSearchResults([]);
@@ -238,7 +272,7 @@ export default function SignUpView() {
             </div>
 
             {/* Student Filter */}
-            <div>
+            {/* <div>
               <select 
                 value={filterStudent}
                 onChange={(e) => setFilterStudent(e.target.value)}
@@ -249,7 +283,7 @@ export default function SignUpView() {
                   <option key={student}>{student}</option>
                 ))}
               </select>
-            </div>
+            </div> */}
           </div>
         </div>
 
@@ -266,16 +300,28 @@ export default function SignUpView() {
               <div key={index} className="pb-[24px] md:pb-[32px] border-b border-[#2A323F]/30">
                 <div className="flex items-start justify-between gap-4">
                   {/* Time */}
-                  <div className="text-[#002244] text-[48px] md:text-[56px] font-['Playfair_Display_SC',_serif] leading-none flex items-start gap-1 shrink-0">
-                    <span>{slot.time}</span>
-                    <span className="text-[24px] md:text-[28px] font-['Open_Sans',_sans-serif] pt-1">{getTimePeriod(slot.time)}</span>
+                  <div className="text-[#002244] text-[48px] md:text-[56px] font-['Playfair_Display_SC',_serif] leading-none flex items-start gap-1 shrink-0 flex-col md:flex-row md:items-end">
+                    {/* Date */}
+                    <span className="text-[20px] md:text-[24px] font-['Open_Sans',_sans-serif] mb-1 md:mb-0 md:mr-2">
+                      {(() => {
+                        const d = new Date(slot.startTime);
+                        return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric'});
+                      })()}
+                    </span>
+                    {/* Time */}
+                    <span>
+                      {(() => {
+                        const d = new Date(slot.startTime);
+                        return d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+                      })()}
+                    </span>
                   </div>
 
                   {/* Student Info or Sign Up Button */}
                   <div className="flex-1 min-w-0">
-                    {slot.available ? (
+                    {slot.reservedCount < slot.capacity ? (
                       <button
-                        onClick={() => handleSignUp(slot.time)}
+                        onClick={() => handleSignUp(slot.id)}
                         className="bg-[#6abf28] text-[#2a323f] text-[16px] md:text-[18px] font-['Open_Sans',_sans-serif] px-[24px] md:px-[32px] py-[12px] md:py-[14px] rounded lowercase hover:bg-[#5da622] transition-colors"
                       >
                         Sign Up
@@ -283,11 +329,17 @@ export default function SignUpView() {
                     ) : (
                       <div>
                         <div className="font-['Open_Sans',_sans-serif] text-[16px] md:text-[18px]">
-                          <span className="font-semibold">{slot.studentName?.split(' ')[0]} </span>
-                          <span className="font-light">{slot.studentName?.split(' ')[1]}</span>
+                          {reservations[slot.id]?.reservedName ? (
+                            <>
+                              <span className="font-semibold">{reservations[slot.id].reservedName.split(' ')[0]} </span>
+                              <span className="font-light">{reservations[slot.id].reservedName.split(' ')[1]}</span>
+                            </>
+                          ) : (
+                            <span className="font-light">Reserved</span>
+                          )}
                         </div>
                         <div className="text-[#002244] text-[16px] md:text-[18px] font-['Open_Sans',_sans-serif] font-light">
-                          {slot.church}
+                          {/* {reservations[slot.id]?.reservedContact || ''} */}
                         </div>
                         <div className="text-[#666] text-[14px] md:text-[15px] font-['Open_Sans',_sans-serif] font-light mt-1">
                           {slot.location}
@@ -302,66 +354,15 @@ export default function SignUpView() {
         </div>
       </main>
 
-      {/* Participant Search Modal */}
-      <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
-        <DialogContent className="w-[calc(100%-2rem)] max-w-md md:max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="font-['Open_Sans',_sans-serif] text-[#002244] text-[20px] md:text-[24px]">
-              Search Participant
-            </DialogTitle>
-          </DialogHeader>
-          
-          <div className="space-y-4 md:space-y-6">
-            <div>
-              <Input
-                type="text"
-                placeholder="Type a name to search..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full font-['Inter',_sans-serif] text-[16px] md:text-[18px] h-[44px] md:h-[48px]"
-                autoFocus
-              />
-            </div>
-
-            {/* Search Results */}
-            <div className="max-h-[300px] md:max-h-[400px] overflow-y-auto">
-              {isSearching ? (
-                <div className="text-center py-8 md:py-12 text-[#666] font-['Inter',_sans-serif] text-[16px] md:text-[18px]">
-                  Searching...
-                </div>
-              ) : searchQuery.trim().length > 0 ? (
-                searchResults.length > 0 ? (
-                  <div className="space-y-2 md:space-y-3">
-                    {searchResults.map((participant) => (
-                      <button
-                        key={participant.id}
-                        onClick={() => handleSelectParticipant(participant)}
-                        className="w-full text-left px-4 md:px-6 py-3 md:py-4 rounded-lg hover:bg-[#f5f5f5] transition-colors border border-[#e0e0e0]"
-                      >
-                        <div className="font-['Open_Sans',_sans-serif] text-[16px] md:text-[18px]">
-                          <span className="font-semibold text-[#002244]">{participant.name.split(' ')[0]} </span>
-                          <span className="font-light text-[#002244]">{participant.name.split(' ')[1]}</span>
-                        </div>
-                        <div className="text-sm md:text-base text-[#666] font-['Inter',_sans-serif] mt-1">
-                          {participant.church}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 md:py-12 text-[#666] font-['Inter',_sans-serif] text-[16px] md:text-[18px]">
-                    No participants found
-                  </div>
-                )
-              ) : (
-                <div className="text-center py-8 md:py-12 text-[#666] font-['Inter',_sans-serif] text-[16px] md:text-[18px]">
-                  Start typing to search for participants
-                </div>
-              )}
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <ParticipantSearch
+        isOpen={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        searchResults={searchResults}
+        isSearching={isSearching}
+        handleSelectParticipant={handleSelectParticipant}
+      />
     </>
   );
 }

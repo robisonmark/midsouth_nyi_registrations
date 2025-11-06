@@ -14,6 +14,7 @@ public interface IEventService
 
     // Reservation (signup) flow
     Task<SlotReservation?> CreateReservationAsync(SlotReservation reservation);
+    Task<SlotReservation?> GetReservationAsync(Guid reservationId);
 
     // New: Get timeslots by category and age
     Task<IEnumerable<EventSlot>> GetTimeSlotsByCategoryAndAgeAsync(string category, string age);
@@ -66,5 +67,11 @@ public class EventService : IEventService
         // TODO: Replace with real implementation
         // For now, return an empty list
         return new List<EventSlot>();
+    }
+
+    public async Task<SlotReservation?> GetReservationAsync(Guid reservationId)
+    {
+        _logger.LogInformation("Getting Reservation with ID: {reservationId}", reservationId);
+        return await _repository.GetReservationById(reservationId);
     }
 }

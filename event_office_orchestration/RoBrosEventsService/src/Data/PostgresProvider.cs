@@ -18,6 +18,7 @@ public class PostgresProvider : ISqlProvider
             SELECT * 
             FROM events 
             WHERE id = @eventId
+            ORDER BY master_start DESC;
         ";
     }
 
@@ -70,7 +71,7 @@ public class PostgresProvider : ISqlProvider
         ";
     }
 
-    public virtual string CreateTimeSlotsWuery()
+    public virtual string CreateTimeSlotsQuery()
     {
         // Future, to be called as events are added and configured
         return @"";
@@ -122,5 +123,22 @@ public class PostgresProvider : ISqlProvider
         ";
     }
 
+    public virtual string GetReservationByIdQuery()
+    {
+        return @"
+            SELECT *
+            FROM slot_reservations
+            WHERE slot_id = @reservationId;
+        ";
+    }
+
+    public virtual string UpdateReservedCountQuery()
+    {
+        return @"
+            UPDATE event_slots
+            SET reserved_count = reserved_count + 1
+            WHERE id = @slotId;
+        ";
+    }
 }
 

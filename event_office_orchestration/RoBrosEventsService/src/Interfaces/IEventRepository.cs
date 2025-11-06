@@ -7,8 +7,10 @@ public interface IEventRepository
     Task<Event> GetEventById(Guid id);
     Task<IEnumerable<Event>> GetAllEventsAsync();
     Task<IEnumerable<EventSlot>> GetEventTimeSlots(Guid id);
-    Task<SlotReservation> CreateReservation(SlotReservation reservation);
     Task<bool> CreateEvent(Event newEvent);
+    
+    Task<SlotReservation> CreateReservation(SlotReservation reservation);
+    Task<SlotReservation?> GetReservationById(Guid reservationId);
 }
 
 public interface ISqlProvider
@@ -18,5 +20,7 @@ public interface ISqlProvider
     string GetEventTimeSlotsQuery();
     string CreateReservationQuery();
     string CreateEvent();
+    string GetReservationByIdQuery();
+    string UpdateReservedCountQuery();
     
 }

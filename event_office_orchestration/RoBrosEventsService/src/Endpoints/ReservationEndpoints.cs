@@ -30,6 +30,13 @@ namespace RoBrosEventsService.Endpoints
                 await EventService.CreateReservationAsync(reservation);
                 return Results.Ok();
             });
+
+            group.MapGet("/{reservationId:guid}", async (Guid reservationId, IEventService EventService) =>
+            {
+                // Implementation for getting a reservation by ID can be added here
+                var reservation = await EventService.GetReservationAsync(reservationId);
+                return Results.Ok(reservation);
+            });
         }
     }
 
