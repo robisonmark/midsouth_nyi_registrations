@@ -62,5 +62,6 @@ app.MapEventEndpoints();
 app.UseSwagger();
 app.UseSwaggerUI();
 // }
+app.UseCors(options => options.WithOrigins("*") .AllowAnyMethod() .AllowAnyHeader());
 
 app.Run();
