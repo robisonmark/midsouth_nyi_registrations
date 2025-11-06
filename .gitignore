@@ -15,3 +15,6 @@
 .env
 *.pyc
 __pycache__/
+**/bin/**/*
+**/obj/**/*
+momentum_app/node_modules
