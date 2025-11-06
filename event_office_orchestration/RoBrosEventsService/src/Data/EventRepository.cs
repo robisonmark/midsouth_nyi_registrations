@@ -121,6 +121,8 @@ public class EventRepository : IEventRepository
         {
             Id = reader.GetGuid("id"),
             EventId = reader.GetGuid("event_id"),
+            TimeBlockId = reader.GetGuid("time_block_id"),
+            LocationId = reader.GetGuid("location_id"),
             StartTime = reader.GetDateTime("start_time"),
             EndTime = reader.GetDateTime("end_time"),
             Capacity = reader.GetInt32("capacity"),

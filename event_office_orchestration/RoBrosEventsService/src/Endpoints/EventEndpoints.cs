@@ -41,6 +41,12 @@ namespace RoBrosEventsService.Endpoints
                 return Results.Ok(time_slots);
             });
 
+            group.MapGet("/timeslots", async (string event_name, string category, string age, IEventService EventService) =>
+            {
+                var time_slots = await EventService.GetTimeSlotsByCategoryAndAgeAsync(category, age);
+                return Results.Ok(time_slots);
+            });
+
         }
     }
 }

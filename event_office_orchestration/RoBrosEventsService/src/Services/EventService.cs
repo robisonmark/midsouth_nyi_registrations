@@ -4,6 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace RoBrosEventsService.Services;
 
+
 public interface IEventService
 {
     Task<bool> CreateEventAsync(Event newEvent);
@@ -13,9 +14,9 @@ public interface IEventService
 
     // Reservation (signup) flow
     Task<SlotReservation?> CreateReservationAsync(SlotReservation reservation);
-    // Task<SlotReservation?> GetReservationAsync(Guid slotId, Guid participantId);
-    // Task<bool> DeleteReservationAsync(Guid slotId, Guid participantId);
-    // Task<IEnumerable<SlotReservation>> GetReservationsByEventAsync(Guid eventId);
+
+    // New: Get timeslots by category and age
+    Task<IEnumerable<EventSlot>> GetTimeSlotsByCategoryAndAgeAsync(string category, string age);
 }
 
 public class EventService : IEventService
@@ -56,5 +57,14 @@ public class EventService : IEventService
     {
         _logger.LogInformation("Creating Event: {name}", newEvent.Name);
         return await _repository.CreateEvent(newEvent);
+    }
+
+    // New: Get timeslots by category and age (stub implementation)
+    public async Task<IEnumerable<EventSlot>> GetTimeSlotsByCategoryAndAgeAsync(string category, string age)
+    {
+        _logger.LogInformation("Getting timeslots for category: {category}, age: {age}", category, age);
+        // TODO: Replace with real implementation
+        // For now, return an empty list
+        return new List<EventSlot>();
     }
 }

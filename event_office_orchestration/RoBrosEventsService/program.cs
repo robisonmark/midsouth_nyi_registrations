@@ -24,10 +24,6 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-
-// var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-//     ?? ;
-
 var connectionString = "Host=localhost;Database=postgres;Username=postgres;Password=mysecretpassword;Port=5432;";
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
 Console.WriteLine($"DB ConnectionString: {connectionString}");

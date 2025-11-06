@@ -21,6 +21,25 @@ public class PostgresProvider : ISqlProvider
         ";
     }
 
+    public virtual string CreateEvent()
+    {
+        return @"
+            INSERT INTO events (id, category, name, master_start, master_end, is_active) 
+            VALUES
+            (uuid_generate_v4(), @category, @name, @masterStart, @masterEnd, 'true')
+        ";
+    }
+
+    public virtual string CreateEventTimes()
+    {
+        return @"
+            INSERT INTO event_times (event_id, start_time, end_time, created_by, version)
+            VALUES
+            (@eventId, @startTime, @endTime, @createdBy, 1);
+
+        ";
+    }
+
     public virtual string GetEventTimeSlotsQuery()
     {
         return @"
@@ -94,9 +113,9 @@ public class PostgresProvider : ISqlProvider
     {
         return @"
             INSERT INTO slot_reservations
-                (id, slot_id, participant_id, reserved_name, reserved_contact, status, created_at)
+                (slot_id, participant_id, reserved_name, reserved_contact, status, created_at)
             VALUES
-                (@Id, @SlotId, @ParticipantId, @ReservedName, @ReservedContact, @Status, @CreatedAt)
+                (@SlotId, @ParticipantId, @ReservedName, @ReservedContact, @Status, @CreatedAt)
             RETURNING *;
         ";
     }
