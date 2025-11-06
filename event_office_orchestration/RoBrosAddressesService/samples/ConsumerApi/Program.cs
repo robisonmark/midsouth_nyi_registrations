@@ -80,7 +80,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 // Minimal API endpoints for address operations
-app.MapGet("/addresses/{id:guid}", async (Guid id, IAddressService addressService) =>
+app.MapGet("/address/{id:guid}", async (Guid id, IAddressService addressService) =>
 {
     Console.WriteLine("---------- Grabbing Address ---------------");
     var address = await addressService.GetAddressAsync(id);
@@ -99,6 +99,7 @@ app.MapPost("/addresses", async ([FromBody] CreateAddressRequest request, IAddre
     }
     catch (ArgumentException ex)
     {
+        Console.WriteLine($"Argument Exception: {ex.Message}");
         return Results.BadRequest(ex.Message);
     }
 })
