@@ -17,7 +17,7 @@ public class PostgresProvider : ISqlProvider
         return @"
             SELECT * 
             FROM events 
-            WHERE id = @eventId;
+            WHERE id = @eventId
         ";
     }
 
@@ -47,7 +47,8 @@ public class PostgresProvider : ISqlProvider
         FROM event_slots
         INNER JOIN event_time_blocks
             ON event_slots.time_block_id = event_time_blocks.id
-        WHERE event_slots.event_id = @eventId;
+        WHERE event_slots.event_id = @eventId
+        ORDER BY event_slots.start_time ASC;
         ";
     }
 
@@ -81,6 +82,7 @@ public class PostgresProvider : ISqlProvider
             SELECT * 
             FROM event_times
             WHERE event_id = @eventId
+            ORDER BY start_time ASC;
         ";
     }
 
