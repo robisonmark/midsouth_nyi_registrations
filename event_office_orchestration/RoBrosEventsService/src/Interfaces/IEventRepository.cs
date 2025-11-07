@@ -11,6 +11,11 @@ public interface IEventRepository
     
     Task<SlotReservation> CreateReservation(SlotReservation reservation);
     Task<SlotReservation?> GetReservationById(Guid reservationId);
+
+    Task<IEnumerable<string>> GetAllAgeGroupsAsync();
+    
+        // New: Get age groups for a specific event
+        Task<IEnumerable<string>> GetAgeGroupsByEventAsync(Guid eventId);
 }
 
 public interface ISqlProvider
@@ -22,5 +27,4 @@ public interface ISqlProvider
     string CreateEvent();
     string GetReservationByIdQuery();
     string UpdateReservedCountQuery();
-    
 }

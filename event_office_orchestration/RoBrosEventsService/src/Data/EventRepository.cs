@@ -168,4 +168,37 @@ public class EventRepository : IEventRepository
         };
     }
 
+    public async Task<IEnumerable<string>> GetAllAgeGroupsAsync()
+    {
+        var ageGroups = new List<string>();
+        await using var connection = await _dataSource.OpenConnectionAsync();
+        // This assumes you have an EventSlot or EventTimeBlock table with an AgeGroup or Level column
+        // Adjust the query as needed for your schema
+        var sql = "SELECT DISTINCT level FROM event_time_blocks WHERE level IS NOT NULL AND level <> '' ORDER BY level";
+        using var command = new NpgsqlCommand(sql, connection);
+        using var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            ageGroups.Add(reader.GetString(0));
+        }
+        return ageGroups;
+    }
+    
+        public async Task<IEnumerable<string>> GetAgeGroupsByEventAsync(Guid eventId)
+        {
+            var ageGroups = new List<string>();
+            await using var connection = await _dataSource.OpenConnectionAsync();
+            // This assumes you have an EventTimeBlock or similar table with event_id and level columns
+            // Adjust the query as needed for your schema
+            var sql = "SELECT DISTINCT level FROM event_time_blocks WHERE event_id = @eventId AND level IS NOT NULL AND level <> '' ORDER BY level";
+            using var command = new NpgsqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@eventId", eventId);
+            using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                ageGroups.Add(reader.GetString(0));
+            }
+            return ageGroups;
+        }
+
 }

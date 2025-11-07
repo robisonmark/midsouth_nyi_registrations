@@ -18,6 +18,11 @@ public interface IEventService
 
     // New: Get timeslots by category and age
     Task<IEnumerable<EventSlot>> GetTimeSlotsByCategoryAndAgeAsync(string category, string age);
+
+    // New: Get all unique age groups
+    Task<IEnumerable<string>> GetAllAgeGroupsAsync();
+       // New: Get age groups for a specific event
+    Task<IEnumerable<string>> GetAgeGroupsByEventAsync(Guid eventId);
 }
 
 public class EventService : IEventService
@@ -73,5 +78,15 @@ public class EventService : IEventService
     {
         _logger.LogInformation("Getting Reservation with ID: {reservationId}", reservationId);
         return await _repository.GetReservationById(reservationId);
+    }
+
+    public async Task<IEnumerable<string>> GetAllAgeGroupsAsync()
+    {
+        return await _repository.GetAllAgeGroupsAsync();
+    }
+     
+    public async Task<IEnumerable<string>> GetAgeGroupsByEventAsync(Guid eventId)
+    {
+        return await _repository.GetAgeGroupsByEventAsync(eventId);
     }
 }
