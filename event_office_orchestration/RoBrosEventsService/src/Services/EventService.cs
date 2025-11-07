@@ -9,7 +9,7 @@ public interface IEventService
 {
     Task<bool> CreateEventAsync(Event newEvent);
     Task<Event?> GetEventAsync(Guid id);
-    Task<IEnumerable<Event>> GetAllEventsAsync();
+    Task<IEnumerable<Event>> GetAllEventsAsync(string? level = null);
     Task<IEnumerable<EventSlot?>> GetTimeSlotsAsync(Guid id);
 
     // Reservation (signup) flow
@@ -38,9 +38,9 @@ public class EventService : IEventService
         return await _repository.GetEventById(id);
     }
 
-    public async Task<IEnumerable<Event>> GetAllEventsAsync()
+    public async Task<IEnumerable<Event>> GetAllEventsAsync(string? level = null)
     {
-        return await _repository.GetAllEventsAsync();
+        return await _repository.GetAllEventsAsync(level);
     }
 
     public async Task<IEnumerable<EventSlot?>> GetTimeSlotsAsync(Guid id)

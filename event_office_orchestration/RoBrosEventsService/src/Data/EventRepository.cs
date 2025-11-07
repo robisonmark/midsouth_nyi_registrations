@@ -34,19 +34,26 @@ public class EventRepository : IEventRepository
         throw new InvalidOperationException("Failed to create address");
     }
 
-    public async Task<IEnumerable<Event>> GetAllEventsAsync()
+    public async Task<IEnumerable<Event>> GetAllEventsAsync(string? level = null)
     {
         var events = new List<Event>();
         await using var connection = await _dataSource.OpenConnectionAsync();
-        using var command = new NpgsqlCommand(_sqlProvider.GetAllEventsQuery(), connection);
-        
+        string sql = _sqlProvider.GetAllEventsQuery();
+        if (!string.IsNullOrEmpty(level))
+        {
+            sql += " WHERE level = @level";
+        }
+        using var command = new NpgsqlCommand(sql, connection);
+        if (!string.IsNullOrEmpty(level))
+        {
+            command.Parameters.AddWithValue("@level", level);
+        }
         using var reader = await command.ExecuteReaderAsync();
         while (await reader.ReadAsync())
         {
             events.Add(MapEventFromReader(reader));
         }
         return events;
-        // throw new InvalidOperationException("Failed to create address");
     }
 
     public async Task<IEnumerable<EventSlot>> GetEventTimeSlots(Guid id)
@@ -123,7 +130,8 @@ public class EventRepository : IEventRepository
                 ReservedName = reader.GetString("reserved_name"),
                 ReservedContact = reader.GetString("reserved_contact"),
                 Status = reader.GetString("status"),
-                CreatedAt = reader.GetDateTime("created_at")
+                CreatedAt = reader.GetDateTime("created_at"),
+                Church = reader.GetString("church")
             };
         }
 
@@ -150,12 +158,13 @@ public class EventRepository : IEventRepository
             Id = reader.GetGuid("id"),
             EventId = reader.GetGuid("event_id"),
             TimeBlockId = reader.GetGuid("time_block_id"),
-            LocationId = reader.GetGuid("location_id"),
+            LocationId = reader.GetString("name"),
             StartTime = reader.GetDateTime("start_time"),
             EndTime = reader.GetDateTime("end_time"),
             Capacity = reader.GetInt32("capacity"),
             ReservedCount = reader.GetInt32("reserved_count"),
             Status = reader.GetString("status"),
+            Level = reader.GetString("level")
         };
     }
 

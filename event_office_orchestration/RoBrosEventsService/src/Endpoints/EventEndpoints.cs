@@ -22,10 +22,10 @@ namespace RoBrosEventsService.Endpoints
                 return Results.Created($"/api/events/{newEvent.Id}", newEvent);
             });
 
-            // GET /api/events
-            group.MapGet("/", async (IEventService EventService) =>
+            // GET /api/events?level=junior
+            group.MapGet("/", async ([FromQuery] string? level, IEventService EventService) =>
             {
-                var events = await EventService.GetAllEventsAsync();
+                var events = await EventService.GetAllEventsAsync(level);
                 return Results.Ok(events);
             });
 
