@@ -107,11 +107,11 @@ public class EventRepository : IEventRepository
 
     }
 
-    public async Task<bool> CreateEventTimeSlots(EventSlot newTimeSlot)
-    {
-        // Implementation for creating event time slots would go here
-        return true;
-    }
+    // public async Task<bool> CreateEventTimeSlots(EventSlot newTimeSlot)
+    // {
+    //     // Implementation for creating event time slots would go here
+    //     return true;
+    // }
 
     public async Task<SlotReservation?> GetReservationById(Guid reservationId)
     {

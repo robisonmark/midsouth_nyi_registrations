@@ -52,16 +52,26 @@ builder.Services.AddOpenApiDocument(options =>
     };
 });
 
+// builder.Services.AddCors(options =>
+// {
+//     options.AddPolicy("AllowAll",
+//         builder =>
+//         {
+//             builder.AllowAnyOrigin()
+//                   .AllowAnyHeader()
+//                   .AllowAnyMethod();
+//         });
+// });
+
 var app = builder.Build();
 
 app.MapReservationEndpoints();
 app.MapEventEndpoints();
 
-// if (app.Environment.IsDevelopment())
-// {
+
 app.UseSwagger();
 app.UseSwaggerUI();
-// }
-app.UseCors(options => options.WithOrigins("*") .AllowAnyMethod() .AllowAnyHeader());
+
+app.UseCors(options => options.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
 
 app.Run();
