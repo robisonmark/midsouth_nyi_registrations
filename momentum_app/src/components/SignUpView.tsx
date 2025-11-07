@@ -4,10 +4,10 @@ import { useParams } from 'react-router-dom';
 import { useAppSelector } from '../store/hooks';
 import svgPaths from "../imports/svg-n6pltu4jyi";
 import ParticipantSearch from './ParticipantSearch';
-import type { Reservation } from '../models/Reservation';
+// import type { Reservation } from '../models/Reservation';
 import type { EventCategory, Church } from '../store/slices/appSlice';
 
-type AgeCategory = 'early-youth' | 'senior-youth';
+type AgeCategory = string;
 type EventType = 'Vocal Solo' | 'Sign Language' | 'Preaching' | 'Flag Football' | 'Instrumental Solo' | 'Drama';
 
 interface TimeSlot {
@@ -19,21 +19,18 @@ interface TimeSlot {
   time: string;
   studentName?: string;
   eventType: EventType;
-  location: string;
+  locationId: string;
   church?: Church;
   available: boolean;
 }
 
 
-// Fetch timeslots from API
-// API endpoint example: /api/timeslots?category=vocal&age=senior-youth
-
 const students = ['Student One', 'Student Two', 'Dos Estudiante'];
 
 // Mock participant data for API search
 const mockParticipants = [
-  { id: 1, name: 'Mark Robison', church: 'Hendersonville' },
-  { id: 2, name: 'Laura Robison', church: 'Hendersonville' },
+  { id: 'c898e68b-2e42-4cf1-a6e1-692f716fd57b', name: 'Mark Robison', church: 'Hendersonville' },
+  { id: '6759ed96-82d2-401a-a1be-9f97cfd86dea', name: 'Laura Robison', church: 'Hendersonville' },
   { id: 3, name: 'Laura Aguyao', church: 'Goodlettsville' },
   { id: 4, name: 'Sarah Johnson', church: 'Clarksville Grace' },
   { id: 5, name: 'John Smith', church: 'Hendersonville' },
@@ -42,7 +39,7 @@ const mockParticipants = [
   { id: 8, name: 'Rachel Martinez', church: 'Hendersonville' },
   { id: 9, name: 'David Thompson', church: 'Goodlettsville' },
   { id: 10, name: 'Sophie Anderson', church: 'Clarksville Grace' },
-  { id: "e156e71a-3398-4b56-aa79-1aab837bec9f", name: 'Matt Robison', church: 'Hendersonville' },
+  { id: 'e156e71a-3398-4b56-aa79-1aab837bec9f', name: 'Matt Robison', church: 'Hendersonville' },
 ];
 
 // Helper function to get AM/PM indicator
@@ -55,19 +52,67 @@ const getTimePeriod = (time: string): string => {
 };
 
 export default function SignUpView() {
+  // Declare these first so all hooks below can reference them
+  const [selectedEventType, setSelectedEventType] = useState<string>('');
+  const [events, setEvents] = useState<Array<{ id: string; name: string; category: string; type?: string }>>([]);
   const { category } = useParams<{ category: string }>();
   const selectedChurch = useAppSelector((state) => state.app.selectedChurch);
-  
   // Validate and set the category
   const validCategories: EventCategory[] = ['vocal', 'instrumental', 'speech', 'creative'];
   const selectedCategory: EventCategory = validCategories.includes(category as EventCategory) 
     ? (category as EventCategory) 
     : 'vocal';
-  
+  const [selectedAgeGroup, setSelectedAgeGroup] = useState<AgeCategory>('');
+  const [ageGroups, setAgeGroups] = useState<AgeCategory[]>([]);
 
-  const [selectedAgeGroup, setSelectedAgeGroup] = useState<AgeCategory>('senior-youth');
-  const [selectedEventType, setSelectedEventType] = useState<string>('');
-  const [events, setEvents] = useState<Array<{ id: string; name: string; category: string; type?: string }>>([]);
+
+
+  // Load available age groups for the selected event
+  useEffect(() => {
+    const fetchAgeGroups = async () => {
+      if (!selectedEventType) {
+        setAgeGroups([]);
+        setSelectedAgeGroup('');
+        return;
+      }
+      // Find the selected event object by name
+      const selectedEvent = events.find(e => e.name === selectedEventType);
+      if (!selectedEvent) {
+        setAgeGroups([]);
+        setSelectedAgeGroup('');
+        return;
+      }
+      try {
+        const result = await apiFetch<AgeCategory[]>(`/api/events/${selectedEvent.id}/age_groups`);
+        setAgeGroups(result);
+        setSelectedAgeGroup(result[0] || '');
+      } catch {
+        setAgeGroups([]);
+        setSelectedAgeGroup('');
+      }
+    };
+    fetchAgeGroups();
+  }, [selectedEventType, events]);
+
+  // Handler to change age group and filter timeslots
+  const handleAgeGroupChange = async (newAgeGroup: AgeCategory) => {
+    setSelectedAgeGroup(newAgeGroup);
+    if (selectedEventType) {
+      setLoadingTimeslots(true);
+      setTimeslotError(null);
+      try {
+        const selectedEvent = events.find(e => e.name === selectedEventType);
+        if (selectedEvent) {
+          const filtered = await apiFetch<TimeSlot[]>(`/api/events/${selectedEvent.id}/time_slots?age=${newAgeGroup}`);
+          setTimeslots(filtered);
+        }
+      } catch (err: any) {
+        setTimeslotError(err.message);
+      } finally {
+        setLoadingTimeslots(false);
+      }
+    }
+  };
   const [loadingEvents, setLoadingEvents] = useState(false);
   const [eventsError, setEventsError] = useState<string | null>(null);
   const [filterStudent, setFilterStudent] = useState<string>('all students');
@@ -183,7 +228,18 @@ export default function SignUpView() {
           reservedContact: participant.name
         })
       });
-      // Optionally, you could show a success message or refresh reservations here
+      // Fetch the latest reservation for this slot to ensure UI is in sync with backend
+      const latestReservation = await apiFetch(`/api/reservations/${selectedTimeSlot}`);
+      setReservations(prev => ({
+        ...prev,
+        [selectedTimeSlot]: latestReservation
+      }));
+      // Optionally, update timeslots (e.g., reservedCount) if backend returns updated slot info
+      setTimeslots(prev => prev.map(slot =>
+        slot.id === selectedTimeSlot
+          ? { ...slot, reservedCount: (slot.reservedCount ?? 0) + 1 }
+          : slot
+      ));
     } catch (err) {
       // Optionally, handle error (e.g., show error message)
     }
@@ -254,15 +310,17 @@ export default function SignUpView() {
           {/* Age Group and Filter Row */}
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-[20px]">
             <div className="relative flex items-center justify-between md:justify-start md:gap-8">
-              <button 
-                onClick={() => setSelectedAgeGroup(selectedAgeGroup === 'senior-youth' ? 'early-youth' : 'senior-youth')}
-                className="text-[#002244] text-[24px] md:text-[28px] font-['Open_Sans',_sans-serif] tracking-[-1.92px] flex items-center gap-2"
-              >
-                {selectedAgeGroup === 'senior-youth' ? 'senior youth' : 'early youth'}
-                <svg className="w-[24px] h-[24px] md:w-[28px] md:h-[28px]" fill="none" viewBox="0 0 24 24">
-                  <path d={svgPaths.p2b1b0180} fill="#1D1B20" />
-                </svg>
-              </button>
+              <div className="flex gap-2">
+                {ageGroups.map((age) => (
+                  <button
+                    key={age}
+                    onClick={() => handleAgeGroupChange(age)}
+                    className={`text-[#002244] text-[24px] md:text-[28px] font-['Open_Sans',_sans-serif] tracking-[-1.92px] flex items-center gap-2 ${selectedAgeGroup === age ? 'font-bold underline' : ''}`}
+                  >
+                    {age.replace('-', ' ')}
+                  </button>
+                ))}
+              </div>
               
               <div className="w-[14px] h-[14px] md:hidden">
                 <svg className="block size-full" fill="none" viewBox="0 0 14 14">
@@ -339,13 +397,13 @@ export default function SignUpView() {
                           )}
                         </div>
                         <div className="text-[#002244] text-[16px] md:text-[18px] font-['Open_Sans',_sans-serif] font-light">
-                          {/* {reservations[slot.id]?.reservedContact || ''} */}
-                        </div>
-                        <div className="text-[#666] text-[14px] md:text-[15px] font-['Open_Sans',_sans-serif] font-light mt-1">
-                          {slot.location}
+                          {reservations[slot.id]?.church || ''}
                         </div>
                       </div>
                     )}
+                    <div className="text-[#666] text-[14px] md:text-[15px] font-['Open_Sans',_sans-serif] font-light mt-1">
+                      {slot.locationId}
+                    </div>
                   </div>
                 </div>
               </div>
