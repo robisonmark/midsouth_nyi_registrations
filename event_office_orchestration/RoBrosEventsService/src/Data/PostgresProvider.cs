@@ -48,6 +48,8 @@ public class PostgresProvider : ISqlProvider
         FROM event_slots
         INNER JOIN event_time_blocks
             ON event_slots.time_block_id = event_time_blocks.id
+        INNER JOIN locations
+            ON event_slots.location_id = locations.id
         WHERE event_slots.event_id = @eventId
         ORDER BY event_slots.start_time ASC;
         ";
@@ -128,6 +130,8 @@ public class PostgresProvider : ISqlProvider
         return @"
             SELECT *
             FROM slot_reservations
+            INNER JOIN participants
+                ON slot_reservations.participant_id = participants.id
             WHERE slot_id = @reservationId;
         ";
     }
