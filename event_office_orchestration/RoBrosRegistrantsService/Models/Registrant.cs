@@ -3,6 +3,7 @@ using System.Diagnostics;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
+using EventOfficeApi.RoBrosAddressesService.Models;
 using RoBrosRegistrantsService.Models;
 
 namespace RoBrosRegistrantsService.Models
@@ -18,12 +19,12 @@ namespace RoBrosRegistrantsService.Models
         required public string FamilyName { get; set; }
 
         [Required]
-        required public Church Church { get; set; } // This needs to match a church in the database but should use a string to get it.
+        required public Church Church { get; set; } // Can be supplied as full object or as a string name in JSON
         
         public Guid? ChurchId { get; set; }
 
         [Required]
-        public string ParticipantRole { get; set; } 
+        public string ParticipantRole { get; set; } = "Chaperone";
 
         public string YouthLeaderEmail { get; set; } // part of church?
 
@@ -32,7 +33,7 @@ namespace RoBrosRegistrantsService.Models
         public string YouthLeaderLastName { get; set; }  // part of church?
 
         // [Required]
-        required public Address Address { get; set; }
+        required public CreateAddressRequest Address { get; set; }
 
         public Guid AddressId { get; set; }
 

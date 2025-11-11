@@ -4,34 +4,32 @@ using Microsoft.Extensions.Configuration;
 using Npgsql;
 using NSwag;
 
+// RoBros Libraries
+using EventOfficeApi.RoBrosAddressesService.Extensions;
+
 
 var builder = WebApplication.CreateBuilder(args);
-
-// Register NpgsqlConnection as a singleton
-// builder.Services.AddSingleton<NpgsqlConnection>(serviceProvider =>
-// {
-//     var configuration = serviceProvider.GetRequiredService<IConfiguration>();
-//     Console.WriteLine("Configuration: " + configuration);
-//     var connectionString = configuration.GetConnectionString("DefaultConnection");
-
-//     var connection = new NpgsqlConnection(connectionString);
-//     connection.Open(); // Open the connection when the singleton is created
-//     return connection;
-// });
-
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
+    ?? "Host=localhost;Database=RoBrosRegistrant;Username=postgres;Password=YourPassword;Timeout=30;";
 
 builder.Services.AddSingleton<NpgsqlDataSource>(provider =>
 {
-    // var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-    var dataSourceBuilder = new NpgsqlDataSourceBuilder("Host=localhost;Database=RoBrosRegistrant;Username=postgres;Password=YourPassword");
+    var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
     return dataSourceBuilder.Build();
 });
+
+var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
+var dataSource = dataSourceBuilder.Build();
 
 // Register application services
 // I Need to understand this better. ChatGPT explains
 builder.Services.AddScoped<RoBrosRegistrantsService.Services.DatabaseService>();
 builder.Services.AddScoped<RoBrosRegistrantsService.Services.IRegistrantService, RoBrosRegistrantsService.Services.RegistrantService>();
 builder.Services.AddScoped<RoBrosRegistrantsService.Data.IRegistrantRepository, RoBrosRegistrantsService.Data.RegistrantRepository>();
+builder.Services.AddScoped<RoBrosRegistrantsService.Data.ChurchRepository>();
+builder.Services.AddScoped<RoBrosRegistrantsService.Services.IChurchService, RoBrosRegistrantsService.Services.ChurchService>();
+
+builder.Services.AddAddressPackage(dataSource);
 
 // Add services to the container.
 builder.Services.AddControllers()

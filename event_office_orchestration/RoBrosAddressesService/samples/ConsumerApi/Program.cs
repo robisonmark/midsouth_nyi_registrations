@@ -21,7 +21,6 @@ var connectionString = builder.Configuration.GetConnectionString("DefaultConnect
     ?? "Host=localhost;Database=RoBrosAddresses;Username=postgres;Password=YourPassword;Timeout=30;";
 
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
-// using var dataSource = NpgsqlDataSource.Create(connectionString);
 var dataSource = dataSourceBuilder.Build();
 
 // This should inject a logger and anything else that comes from the consuming service
@@ -94,8 +93,8 @@ app.MapPost("/addresses", async ([FromBody] CreateAddressRequest request, IAddre
     try
     {
         Console.WriteLine("----- Creating address... -----");
-        var address = await addressService.CreateAddressAsync(request);
-        return Results.Created($"/addresses/{address.Id}", address);
+        var address_id = await addressService.CreateAddressAsync(request);
+        return Results.Created($"/addresses/{address_id}", address_id);
     }
     catch (ArgumentException ex)
     {

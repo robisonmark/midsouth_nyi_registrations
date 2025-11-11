@@ -1,10 +1,16 @@
+// Standard Libraries
 using System;
 using System.Diagnostics;
 
+// ASP.NET Libraries
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
+// RoBros Libraries
+using EventOfficeApi.RoBrosAddressesService.Models;
+
+// Local
 using RoBrosRegistrantsService.Models;
 using RoBrosRegistrantsService.Services;
 
@@ -31,11 +37,6 @@ namespace RoBrosRegistrantsService.Controllers
         public async Task<Guid> CreateRegistrantAsync(Registrant registrant)
         {
             registrant.Id = Guid.NewGuid();
-
-            if (registrant.Address == null)
-            {
-                registrant.Address = new Address();
-            }
            
            return await _registrantService.CreateRegistrantAsync(registrant);
         }
@@ -53,16 +54,16 @@ namespace RoBrosRegistrantsService.Controllers
                 : NotFound();
         }
 
-        // [HttpGet]
-        // // [ActionName(nameof(SearchRegistrants))]
-        // [Route("/api/registrants/search", Name = "GetRegistrantsSearch")]
-        // [ProducesResponseType(typeof(Registrants), StatusCodes.Status200OK)]
-        // [ProducesResponseType(StatusCodes.Status204NoContent)]
-        // public async Task<IActionResult> GetRegistrant(Guid registrantId)
-        // {
-
-        //     await Task.Delay(10);
-        //     return Ok(registrants);
-        // }
+        [HttpGet]
+        // [ActionName(nameof(SearchRegistrants))]
+        [Route("/api/registrants/search/{searchParameters}", Name = "GetRegistrantsSearch")]
+        [ProducesResponseType(typeof(IEnumerable<Registrant>), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        public async Task<IActionResult> SearchRegistrantsAsync(string searchParameters)
+        {
+            return await _registrantService.SearchRegistrantsAsync(searchParameters) is IEnumerable<Registrant> registrants && registrants.Any()
+                ? Ok(registrants)
+                : NoContent();
+        }
     }
 }

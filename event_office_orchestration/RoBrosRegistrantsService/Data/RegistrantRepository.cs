@@ -3,6 +3,8 @@ using Npgsql;
 using System.Data;
 using System.Data.Common;
 
+using EventOfficeApi.RoBrosAddressesService.Models;
+
 using RoBrosRegistrantsService.Models;
 using RoBrosRegistrantsService.Services;
 
@@ -31,35 +33,36 @@ public class RegistrantRepository : IRegistrantRepository
     public async Task<Guid> CreateRegistrantAsync(Registrant registrant)
     {
         _logger.LogInformation("Inserting a new registrant into the database");
-        registrant.AddressId = registrant.Address.Id;
-        registrant.ChurchId = registrant.Church.Id;
 
-        var sql = @"
-            INSERT INTO registrant (
-                Id, 
-                GivenName,
-                FamilyName, 
-                ParticipantRole, 
-                ChurchId, 
-                YouthLeaderEmail, 
-                YouthLeaderFirstName, 
-                YouthLeaderLastName, 
-                AddressId, 
-                Mobile, 
-                Email, 
-                Birthday,
-                Gender, 
-                ShirtSize, 
-                Price, 
-                Paid, 
-                Notes, 
-                SubmissionDate, 
-                IPAddress,
-                CreatedAt,
-                CreatedBy,
-                UpdatedAt,
-                UpdatedBy,
-                Version
+        Guid registrantId = Guid.NewGuid();
+        registrant.Id = registrantId;
+
+        var registrantSQL = @"
+            INSERT INTO registrants (
+                id,
+                given_name,
+                family_name, 
+                participant_role, 
+                church_id, 
+                youth_leader_email, 
+                youth_leader_first_name, 
+                youth_leader_last_name, 
+                address_id, 
+                cell_number, 
+                email, 
+                birthday,
+                gender, 
+                shirt_size, 
+                price,
+                paid,
+                notes, 
+                submission_date, 
+                ip_address,
+                created_at,
+                created_by,
+                updated_at,
+                updated_by,
+                version
             ) VALUES (
                 @Id,
                 @GivenName, 
@@ -85,15 +88,85 @@ public class RegistrantRepository : IRegistrantRepository
                 @UpdatedAt,
                 @UpdatedBy,
                 1
-            )";
+            );";
+        
 
-        int rowsAffected = await _databaseService.ExecuteAsync(sql, registrant);
+        
+        int rowsAffected = await _databaseService.ExecuteAsync(registrantSQL, registrant);
         Console.WriteLine($"Rows affected: {rowsAffected}");
         
-        if (rowsAffected > 0)
-        {
-            return registrant.Id;
-        }
+            if (rowsAffected > 0)
+            {
+                // If the registrant is a Competitor (inherits from Registrant), insert
+                // competitor-specific details into the student table. We detect this via
+                // runtime type and cast so we can pass the full Competitor object to the
+                // database helper which expects property names matching the SQL params.
+                if (registrant is RoBrosRegistrantsService.Models.Competitor competitor)
+                {
+                    // Ensure the child object has the registrant id populated
+                    competitor.RegistrantId = registrant.Id;
+
+                    var competitorSQL = @"
+                    INSERT INTO student (
+                        registrant_id,
+                        district,
+                        competition_status,
+                        medical_conditions,
+                        dietary_restrictions,
+                        allergies,
+                        food_allergies,
+                        medications,
+                        guardian_first_name,
+                        guardian_last_name,
+                        guardian_home_phone,
+                        guardian_work_phone,
+                        guardian_contact_phone,
+                        insurance_company,
+                        policy_id,
+                        quizzing,
+                        art_categories,
+                        creative_ministries_categories,
+                        creative_writing_categories,
+                        speech_categories,
+                        vocal_music_categories,
+                        instrumental_music_categories,
+                        individual_sport_categories,
+                        team_sport_categories,
+                        attending_tnt_at_tnu
+                    ) VALUES (
+                        @RegistrantId,
+                        @District,
+                        @CompetitionStatus,
+                        @MedicalConditions,
+                        @DietaryRestrictions,
+                        @Allergies,
+                        @FoodAllergies,
+                        @Medications,
+                        @GuardianFirstName,
+                        @GuardianLastName,
+                        @GuardianHomePhone,
+                        @GuardianWorkPhone,
+                        @GuardianContactPhone,
+                        @InsuranceCompany,
+                        @PolicyId,
+                        @Quizzing,
+                        @ArtCategories,
+                        @CreativeMinistriesCategories,
+                        @CreativeWritingCategories,
+                        @SpeechCategories,
+                        @VocalMusicCategories,
+                        @InstrumentalMusicCategories,
+                        @IndividualSportCategories,
+                        @TeamSportCategories,
+                        @AttendingTNTatTNU
+                    );";
+
+                    int competitorRowsAffected = await _databaseService.ExecuteAsync(competitorSQL, competitor);
+                    Console.WriteLine($"Competitor Rows affected: {competitorRowsAffected}");
+                }
+
+                return registrant.Id;
+            }
 
         throw new InvalidOperationException("Failed to add registrant.");
     }
@@ -104,22 +177,22 @@ public class RegistrantRepository : IRegistrantRepository
 
         var sql = @"
             SELECT 
-                Id, 
-                GivenName,
-                FamilyName, 
-                ParticipantRole, 
-                ChurchId, 
-                YouthLeaderEmail, 
-                YouthLeaderFirstName, 
-                YouthLeaderLastName, 
-                AddressId, 
-                Mobile, 
-                Email, 
-                Birthday,
-                Gender,
-                ShirtSize
-            FROM registrant 
-            WHERE Id = @id";
+                id, 
+                given_name,
+                family_name, 
+                participant_role, 
+                church_id, 
+                youth_leader_email, 
+                youth_leader_first_name, 
+                youth_leader_last_name, 
+                address_id, 
+                cell_number, 
+                email, 
+                birthday,
+                gender,
+                shirt_size
+            FROM registrants 
+            WHERE id = @id";
 
         // using var reader = await _databaseService.QueryAsync<Registrant>(sql, id);
         // if (await reader.ReadAsync())
@@ -226,22 +299,47 @@ public class RegistrantRepository : IRegistrantRepository
         throw new InvalidOperationException("Failed to update registrant.");
     }
 
-    public async Task<IEnumerable<Registrant>> SearchRegistrantsAsync(string queryStringParameters)
+    public async Task<IEnumerable<Registrant>> SearchRegistrantsAsync(string searchParameters)
     {
-        var sql = @"SELECT * FROM registrants 
-            WHERE GivenName iLike '%@queryStringParameters%'
-            OR FamilyName iLike '%@queryStringParameters%'
-            OR ChurchId iLike '%@queryStringParameters%'
-            ";
-        // Need to figure out the querystring and defined it
-        // using var reader = await _databaseService.QueryAsync<IEnumerable<Registrant>>(sql, new { queryStringParameters });
-        // if (await reader.ReadAsync())
-        // {
-        //     return [MapRegistrantFromReader(reader)];
-        // }
-        var registrants = await _databaseService.QueryAsync<Registrant>(sql, queryStringParameters);
+        IEnumerable<Registrant> return_value = new List<Registrant>();
+        // Use a parameterized pattern for ILIKE. Passing the % wildcard in the SQL string
+        // around the parameter (e.g. '%@p%') does NOT substitute the parameter value.
+        // Two safe options are: (1) build the pattern in .NET and pass it as a parameter,
+        // or (2) use SQL concatenation: column ILIKE '%' || @p || '%'.
+         var sql = @"SELECT
+            registrants.id AS Id,
+            registrants.given_name AS GivenName,
+            registrants.family_name AS FamilyName,
+            registrants.participant_role AS ParticipantRole,
+            registrants.church_id AS ChurchId,
+            registrants.youth_leader_email AS YouthLeaderEmail,
+            registrants.youth_leader_first_name AS YouthLeaderFirstName,
+            registrants.youth_leader_last_name AS YouthLeaderLastName,
+            registrants.address_id AS AddressId,
+            registrants.cell_number AS Mobile,
+            registrants.email AS Email,
+            registrants.birthday AS Birthday,
+            registrants.gender AS Gender,
+            registrants.shirt_size AS ShirtSize,
+            registrants.price AS Price,
+            registrants.paid AS Paid,
+            registrants.notes AS Notes,
+            registrants.submission_date AS SubmissionDate,
+            registrants.ip_address AS IPAddress
+        FROM registrants
+        INNER JOIN churches ON registrants.church_id = churches.id
+        WHERE registrants.given_name ILIKE @pattern
+            OR registrants.family_name ILIKE @pattern
+            OR churches.name ILIKE @pattern;";
+
+        var pattern = $"%{searchParameters}%";
+        var registrants = await _databaseService.QueryAsync<Registrant>(sql, new { pattern });
         if (registrants != null)
         {
+            foreach (Registrant registrant in registrants)
+            {
+                return_value.Append(registrant);
+            }
             return registrants;
         }
 
@@ -250,13 +348,14 @@ public class RegistrantRepository : IRegistrantRepository
 
     private static Registrant MapRegistrantFromReader(DbDataReader reader)
     {
-        Address registrantAddress = new Address
+        // This should be able to return type Address Not CreateAddressRequest
+        CreateAddressRequest registrantAddress = new CreateAddressRequest
         {
             StreetAddress1 = reader.GetString("StreetAddress1"),
             StreetAddress2 = reader.GetString("StreetAddress2"),
-            Locality = reader.GetString("Locality"),
-            AdministrativeAreaLevel = reader.GetString("AdministrativeAreaLevel"),
-            PostalCode = reader.GetInt32("PostalCode"),
+            City = reader.GetString("Locality"),
+            State = reader.GetString("AdministrativeAreaLevel"),
+            PostalCode = reader.GetString("PostalCode"),
             Country = reader.GetString("Country")
         }; 
 
@@ -268,9 +367,9 @@ public class RegistrantRepository : IRegistrantRepository
             {
                 StreetAddress1 = reader.GetString("ChurchStreetAddress1"),
                 StreetAddress2 = reader.GetString("ChurchStreetAddress2"),
-                Locality = reader.GetString("ChurchLocality"),
-                AdministrativeAreaLevel = reader.GetString("ChurchAdministrativeAreaLevel"),
-                PostalCode = reader.GetInt32("ChurchPostalCode"),
+                City = reader.GetString("ChurchLocality"),
+                State = reader.GetString("ChurchAdministrativeAreaLevel"),
+                PostalCode = reader.GetString("ChurchPostalCode"),
                 Country = reader.GetString("ChurchCountry")
             }
         };

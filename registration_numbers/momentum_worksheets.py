@@ -340,6 +340,7 @@ class MomentumWorksheets:
                                     "Registration Type",
                                     "Participation Status",
                                     "Grade Level",
+                                    "Address",
                                     "",
                                     "Events",
                                     "Arts",
@@ -366,6 +367,9 @@ class MomentumWorksheets:
             team_sports_events = ", ".join([member.value for member in row_data.team_sports_events])
             event_errors = ", ".join([member for member in row_data.event_errors])
 
+            address2 = f"{row_data.street_address2}," if row_data.street_address2 != "" else ""
+            address = f"{row_data.street_address}, {address2} {row_data.city}, {row_data.state} {row_data.zip_code}"
+
             self.momentum_main_worksheet[current_church][0]["data"].insert(
                 row_index,
                 {
@@ -381,6 +385,7 @@ class MomentumWorksheets:
                         row_data.registration_type.value,
                         row_data.participation_status.value,
                         row_data.grade_level,
+                        address,
                         "",
                         art_events,
                         academic_events,

@@ -10,43 +10,46 @@ namespace RoBrosRegistrantsService.Models
         [Required]
         required public Guid RegistrantId { get; set; }
 
-        // How do I default
-        // [Required]
-        // public string ParticipantRole { get; set; } = "Student"; // student/chaperone/volunteer
-
         [Required]
-        public string CompetitionStatus { get; set; } // competing/spectation enum
+        public string CompetitionStatus { get; set; } = "Spectating"; // competing/spectating enum
 
-        public string MedicalConditions { get; set; }
+        public Student()
+        {
+            // Students are participants by default
+            ParticipantRole = "Student";
+            CompetitionStatus = "Spectating";
+        }
 
-        public string DietaryRestrictions { get; set; }
+    public string? MedicalConditions { get; set; } = string.Empty;
 
-        public string[] Allergies { get; set; }
+    public string? DietaryRestrictions { get; set; } = string.Empty;
 
-        public string[] FoodAllergies { get; set; }
+    public string[] Allergies { get; set; } = Array.Empty<string>();
 
-        public string[] Medications { get; set; } // possible { medicine: xx; dose: xx }
+    public string[] FoodAllergies { get; set; } = Array.Empty<string>();
 
-        [Required]
-        public string GuardianFirstName { get; set; }
+    public string[] Medications { get; set; } = Array.Empty<string>(); // possible { medicine: xx; dose: xx }
 
-        [Required]
-        public string GuardianLastName { get; set; }
+    [Required]
+    public string GuardianFirstName { get; set; } = string.Empty;
 
-        [Required]
-        public string GuardianHomePhone { get; set; }
+    [Required]
+    public string GuardianLastName { get; set; } = string.Empty;
 
-        [Required]
-        public string GuardianWorkPhone { get; set; }
+    [Required]
+    public string GuardianHomePhone { get; set; } = string.Empty;
 
-        [Required]
-        public string GuardianContactPhone { get; set; } // possible id of above?
+    [Required]
+    public string GuardianWorkPhone { get; set; } = string.Empty;
 
-        [Required]
-        public string InsuranceCompany { get; set; }
+    [Required]
+    public string GuardianContactPhone { get; set; } = string.Empty; // possible id of above?
 
-        [Required]
-        public string PolicyId { get; set; }
+    [Required]
+    public string InsuranceCompany { get; set; } = string.Empty;
+
+    [Required]
+    public string PolicyId { get; set; } = string.Empty;
     }
 
 }

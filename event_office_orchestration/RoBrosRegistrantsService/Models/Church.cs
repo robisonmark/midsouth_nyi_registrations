@@ -1,3 +1,5 @@
+using EventOfficeApi.RoBrosAddressesService.Models;
+
 namespace RoBrosRegistrantsService.Models
 {
     public class Church

@@ -1,11 +1,18 @@
+// ASP.NET Libraries
 using Microsoft.Extensions.Logging;
+
+// RoBros Libraries
+using EventOfficeApi.RoBrosAddressesService.Models;
+using EventOfficeApi.RoBrosAddressesService.Services;
+
+// Local
 using RoBrosRegistrantsService.Data;
 using RoBrosRegistrantsService.Models;
+using RoBrosRegistrantsService.Services;
 
 // Address Service Reference
 // using EventOfficeApi.RoBrosAddressesService.Extensions;
 // using EventOfficeApi.RoBrosAddressesService.Models;
-// using EventOfficeApi.RoBrosAddressesService.Services;
 
 namespace RoBrosRegistrantsService.Services;
 
@@ -15,16 +22,25 @@ public interface IRegistrantService
     Task<Registrant> GetRegistrantAsync(Guid id);
     // Task<IEnumerable<Registrant>> GetAllRegistrantsAsync();
     // Task<Registrant?> UpdateRegistrantAsync(Registrant registrant); // TODO: Break this into smaller parts and a whole, should it be named put
-    // Task<Registrants?> SearchRegistrantsAsync(string queryStringParameters);
+    Task<IEnumerable<Registrant>> SearchRegistrantsAsync(string searchParameters);
 }
 
 public class RegistrantService: IRegistrantService
 {
+    private readonly IAddressService _addressService;
+    private readonly IChurchService _churchService;
     private readonly IRegistrantRepository _repository;
     private readonly ILogger<RegistrantService> _logger;
+    
 
-    public RegistrantService(IRegistrantRepository repository, ILogger<RegistrantService> logger)
+    public RegistrantService(
+        IRegistrantRepository repository,
+        IAddressService addressService,
+        IChurchService churchService,
+        ILogger<RegistrantService> logger)
     {
+        _addressService = addressService;
+        _churchService = churchService;
         _repository = repository;
         _logger = logger;
     }
@@ -33,16 +49,11 @@ public class RegistrantService: IRegistrantService
     {
         _logger.LogInformation("Creating a new registrant");
 
-        if (registrant.Address == null)
-        {
-            // TODO: Check for Address in Address Service before creating a new one
-            registrant.Address = new Address();
-        }
-        if (registrant.Church.Id == null)
-        {
-            // TODO: Check for Address in Address Service before creating a new one
-            registrant.ChurchId = Guid.NewGuid();
-        }
+        Guid church_id = await _churchService.CreateChurchAsync(registrant.Church);
+        registrant.ChurchId = church_id;
+        
+        Guid address_id = await _addressService.CreateAddressAsync(registrant.Address);
+        registrant.AddressId = address_id;
         
         return await _repository.CreateRegistrantAsync(registrant);
     }
@@ -54,11 +65,11 @@ public class RegistrantService: IRegistrantService
         return await _repository.GetRegistrantAsync(id);
     }
 
-    public async Task<IEnumerable<Registrant>> SearchRegistrantsAsync(String queryStringParameters)
+    public async Task<IEnumerable<Registrant>> SearchRegistrantsAsync(String searchParameters)
     {
         _logger.LogInformation("Search registrants");
-        
-        return await _repository.SearchRegistrantsAsync(queryStringParameters);
+
+        return await _repository.SearchRegistrantsAsync(searchParameters);
     }
 
 }

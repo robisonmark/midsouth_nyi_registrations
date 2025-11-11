@@ -1,11 +1,17 @@
+// Standard Libraries
 using System;
 using System.Diagnostics;
 using System.Threading;
 
+// ASP.NET Libraries
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 
+// RoBros Libraries
+using EventOfficeApi.RoBrosAddressesService.Models;
+
+// Local
 using RoBrosRegistrantsService.Models;
 using RoBrosRegistrantsService.Services;
 // using RoBrosRegistrantsService.Data;
@@ -22,11 +28,11 @@ namespace RoBrosRegistrantsService.Controllers
         //     _logger = logger;
         // }
 
-        private readonly DatabaseService _databaseService;
+        private readonly ChurchService _churchService;
 
-        public ChurchController(DatabaseService databaseService)
+        public ChurchController(ChurchService churchService)
         {
-            _databaseService = databaseService;
+            _churchService = churchService;
         }
 
         [HttpPost]
@@ -49,30 +55,24 @@ namespace RoBrosRegistrantsService.Controllers
                 // This should also create a look up table for addresses
             }
 
-            Guid addressId = Guid.NewGuid();
             church.createdBy = "Mark"; // replace with actual user
             church.updatedBy = "Mark"; // replace with actual user
 
-            Console.WriteLine($"Creating church with ID: {church.Id}, Name: {church.Name}, Address: {addressId}");
-
-            var sql = @"INSERT INTO church 
-                        (Id, Name, CreatedBy, CreatedAt, UpdatedBy, UpdatedAt, Version) 
-                        VALUES (@Id, @Name, 'Mark', NOW(), 'Mark', NOW(), 1)
-                        RETURNING Id;";
-            var parameters = new { Id = Guid.NewGuid(), Name = church.Name, AddressId = addressId };
-            // return await _databaseService.ExecuteAsync(sql, church);
-
-            int rowsAffected = await _databaseService.ExecuteAsync(sql, church);
-
-            if (rowsAffected > 0)
+            try
             {
-                // return CreatedAtAction(nameof(GetChurch), new { id = church.Id }, church);
-                return Accepted(new { id = church.Id });
-            }
-            // await Task.Delay(1000);
+                var id = await _churchService.CreateChurchAsync(church);
+                if (id == Guid.Empty)
+                {
+                    return BadRequest("Failed to create church");
+                }
 
-            return BadRequest("Failed to add registrant.");
-            // return Accepted();
+                return Accepted(new { id });
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(ex);
+                return BadRequest("Failed to add church.");
+            }
         }
 
         [HttpGet]
@@ -82,11 +82,7 @@ namespace RoBrosRegistrantsService.Controllers
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         public async Task<IActionResult> GetChurch(Guid churchId)
         {
-            var sql = "SELECT Id, Name, AddressId, CreatedAt, CreatedBy, UpdatedAt, UpdatedBy, Version FROM church WHERE Id = @Id";
-            var parameters = new { Id = churchId };
-
-            var response = await _databaseService.QuerySingleAsync<Church>(sql, parameters);
-
+            var response = await _churchService.GetChurchAsync(churchId);
             if (response == null)
             {
                 return NotFound();
