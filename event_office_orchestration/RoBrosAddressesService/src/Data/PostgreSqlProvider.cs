@@ -8,9 +8,9 @@ public class PostgreSqlProvider : ISqlProvider
     public virtual string GetCreateAddressQuery()
     {
         return @"
-            INSERT INTO addresses (id, street_address_1, street_address_2, locality, administrative_area_level, postal_code, country, created_at, created_by, updated_at, updated_by, version)
+        WITH new_address AS (
+            INSERT INTO addresses (street_address_1, street_address_2, city, state, postal_code, country, created_at, created_by, updated_at, updated_by, version)
             VALUES (
-                @Id, 
                 @StreetAddress1, 
                 @StreetAddress2, 
                 @City, 
@@ -22,7 +22,14 @@ public class PostgreSqlProvider : ISqlProvider
                 @UpdatedAt,
                 @UpdatedBy,
                 1)
-            RETURNING *;";
+            ON CONFLICT (street_address_1, city, postal_code) DO NOTHING
+            RETURNING id
+        )
+        SELECT id FROM new_address
+        UNION
+        SELECT id FROM addresses 
+        WHERE street_address_1 = @StreetAddress1 AND city = @City AND postal_code = @PostalCode
+        LIMIT 1;";
     }
 
     public virtual string GetUpdateAddressQuery()
@@ -102,7 +109,7 @@ public class PostgreSqlProvider : ISqlProvider
             SELECT EXISTS(
                 SELECT 1 FROM addresses WHERE id = @Id
                 UNION 
-                SELECT 1 FROM addresses WHERE street_address_1 = @StreetAddress1 AND locality = @City AND postal_code = @PostalCode
+                SELECT 1 FROM addresses WHERE street_address_1 = @StreetAddress1 AND city = @City AND postal_code = @PostalCode
             );";
     }
 

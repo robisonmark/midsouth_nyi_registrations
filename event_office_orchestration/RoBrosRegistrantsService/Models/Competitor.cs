@@ -3,40 +3,41 @@ using System.Diagnostics;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
-namespace EventOfficeApi.Student
+namespace RoBrosRegistrantsService.Models
 {
-    public class Competitor
+    public class Competitor : Student
     {
-        public Guid Id { get; set; }
-
-        [Required]
-        required public Guid RegistrantId { get; set; }
+        public Competitor()
+        {
+            // Competitor is a Student participant by definition
+            ParticipantRole = "Student";
+            CompetitionStatus = "Competing";
+        }
 
         [Required]
         required public int District { get; set; }
-        [Required]
-        required public string CompetitionStatus { get; set; } = "Competiting"; // competing/spectation enum
 
-        [Required]
-        required public bool Quzzing { get; set; } = false;
+        // Inherits CompetitionStatus from Student; default set in ctor above
 
-        public string[] ArtCategories { get; set; }
+        required public bool Quizzing { get; set; } = false;
 
-        public string[] CreativeMinistriesCategories { get; set; }
+        public string[] ArtCategories { get; set; } = Array.Empty<string>();
 
-        public string[] CreativeWritingCategories { get; set; }
+        public string[] CreativeMinistriesCategories { get; set; } = Array.Empty<string>();
 
-        public string[] SpeechCategories { get; set; }
+        public string[] CreativeWritingCategories { get; set; } = Array.Empty<string>();
 
-        public string[] AcademicCategories { get; set; }
+        public string[] SpeechCategories { get; set; } = Array.Empty<string>();
 
-        public string[] VocalMusicCategories { get; set; }
+        public string[] AcademicCategories { get; set; } = Array.Empty<string>();
 
-        public string[] InstrumentalMusicCategories { get; set; }
+        public string[] VocalMusicCategories { get; set; } = Array.Empty<string>();
 
-        public string[] IndividualSportCategories { get; set; }
+        public string[] InstrumentalMusicCategories { get; set; } = Array.Empty<string>();
 
-        public string[] TeamSportCategories { get; set; }
+        public string[] IndividualSportCategories { get; set; } = Array.Empty<string>();
+
+        public string[] TeamSportCategories { get; set; } = Array.Empty<string>();
 
         [Required]
         required public bool AttendingTNTatTNU { get; set; }

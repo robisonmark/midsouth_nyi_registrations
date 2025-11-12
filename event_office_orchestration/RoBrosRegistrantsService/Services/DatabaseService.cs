@@ -2,7 +2,7 @@ using System.Data;
 using Npgsql;
 using Dapper;
 
-namespace EventOfficeApi.Services
+namespace RoBrosRegistrantsService.Services
 {
     public class DatabaseService : IDisposable
     {
@@ -18,6 +18,12 @@ namespace EventOfficeApi.Services
             // https://www.npgsql.org/doc/basic-usage.html#connections-without-a-data-source
             // recommended - https://www.npgsql.org/doc/basic-usage.html#data-source
         }
+        
+        // public async Task<NpgsqlCommand> InitializeCommandAsync(string sql, object? parameters = null)
+        // {
+        //     await using var connection = await _dataSource.OpenConnectionAsync();
+        //     return new NpgsqlCommand(_sqlProvider.GetSelectAddressByIdQuery(), connection);
+        // }
 
         public async Task<T?> QuerySingleAsync<T>(string sql, object? parameters = null)
         {

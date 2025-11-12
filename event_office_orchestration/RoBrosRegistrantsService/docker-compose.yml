@@ -1,8 +1,8 @@
 services:
   api:
     build:
-      context: .
-      dockerfile: Dockerfile.dev   # <-- use dev Dockerfile
+      context: ..
+      dockerfile: ./RoBrosRegistrantsService/Dockerfile.dev   # <-- use dev Dockerfile
     ports:
       - "8080:8080"
     volumes:
