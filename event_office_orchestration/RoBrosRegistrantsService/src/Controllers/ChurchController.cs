@@ -28,9 +28,9 @@ namespace RoBrosRegistrantsService.Controllers
         //     _logger = logger;
         // }
 
-        private readonly ChurchService _churchService;
+        private readonly IChurchService _churchService;
 
-        public ChurchController(ChurchService churchService)
+        public ChurchController(IChurchService churchService)
         {
             _churchService = churchService;
         }
@@ -46,13 +46,6 @@ namespace RoBrosRegistrantsService.Controllers
             if (church.Id == null)
             {
                 church.Id = Guid.NewGuid();
-            }
-
-            if (church.Address == null)
-            {
-                // This would need to call the address service to create a new address and return the ID
-                church.Address = new Address();
-                // This should also create a look up table for addresses
             }
 
             church.createdBy = "Mark"; // replace with actual user

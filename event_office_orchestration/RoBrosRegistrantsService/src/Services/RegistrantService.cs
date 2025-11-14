@@ -54,6 +54,13 @@ public class RegistrantService: IRegistrantService
         
         Guid address_id = await _addressService.CreateAddressAsync(registrant.Address);
         registrant.AddressId = address_id;
+
+        Console.WriteLine(registrant.GetType().ToString());
+
+        if (registrant.CompetitionStatus.ToLower() == "competing")
+        {
+            Console.WriteLine("Registrant is a competitor.");
+        }
         
         return await _repository.CreateRegistrantAsync(registrant);
     }

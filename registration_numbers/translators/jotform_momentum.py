@@ -39,8 +39,6 @@ def translate_registrant(registrant_data: dict) -> MomentumRegistrant:
     if quizzing_events != "Neither" and quizzing_events is not None:
         quizzing.append(EventsQuizzing(re.sub(r"[*]", "", quizzing_events).strip()))
 
-    print(f"Quizzing Events: {quizzing}")
-
     academics = [
         EventsAcademic(re.sub(r"[*]", "", academic_event).strip())
         for academic_event in get_nested_value(registrant_data, "academics", [])
