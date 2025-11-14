@@ -53,12 +53,11 @@ public class AddressRepository : IAddressRepository
         return await MapAddressesWithMappings(reader);
     }
 
-    public async Task<Address> CreateAsync(CreateAddressRequest request)
+    public async Task<Guid> CreateAsync(CreateAddressRequest request)
     {
         // Should this be a try{} catch{} block?
         var address = new Address
         {
-            Id = Guid.NewGuid(),
             StreetAddress1 = request.StreetAddress1,
             StreetAddress2 = request.StreetAddress2,
             City = request.City,
@@ -71,12 +70,12 @@ public class AddressRepository : IAddressRepository
             UpdatedBy = "Mark"
         };
 
-        var exists = await CheckExistsBeforeCreate(address);
-        if (exists)
-        {
-            _logger.LogInformation("Address already exists");
-            throw new FileNotFoundException("Address Already Exists");
-        }
+        // var exists = await CheckExistsBeforeCreate(address);
+        // if (exists)
+        // {
+        //     _logger.LogInformation("Address already exists");
+        //     throw new FileNotFoundException("Address Already Exists");
+        // }
 
         // await using var connection = new NpgsqlConnection(_connectionString);
             // try
@@ -96,10 +95,11 @@ public class AddressRepository : IAddressRepository
 
         AddAddressParameters(command, address);
 
+
         using var reader = await command.ExecuteReaderAsync();
         if (await reader.ReadAsync())
         {
-            return MapAddressFromReader(reader);
+            return reader.GetGuid("id");
         }
 
         throw new InvalidOperationException("Failed to create address");
@@ -124,7 +124,6 @@ public class AddressRepository : IAddressRepository
         using var reader = await command.ExecuteReaderAsync();
         if (await reader.ReadAsync())
         {
-            Console.WriteLine("*--------- READING ---------*");
             return MapAddressFromReader(reader);
         }
 

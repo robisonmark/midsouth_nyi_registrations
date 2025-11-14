@@ -1,10 +1,13 @@
-namespace EventOfficeApi.Models
+using EventOfficeApi.RoBrosAddressesService.Models;
+
+namespace RoBrosRegistrantsService.Models
 {
     public class Church
     {
         public Guid? Id { get; set; }
         required public string Name { get; set; }
-        public Address? Address { get; set; }
+        public CreateAddressRequest? Address { get; set; }
+        public Guid? AddressId { get; set; }
 
         // These should be put in by the Base Service. Look into how to do this.
         // For now, just set them in the Controller.
@@ -14,6 +17,10 @@ namespace EventOfficeApi.Models
         public DateTime? updatedAt { get; set; }
 
         // Do we need small church/large church division?
+        public Church()
+        {
+            Id = Guid.NewGuid();
+            Name = string.Empty;
+        }
     }
-
 }

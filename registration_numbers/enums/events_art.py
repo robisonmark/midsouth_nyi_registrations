@@ -9,5 +9,5 @@ class EventsArt(Enum):
     PEN_INK = "Pen/Ink"
     PENCIL = "Pencil"
     STILL_PHOTO = "Still Photography"
-    WATER = "Water Color"
+    WATER = "Water"
     THREE_D_ART = "3-D Art"

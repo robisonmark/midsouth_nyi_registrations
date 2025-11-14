@@ -1,0 +1,44 @@
+# Build outputs
+**/bin/
+**/obj/
+**/out/
+
+# Visual Studio
+**/.vs/
+**/.vscode/
+**/*.user
+**/*.suo
+**/*.sln.docstates
+
+# Test outputs
+**/TestResults/
+**/*.trx
+
+# NuGet
+**/packages/
+**/*.nupkg
+
+# Node (if any)
+**/node_modules/
+
+# Git
+**/.git/
+**/.gitignore
+**/.gitattributes
+
+# Docker
+**/.dockerignore
+**/Dockerfile*
+**/docker-compose*
+
+# OS files
+**/.DS_Store
+**/Thumbs.db
+
+# Logs
+**/logs/
+**/*.log
+
+# Temporary files
+**/tmp/
+**/temp/

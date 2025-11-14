@@ -4,7 +4,7 @@ using System.Diagnostics;
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 
-namespace EventOfficeApi.Student
+namespace RoBrosRegistrantsService.Student
 {
     public class Spectator
     {
@@ -17,7 +17,10 @@ namespace EventOfficeApi.Student
         required public int District { get; set; }
 
         [Required]
-        required public string CompetitionStatus { get; set; } = "Spectating"; // competing/spectation enum
+        public string ParticipantRole { get; set; } = "student";
+
+        [Required]
+        required public string CompetitionStatus { get; set; } = "Spectating"; // competing/spectating enum
     }
 
 }

@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 
-namespace EventOfficeApi.Controllers
+namespace RoBrosRegistrantsService.Controllers
 {
     [ApiController]
     public abstract class BaseController : ControllerBase

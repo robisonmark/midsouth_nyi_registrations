@@ -1,8 +1,8 @@
 services:
   api:
     build:
-      context: .
-      dockerfile: Dockerfile.dev   # <-- use dev Dockerfile
+      context: ..
+      dockerfile: ./RoBrosRegistrantsService/Dockerfile.dev   # <-- use dev Dockerfile
     ports:
       - "8080:8080"
     volumes:
@@ -27,7 +27,7 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./Data/Schema:/docker-entrypoint-initdb.d/
+      - ./sql:/docker-entrypoint-initdb.d/
 
 volumes:
   pgdata:
