@@ -6,6 +6,8 @@ import { useAppSelector } from '../store/hooks';
 import svgPaths from "../imports/svg-n6pltu4jyi";
 import ParticipantSearch from './ParticipantSearch';
 // import type { Reservation } from '../models/Reservation';
+// import { Dialog, DialogContent, DialogHeader, DialogTitle } from './ui/dialog';
+// import { Input } from './ui/input';
 import { type EventCategory, type Church, setHeaderSubText } from '../store/slices/appSlice';
 
 type AgeCategory = string;
@@ -178,16 +180,16 @@ export default function SignUpView() {
   }, [selectedEventType, events]);
 
   // After timeslots are loaded, fetch reservations for reserved slots
-  useEffect(() => {
-    const reservedSlots = timeslots.filter(slot => slot.reservedCount >= slot.capacity && !reservations[slot.id]);
-    if (reservedSlots.length === 0) return;
+  // useEffect(() => {
+  //   const reservedSlots = timeslots.filter(slot => slot.reservedCount >= slot.capacity && !reservations[slot.id]);
+  //   if (reservedSlots.length === 0) return;
 
-    reservedSlots.forEach(slot => {
-      apiFetch<Reservation>(`/api/reservations/${slot.id}`)
-        .then(res => setReservations(prev => ({ ...prev, [slot.id]: res })))
-        .catch(() => setReservations(prev => ({ ...prev, [slot.id]: null })));
-    });
-  }, [timeslots, reservations]);
+  //   reservedSlots.forEach(slot => {
+  //     apiFetch<Reservation>(`/api/reservations/${slot.id}`)
+  //       .then(res => setReservations(prev => ({ ...prev, [slot.id]: res })))
+  //       .catch(() => setReservations(prev => ({ ...prev, [slot.id]: null })));
+  //   });
+  // }, [timeslots, reservations]);
 
   // Mock API call to search participants
   const searchParticipants = async (query: string) => {
@@ -205,7 +207,7 @@ export default function SignUpView() {
       participant.church.toLowerCase().includes(query.toLowerCase())
     );
     
-    setSearchResults(results);
+    // setSearchResults(results);
     setIsSearching(false);
   };
 
