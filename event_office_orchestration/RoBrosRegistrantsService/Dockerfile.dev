@@ -41,7 +41,7 @@ COPY ./RoBrosRegistrantsService/*.csproj ./
 RUN dotnet restore
 
 # Copy everything
-COPY ./RoBrosRegistrantsService ./
+COPY ./RoBrosRegistrantsService/src ./
 COPY ./RoBrosAddressesService/src /RoBrosAddressesService/src
 
 # Expose the dev port

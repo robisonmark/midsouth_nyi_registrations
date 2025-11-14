@@ -10,9 +10,6 @@ namespace RoBrosRegistrantsService.Models
         [Required]
         required public Guid RegistrantId { get; set; }
 
-        [Required]
-        public string CompetitionStatus { get; set; } = "Spectating"; // competing/spectating enum
-
         public Student()
         {
             // Students are participants by default

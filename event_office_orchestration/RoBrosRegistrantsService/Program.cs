@@ -24,10 +24,12 @@ var dataSource = dataSourceBuilder.Build();
 // Register application services
 // I Need to understand this better. ChatGPT explains
 builder.Services.AddScoped<RoBrosRegistrantsService.Services.DatabaseService>();
+
 builder.Services.AddScoped<RoBrosRegistrantsService.Services.IRegistrantService, RoBrosRegistrantsService.Services.RegistrantService>();
 builder.Services.AddScoped<RoBrosRegistrantsService.Data.IRegistrantRepository, RoBrosRegistrantsService.Data.RegistrantRepository>();
-builder.Services.AddScoped<RoBrosRegistrantsService.Data.ChurchRepository>();
+
 builder.Services.AddScoped<RoBrosRegistrantsService.Services.IChurchService, RoBrosRegistrantsService.Services.ChurchService>();
+builder.Services.AddScoped<RoBrosRegistrantsService.Data.IChurchRepository, RoBrosRegistrantsService.Data.ChurchRepository>();
 
 builder.Services.AddAddressPackage(dataSource);
 

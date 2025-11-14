@@ -162,20 +162,29 @@ class MomentumRegistrant(BaseModel):
             return data
 
         if data.participation_status == ParticipationStatus.SPECTATOR:
+            # TODO: Create error helper function
+            if data.event_errors is None:
+                data.event_errors = []
+
+            if (
+                (data.academic_events is not None and len(data.academic_events) > 0)
+                or (data.art_events is not None and len(data.art_events) > 0)
+                or (data.creative_ministries_events is not None and len(data.creative_ministries_events) > 0)
+                or (data.music_events is not None and len(data.music_events) > 0)
+                or (data.quizzing_events is not None and len(data.quizzing_events) > 0)
+                or (data.individual_sports_events is not None and len(data.individual_sports_events) > 0)
+                or (data.team_sports_events is not None and len(data.team_sports_events) > 0)
+            ):
+                data.event_errors.append("Spectators cannot register for events")
+
             data.art_events = []
             data.creative_ministries_events = []
             # data.math_and_business_events = []
             data.music_events = []
             data.quizzing_events = []
             data.individual_sports_events = []
-            # data.science_events = []
             data.team_sports_events = []
 
-            # TODO: Create error helper function
-            if data.event_errors is None:
-                data.event_errors = []
-
-            data.event_errors.append("Spectators cannot register for events")
             return data
 
         if data.art_events is not None:

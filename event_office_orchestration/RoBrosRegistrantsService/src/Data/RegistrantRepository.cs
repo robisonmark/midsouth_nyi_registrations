@@ -16,7 +16,7 @@ public interface IRegistrantRepository
     Task<Registrant> GetRegistrantAsync(Guid id);
     // Task<IEnumerable<Registrant>> GetAllRegistrantsAsync();
     // Task<Registrant> UpdateRegistrantAsync(Registrant registrant); // TODO: Break this into smaller parts and a whole, should it be named put
-    Task<IEnumerable<Registrant>> SearchRegistrantsAsync(string queryStringParameters);
+    Task<IEnumerable<Competitor>> SearchRegistrantsAsync(string queryStringParameters);
 }
 
 public class RegistrantRepository : IRegistrantRepository
@@ -107,9 +107,8 @@ public class RegistrantRepository : IRegistrantRepository
                     competitor.RegistrantId = registrant.Id;
 
                     var competitorSQL = @"
-                    INSERT INTO student (
+                    INSERT INTO students (
                         registrant_id,
-                        district,
                         competition_status,
                         medical_conditions,
                         dietary_restrictions,
@@ -124,18 +123,17 @@ public class RegistrantRepository : IRegistrantRepository
                         insurance_company,
                         policy_id,
                         quizzing,
-                        art_categories,
-                        creative_ministries_categories,
-                        creative_writing_categories,
-                        speech_categories,
-                        vocal_music_categories,
-                        instrumental_music_categories,
-                        individual_sport_categories,
-                        team_sport_categories,
+                        art_events,
+                        creative_ministries_events,
+                        creative_writing_events,
+                        speech_events,
+                        vocal_music_events,
+                        instrumental_music_events,
+                        individual_sports_events,
+                        team_sports_events,
                         attending_tnt_at_tnu
                     ) VALUES (
                         @RegistrantId,
-                        @District,
                         @CompetitionStatus,
                         @MedicalConditions,
                         @DietaryRestrictions,
@@ -150,14 +148,14 @@ public class RegistrantRepository : IRegistrantRepository
                         @InsuranceCompany,
                         @PolicyId,
                         @Quizzing,
-                        @ArtCategories,
-                        @CreativeMinistriesCategories,
-                        @CreativeWritingCategories,
-                        @SpeechCategories,
-                        @VocalMusicCategories,
-                        @InstrumentalMusicCategories,
-                        @IndividualSportCategories,
-                        @TeamSportCategories,
+                        @ArtEvents,
+                        @CreativeMinistriesEvents,
+                        @CreativeWritingEvents,
+                        @SpeechEvents,
+                        @VocalMusicEvents,
+                        @InstrumentalMusicEvents,
+                        @IndividualSportEvents,
+                        @TeamSportEvents,
                         @AttendingTNTatTNU
                     );";
 
@@ -177,7 +175,7 @@ public class RegistrantRepository : IRegistrantRepository
 
         var sql = @"
             SELECT 
-                id, 
+                registrants.id, 
                 given_name,
                 family_name, 
                 participant_role, 
@@ -185,30 +183,43 @@ public class RegistrantRepository : IRegistrantRepository
                 youth_leader_email, 
                 youth_leader_first_name, 
                 youth_leader_last_name, 
-                address_id, 
+                addresses.street_address_1, 
                 cell_number, 
                 email, 
                 birthday,
                 gender,
-                shirt_size
-            FROM registrants 
-            WHERE id = @id";
+                shirt_size,
+                art_events,
+                creative_ministries_events,
+                creative_writing_events,
+                speech_events,
+                vocal_music_events,
+                instrumental_music_events,
+                individual_sports_events,
+                team_sports_events
+            FROM registrants
+                INNER JOIN churches ON registrants.church_id = churches.id
+                INNER JOIN addresses ON registrants.address_id = addresses.id
+                LEFT JOIN students ON registrants.id = students.registrant_id
+            WHERE registrants.id = @id";
 
-        // using var reader = await _databaseService.QueryAsync<Registrant>(sql, id);
-        // if (await reader.ReadAsync())
-        // {
-        //     return MapRegistrantFromReader(reader);
-        // }
-        var registrant = await _databaseService.QuerySingleAsync<Registrant>(sql, new { id });
-        if (registrant != null)
+        var row = await _databaseService.QuerySingleAsync<dynamic>(sql, new { id });
+        if (row == null)
         {
-            return registrant;
+            throw new InvalidOperationException("Failed to get registrant.");
         }
 
-        throw new InvalidOperationException("Failed to add registrant.");
+        return MapRegistrantFromDatabaseRow(row);
+        // var registrant = await _databaseService.QuerySingleAsync<Competitor>(sql, new { id });
+        // if (registrant != null)
+        // {
+        //     return registrant;
+        // }
+
+        // throw new InvalidOperationException("Failed to get registrant.");
     }
 
-    public async Task<List<Registrant>> GetAllRegistrantsAsync()
+    public async Task<List<Competitor>> GetAllRegistrantsAsync()
     {
         var sql = "SELECT * FROM registrant";
         
@@ -218,7 +229,7 @@ public class RegistrantRepository : IRegistrantRepository
         //     return MapRegistrantFromReader(reader);
         // }
 
-        var registrants = (await _databaseService.QueryAsync<Registrant>(sql)).ToList();
+        var registrants = (await _databaseService.QueryAsync<Competitor>(sql)).ToList();
         if (registrants != null)
         {
             return registrants;
@@ -299,9 +310,9 @@ public class RegistrantRepository : IRegistrantRepository
         throw new InvalidOperationException("Failed to update registrant.");
     }
 
-    public async Task<IEnumerable<Registrant>> SearchRegistrantsAsync(string searchParameters)
+    public async Task<IEnumerable<Competitor>> SearchRegistrantsAsync(string searchParameters)
     {
-        IEnumerable<Registrant> return_value = new List<Registrant>();
+        IEnumerable<Competitor> return_value = new List<Competitor>();
         // Use a parameterized pattern for ILIKE. Passing the % wildcard in the SQL string
         // around the parameter (e.g. '%@p%') does NOT substitute the parameter value.
         // Two safe options are: (1) build the pattern in .NET and pass it as a parameter,
@@ -312,6 +323,12 @@ public class RegistrantRepository : IRegistrantRepository
             registrants.family_name AS FamilyName,
             registrants.participant_role AS ParticipantRole,
             registrants.church_id AS ChurchId,
+            churches.name AS ChurchName,
+            addresses.street_address_1 AS ChurchStreetAddress1,
+            addresses.street_address_2 AS ChurchStreetAddress2,
+            addresses.city AS ChurchLocality,
+            addresses.state AS ChurchAdministrativeAreaLevel,
+            addresses.postal_code AS ChurchPostalCode,
             registrants.youth_leader_email AS YouthLeaderEmail,
             registrants.youth_leader_first_name AS YouthLeaderFirstName,
             registrants.youth_leader_last_name AS YouthLeaderLastName,
@@ -325,76 +342,88 @@ public class RegistrantRepository : IRegistrantRepository
             registrants.paid AS Paid,
             registrants.notes AS Notes,
             registrants.submission_date AS SubmissionDate,
-            registrants.ip_address AS IPAddress
+            registrants.ip_address AS IPAddress,
+            students.art_events AS ArtEvents,
+            students.creative_ministries_events AS CreativeMinistriesEvents,
+            students.creative_writing_events AS CreativeWritingEvents,
+            students.speech_events AS SpeechEvents,
+            students.vocal_music_events AS VocalMusicEvents,
+            students.instrumental_music_events AS InstrumentalMusicEvents,
+            students.individual_sports_events AS IndividualSportsEvents,
+            students.team_sports_events AS TeamSportsEvents
         FROM registrants
         INNER JOIN churches ON registrants.church_id = churches.id
+        INNER JOIN addresses ON registrants.address_id = addresses.id
+        LEFT JOIN students ON registrants.id = students.registrant_id
         WHERE registrants.given_name ILIKE @pattern
             OR registrants.family_name ILIKE @pattern
             OR churches.name ILIKE @pattern;";
 
         var pattern = $"%{searchParameters}%";
-        var registrants = await _databaseService.QueryAsync<Registrant>(sql, new { pattern });
-        if (registrants != null)
+        var rows = await _databaseService.QueryAsync<dynamic>(sql, new { pattern });
+        if (rows == null)
         {
-            foreach (Registrant registrant in registrants)
-            {
-                return_value.Append(registrant);
-            }
-            return registrants;
+            return new List<Competitor>();
         }
+        
+        foreach (dynamic row in rows)
+        {
+            Competitor new_competitor = MapRegistrantFromDatabaseRow(row);
+            return_value.Append(new_competitor);
+        }
+        return return_value;
 
-        return new List<Registrant> ();
     }
 
-    private static Registrant MapRegistrantFromReader(DbDataReader reader)
+    private static Registrant MapRegistrantFromDatabaseRow(dynamic row)
     {
         // This should be able to return type Address Not CreateAddressRequest
         CreateAddressRequest registrantAddress = new CreateAddressRequest
         {
-            StreetAddress1 = reader.GetString("StreetAddress1"),
-            StreetAddress2 = reader.GetString("StreetAddress2"),
-            City = reader.GetString("Locality"),
-            State = reader.GetString("AdministrativeAreaLevel"),
-            PostalCode = reader.GetString("PostalCode"),
-            Country = reader.GetString("Country")
+            StreetAddress1 = row.GetString("StreetAddress1"),
+            StreetAddress2 = row.GetString("StreetAddress2"),
+            City = row.GetString("Locality"),
+            State = row.GetString("AdministrativeAreaLevel"),
+            PostalCode = row.GetString("PostalCode"),
+            Country = row.GetString("Country")
         }; 
 
         Church registrantChurch = new Church
         {
-            Id = reader.GetGuid("ChurchId"),
-            Name = reader.GetString("ChurchName"),
-            Address = new Address
+            Id = row.GetGuid("ChurchId"),
+            Name = row.GetString("ChurchName"),
+            Address = new CreateAddressRequest
             {
-                StreetAddress1 = reader.GetString("ChurchStreetAddress1"),
-                StreetAddress2 = reader.GetString("ChurchStreetAddress2"),
-                City = reader.GetString("ChurchLocality"),
-                State = reader.GetString("ChurchAdministrativeAreaLevel"),
-                PostalCode = reader.GetString("ChurchPostalCode"),
-                Country = reader.GetString("ChurchCountry")
+                StreetAddress1 = row.GetString("ChurchStreetAddress1"),
+                StreetAddress2 = row.GetString("ChurchStreetAddress2"),
+                City = row.GetString("ChurchLocality"),
+                State = row.GetString("ChurchAdministrativeAreaLevel"),
+                PostalCode = row.GetString("ChurchPostalCode"),
+                Country = row.GetString("ChurchCountry")
             }
         };
 
         return new Registrant
         {
-            Id = reader.GetGuid("id"),
-            GivenName = reader.GetString("GivenName"),
-            FamilyName = reader.GetString("FamilyName"), 
-            ParticipantRole = reader.GetString("ParticipantRole"), 
-            YouthLeaderEmail = reader.GetString("YouthLeaderEmail"), 
-            YouthLeaderFirstName = reader.GetString("YouthLeaderFirstName"), 
-            YouthLeaderLastName = reader.GetString("YouthLeaderLastName"), 
-            Mobile = reader.GetString("Mobile"), 
-            Email = reader.GetString("Email"), 
-            Birthday = reader.GetDateTime("Birthday"),
-            Gender = reader.GetString("Gender"),
-            ShirtSize = reader.GetString("ShirtSize"),
+            Id = row.GetGuid("id"),
+            GivenName = row.GetString("GivenName"),
+            FamilyName = row.GetString("FamilyName"), 
+            ParticipantRole = row.GetString("ParticipantRole"), 
+            YouthLeaderEmail = row.GetString("YouthLeaderEmail"), 
+            YouthLeaderFirstName = row.GetString("YouthLeaderFirstName"), 
+            YouthLeaderLastName = row.GetString("YouthLeaderLastName"), 
+            Mobile = row.GetString("Mobile"), 
+            Email = row.GetString("Email"), 
+            Birthday = row.GetDateTime("Birthday"),
+            Gender = row.GetString("Gender"),
+            ShirtSize = row.GetString("ShirtSize"),
             // These should return as whole but be stored as ID
             Address = registrantAddress, 
             Church = registrantChurch, 
             // Remove from Response
-            Paid = reader.GetBoolean("Paid"),
-            SubmissionDate = reader.GetDateTime("SubmissionDate"),
-            IPAddress = reader.GetString("IPAddress")
+            Paid = row.GetBoolean("Paid"),
+            SubmissionDate = row.GetDateTime("SubmissionDate"),
+            IPAddress = row.GetString("IPAddress")
         };
     }
 }

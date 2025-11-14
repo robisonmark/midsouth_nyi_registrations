@@ -1,3 +1,10 @@
+// ASP.NET Libraries
+using Microsoft.Extensions.Logging;
+
+// RoBros Libraries
+using EventOfficeApi.RoBrosAddressesService.Models;
+using EventOfficeApi.RoBrosAddressesService.Services;
+
 using RoBrosRegistrantsService.Data;
 using RoBrosRegistrantsService.Models;
 
@@ -14,11 +21,19 @@ public interface IChurchService
 
 public class ChurchService : IChurchService
 {
-    private readonly ChurchRepository _churchRepository;
+    private readonly IChurchRepository _churchRepository;
+    private readonly IAddressService _addressService;
+    private readonly ILogger<ChurchService> _logger;
 
-    public ChurchService(ChurchRepository churchRepository)
+    public ChurchService(
+        IChurchRepository churchRepository,
+        IAddressService addressService,
+        ILogger<ChurchService> logger
+    )
     {
         _churchRepository = churchRepository;
+        _addressService = addressService;
+        _logger = logger;
     }
 
     public async Task<Guid> CreateChurchAsync(Church church)
@@ -30,6 +45,12 @@ public class ChurchService : IChurchService
             {
                 return existing.Id.Value;
             }
+        }
+
+        if (church.Address != null)
+        {
+            Guid addressId = await _addressService.CreateAddressAsync(church.Address);
+            church.AddressId = addressId;
         }
         
         // Ensure ID and audit fields

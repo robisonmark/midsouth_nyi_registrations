@@ -12,6 +12,13 @@ namespace RoBrosRegistrantsService.Models
     {
         public Guid Id { get; set; }
 
+
+        [Required]
+        public string CompetitionStatus { get; set; } = "Spectating"; // competing/spectating enum
+        [Required]
+        public string ParticipantRole { get; set; } = "Chaperone"; // competing/spectating enum
+
+
         [Required]
         required public string GivenName { get; set; }
 
@@ -22,9 +29,6 @@ namespace RoBrosRegistrantsService.Models
         required public Church Church { get; set; } // Can be supplied as full object or as a string name in JSON
         
         public Guid? ChurchId { get; set; }
-
-        [Required]
-        public string ParticipantRole { get; set; } = "Chaperone";
 
         public string YouthLeaderEmail { get; set; } // part of church?
 
