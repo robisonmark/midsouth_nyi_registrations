@@ -22,10 +22,10 @@ namespace RoBrosEventsService.Endpoints
                 return Results.Created($"/api/events/{newEvent.Id}", newEvent);
             });
 
-            // GET /api/events
-            group.MapGet("/", async (IEventService EventService) =>
+            // GET /api/events?level=junior
+            group.MapGet("/", async ([FromQuery] string? level, IEventService EventService) =>
             {
-                var events = await EventService.GetAllEventsAsync();
+                var events = await EventService.GetAllEventsAsync(level);
                 return Results.Ok(events);
             });
 
@@ -45,6 +45,20 @@ namespace RoBrosEventsService.Endpoints
             {
                 var time_slots = await EventService.GetTimeSlotsByCategoryAndAgeAsync(category, age);
                 return Results.Ok(time_slots);
+            });
+
+            // GET /api/events/age_groups
+            group.MapGet("/age_groups", async (IEventService EventService) =>
+            {
+                var ageGroups = await EventService.GetAllAgeGroupsAsync();
+                return Results.Ok(ageGroups);
+            });
+
+            // GET /api/events/{eventId}/age_groups
+            group.MapGet("/{eventId:guid}/age_groups", async (Guid eventId, IEventService EventService) =>
+            {
+                var ageGroups = await EventService.GetAgeGroupsByEventAsync(eventId);
+                return Results.Ok(ageGroups);
             });
 
         }

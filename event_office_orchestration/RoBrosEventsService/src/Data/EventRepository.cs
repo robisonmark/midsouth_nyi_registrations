@@ -34,19 +34,26 @@ public class EventRepository : IEventRepository
         throw new InvalidOperationException("Failed to create address");
     }
 
-    public async Task<IEnumerable<Event>> GetAllEventsAsync()
+    public async Task<IEnumerable<Event>> GetAllEventsAsync(string? level = null)
     {
         var events = new List<Event>();
         await using var connection = await _dataSource.OpenConnectionAsync();
-        using var command = new NpgsqlCommand(_sqlProvider.GetAllEventsQuery(), connection);
-        
+        string sql = _sqlProvider.GetAllEventsQuery();
+        if (!string.IsNullOrEmpty(level))
+        {
+            sql += " WHERE level = @level";
+        }
+        using var command = new NpgsqlCommand(sql, connection);
+        if (!string.IsNullOrEmpty(level))
+        {
+            command.Parameters.AddWithValue("@level", level);
+        }
         using var reader = await command.ExecuteReaderAsync();
         while (await reader.ReadAsync())
         {
             events.Add(MapEventFromReader(reader));
         }
         return events;
-        // throw new InvalidOperationException("Failed to create address");
     }
 
     public async Task<IEnumerable<EventSlot>> GetEventTimeSlots(Guid id)
@@ -78,6 +85,10 @@ public class EventRepository : IEventRepository
         command.Parameters.AddWithValue("@CreatedAt", DateTime.UtcNow);
 
         await command.ExecuteNonQueryAsync(); 
+        
+        using var update = new NpgsqlCommand(_sqlProvider.UpdateReservedCountQuery(), connection);
+        update.Parameters.AddWithValue("@slotId", reservation.SlotId);
+        await update.ExecuteNonQueryAsync();
 
         return reservation;
     }
@@ -96,10 +107,35 @@ public class EventRepository : IEventRepository
 
     }
 
-    public async Task<bool> CreateEventTimeSlots(EventSlot newTimeSlot)
+    // public async Task<bool> CreateEventTimeSlots(EventSlot newTimeSlot)
+    // {
+    //     // Implementation for creating event time slots would go here
+    //     return true;
+    // }
+
+    public async Task<SlotReservation?> GetReservationById(Guid reservationId)
     {
-        // Implementation for creating event time slots would go here
-        return true;
+        await using var connection = await _dataSource.OpenConnectionAsync();
+        using var command = new NpgsqlCommand(_sqlProvider.GetReservationByIdQuery(), connection);
+        
+        command.Parameters.AddWithValue("@reservationId", reservationId);
+        using var reader = await command.ExecuteReaderAsync();
+        if (await reader.ReadAsync())
+        {
+            return new SlotReservation
+            {
+                Id = reader.GetGuid("id"),
+                SlotId = reader.GetGuid("slot_id"),
+                ParticipantId = reader.GetGuid("participant_id"),
+                ReservedName = reader.GetString("reserved_name"),
+                ReservedContact = reader.GetString("reserved_contact"),
+                Status = reader.GetString("status"),
+                CreatedAt = reader.GetDateTime("created_at"),
+                Church = reader.GetString("church")
+            };
+        }
+
+        return null;
     }
 
     private static Event MapEventFromReader(DbDataReader reader)
@@ -122,13 +158,47 @@ public class EventRepository : IEventRepository
             Id = reader.GetGuid("id"),
             EventId = reader.GetGuid("event_id"),
             TimeBlockId = reader.GetGuid("time_block_id"),
-            LocationId = reader.GetGuid("location_id"),
+            LocationId = reader.GetString("name"),
             StartTime = reader.GetDateTime("start_time"),
             EndTime = reader.GetDateTime("end_time"),
             Capacity = reader.GetInt32("capacity"),
             ReservedCount = reader.GetInt32("reserved_count"),
             Status = reader.GetString("status"),
+            Level = reader.GetString("level")
         };
     }
+
+    public async Task<IEnumerable<string>> GetAllAgeGroupsAsync()
+    {
+        var ageGroups = new List<string>();
+        await using var connection = await _dataSource.OpenConnectionAsync();
+        // This assumes you have an EventSlot or EventTimeBlock table with an AgeGroup or Level column
+        // Adjust the query as needed for your schema
+        var sql = "SELECT DISTINCT level FROM event_time_blocks WHERE level IS NOT NULL AND level <> '' ORDER BY level";
+        using var command = new NpgsqlCommand(sql, connection);
+        using var reader = await command.ExecuteReaderAsync();
+        while (await reader.ReadAsync())
+        {
+            ageGroups.Add(reader.GetString(0));
+        }
+        return ageGroups;
+    }
+    
+        public async Task<IEnumerable<string>> GetAgeGroupsByEventAsync(Guid eventId)
+        {
+            var ageGroups = new List<string>();
+            await using var connection = await _dataSource.OpenConnectionAsync();
+            // This assumes you have an EventTimeBlock or similar table with event_id and level columns
+            // Adjust the query as needed for your schema
+            var sql = "SELECT DISTINCT level FROM event_time_blocks WHERE event_id = @eventId AND level IS NOT NULL AND level <> '' ORDER BY level";
+            using var command = new NpgsqlCommand(sql, connection);
+            command.Parameters.AddWithValue("@eventId", eventId);
+            using var reader = await command.ExecuteReaderAsync();
+            while (await reader.ReadAsync())
+            {
+                ageGroups.Add(reader.GetString(0));
+            }
+            return ageGroups;
+        }
 
 }

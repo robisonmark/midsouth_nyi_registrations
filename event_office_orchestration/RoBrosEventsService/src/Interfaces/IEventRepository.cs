@@ -5,10 +5,17 @@ namespace RoBrosEventsService.Interfaces;
 public interface IEventRepository
 {
     Task<Event> GetEventById(Guid id);
-    Task<IEnumerable<Event>> GetAllEventsAsync();
+    Task<IEnumerable<Event>> GetAllEventsAsync(string? level = null);
     Task<IEnumerable<EventSlot>> GetEventTimeSlots(Guid id);
-    Task<SlotReservation> CreateReservation(SlotReservation reservation);
     Task<bool> CreateEvent(Event newEvent);
+    
+    Task<SlotReservation> CreateReservation(SlotReservation reservation);
+    Task<SlotReservation?> GetReservationById(Guid reservationId);
+
+    Task<IEnumerable<string>> GetAllAgeGroupsAsync();
+    
+        // New: Get age groups for a specific event
+        Task<IEnumerable<string>> GetAgeGroupsByEventAsync(Guid eventId);
 }
 
 public interface ISqlProvider
@@ -18,5 +25,6 @@ public interface ISqlProvider
     string GetEventTimeSlotsQuery();
     string CreateReservationQuery();
     string CreateEvent();
-    
+    string GetReservationByIdQuery();
+    string UpdateReservedCountQuery();
 }
