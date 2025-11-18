@@ -7,10 +7,12 @@ from config import API_KEY, EVENT, MOMENTUM_FORM_ID
 from dotenv import dotenv_values
 from enums import ParticipationStatus, RegistrationType
 from FileManager import FileManager
+from SwagManager import SwagManager
+from SwagPDFGenerator import SwagPDFGenerator
 from translators.jotform import JotformClient
 from translators.jotform_momentum import translate_registrant
 
-config = {**dotenv_values("./.env")}  # This loads variables from .env into os.environ
+config = {**dotenv_values("./.env")}
 
 api_key = config.get("JOTFORM_API_KEY")
 
@@ -20,20 +22,24 @@ class MomentumWorksheets:
     Class to handle the generation of raw data from Jotform submissions for Momentum worksheets.
     """
 
-    def __init__(self, shirt_manager):
+    def __init__(self):
         self._event = EVENT.MOMENTUM
         self.file_manager = FileManager(self._event)
 
-        self.shirt_manager = shirt_manager
+        # Initialize SwagManager for Momentum (no age group split)
+        # Cutoff date: November 4, 2025 (last guaranteed date)
+        self.swag_manager = SwagManager(event_type="momentum", age_group_specific=False, cutoff_date=datetime(2025, 11, 4))
+        self.swag_pdf_generator = SwagPDFGenerator(font_name="Helvetica", font_size=12)
+
         self.church_roster_worksheet = {}
         self.church_shirt_worksheet = {}
         self.event_roster_by_category = {}
         self.church_summary_worksheet = {}
         self.momentum_main_worksheet = {}
 
-        # define pricing as when price expires.  the last date defines the walk up price
+        # Define pricing as when price expires. The last date defines the walk up price
         self.pricing_breakdown = {
-            "student": {"10-24-25": 85, "11-14-25": 130, "11-14-25": 175},
+            "student": {"10-24-25": 85, "11-14-25": 130, "11-15-25": 175},
             "chaperone": 35,
             "spectator": 55,
         }
@@ -64,7 +70,7 @@ class MomentumWorksheets:
             if submission_date <= price_date:
                 return self.pricing_breakdown["student"][price_date_string]
 
-            elif submission_date > max_date:
+            elif submission_date >= max_date:
                 return self.pricing_breakdown["student"][list(price_dates)[-1]] + self.late_fee
 
     def create_church_worksheets(self, row_data: dict) -> None:
@@ -96,7 +102,6 @@ class MomentumWorksheets:
         if current_church is None or current_church != row_data.church:
             current_church = row_data.church
 
-            # TODO: PULL THIS OUT INTO CREATION METHOD
             if self.church_roster_worksheet.get(current_church) is None:
                 self.church_roster_worksheet[current_church] = [
                     {
@@ -172,13 +177,12 @@ class MomentumWorksheets:
                         str(row_data.payment > 0.0),
                         self.get_price(row_data),
                         entry["paid"],
-                        f"=SUM(R{row_index + 1}-S{row_index + 1})",
+                        f"=SUM(S{row_index + 1}-T{row_index + 1})",
                     ),
                     "format": None,
                 },
             )
 
-    # TODO: Look into reuse of code with create_roster_workbook
     def create_church_workbook(self) -> None:
         for church in self.church_roster_worksheet:
             current_row_index = len(self.church_roster_worksheet[church][0]["data"])
@@ -191,9 +195,9 @@ class MomentumWorksheets:
                     "values": [
                         "Total Due at Registration",
                         "",
-                        f"=SUM(R2:R{str(current_row_index)})",
                         f"=SUM(S2:S{str(current_row_index)})",
                         f"=SUM(T2:T{str(current_row_index)})",
+                        f"=SUM(U2:U{str(current_row_index)})",
                     ],
                     "format": {"bold": True},
                 },
@@ -204,7 +208,7 @@ class MomentumWorksheets:
                     "type": "row",
                     "row": 0,
                     "col": 22,
-                    "values": ["Payment Details", "", "", "Total Due", f"=T{current_row_index + 1}"],
+                    "values": ["Payment Details", "", "", "Total Due", f"=U{current_row_index + 1}"],
                     "format": {"bold": True},
                 },
             )
@@ -261,7 +265,6 @@ class MomentumWorksheets:
                         excel_safe_name = event.replace("/", "-").replace("\\", "-")
 
                         # Names for these too are too long for Excel worksheets
-                        # and at max length they are the same
                         if excel_safe_name == "Human Video-Interpretive Worship Group":
                             excel_safe_name = "Human Video - Group"
                         if excel_safe_name == "Human Video-Interpretive Worship Solo":
@@ -405,7 +408,6 @@ class MomentumWorksheets:
             )
 
     def create_momentum_main_workbook(self) -> None:
-        # TODO: Add church roster worksheets to this workbook after these worksheets
         all_rows = [
             {
                 "worksheet_name": "Momentum Main",
@@ -439,19 +441,18 @@ class MomentumWorksheets:
             }
         ]
 
-        # Iterate churches in alphabetical order and sort each sheet's rows by last name (values[2]).
+        # Iterate churches in alphabetical order and sort each sheet's rows by last name
         for church in sorted(self.momentum_main_worksheet.keys(), key=lambda s: s.lower()):
             sheet = self.momentum_main_worksheet[church][0]
 
             data = sheet.get("data", [])
             if not data:
-                # nothing to write
                 continue
 
             header = data[0]
             rows = data[1:]
 
-            # Sort rows by the last-name column which is at values[2]. Fall back to empty string if missing.
+            # Sort rows by last name (values[3])
             def _last_name_key(row):
                 vals = row.get("values", ())
                 try:
@@ -463,9 +464,9 @@ class MomentumWorksheets:
 
             sheet["data"] = [header] + rows
 
-            all_rows[0]["data"].extend(sheet["data"][1:])  # Exclude header for now
+            all_rows[0]["data"].extend(sheet["data"][1:])
 
-        # Re-index row numbers so any downstream code relying on row indices stays consistent.
+        # Re-index row numbers
         for idx, r in enumerate(all_rows[0]["data"], start=1):
             r["row"] = idx
 
@@ -473,29 +474,43 @@ class MomentumWorksheets:
             "momentum_main_sheet", f"{datetime.now().strftime('%Y_%m_%d')}_momentum_main", all_rows
         )
 
+    def generate_swag_pdfs(self) -> None:
+        """Generate swag PDFs for all churches."""
+        print("\n🎽 Generating Swag Reports...")
+        swag_output = self.file_manager.create_directory("swag_reports")
+        self.swag_pdf_generator.generate_all_pdfs(self.swag_manager, swag_output)
+        print(f"✅ Swag reports saved to: {swag_output}")
+
     def process_data(self, raw_data: list[dict[str:Any]]) -> None:
         """
         Processes the raw data and generates the necessary worksheets.
         :param raw_data: List of registrant data from Jotform.
         """
         for data in raw_data:
-            if data.church == "" or data.registration_type is RegistrationType.STAFF:
-                data.church = "Staff"
+            if data.approval_status.lower() not in ["deleted", "archived"]:
+                # Add to swag manager
+                self.swag_manager.add_registrant(data)
 
-            self.create_church_worksheets(data)
-            self.create_roster_by_category_worksheets(data)
-            self.create_church_summary(data)
-            self.aggregate_momentum_main_sheet(data)
+                if data.church == "" or data.registration_type is RegistrationType.STAFF:
+                    data.church = "Staff"
+
+                self.create_church_worksheets(data)
+                self.create_roster_by_category_worksheets(data)
+                self.create_church_summary(data)
+                self.aggregate_momentum_main_sheet(data)
 
         self.create_church_workbook()
         self.create_roster_workbook()
         self.create_church_summary_pdf()
         self.create_momentum_main_workbook()
 
+        # Generate swag PDFs
+        self.generate_swag_pdfs()
+
 
 if __name__ == "__main__":
-    momemtum_worksheets = MomentumWorksheets(shirt_manager=None)  # Replace with actual shirt manager instance
+    momentum_worksheets = MomentumWorksheets()
     jotform = JotformClient(api_key, MOMENTUM_FORM_ID, translate_registrant)
 
     momentum_data = jotform.get_data()
-    momemtum_worksheets.process_data(momentum_data)
+    momentum_worksheets.process_data(momentum_data)
