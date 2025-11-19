@@ -2,7 +2,12 @@ using RoBrosEventsService.Data;
 using RoBrosEventsService.Interfaces;
 using RoBrosEventsService.Services;
 using RoBrosEventsService.Endpoints;
-using RoBrosEventsService.Extensions;
+
+using EventOfficeApi.RoBrosAddressesService.Extensions;
+using RoBrosRegistrantsService.Services;
+using RoBrosRegistrantsService.Endpoints;
+using RoBrosRegistrantsService.Controllers;
+using RoBrosRegistrantsService.Data;
 
 using Microsoft.AspNetCore.Routing;
 using Microsoft.AspNetCore.Mvc;
@@ -12,26 +17,20 @@ using Microsoft.Extensions.Configuration;
 using Npgsql;
 using NSwag;
 
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Register dependencies
-// builder.Services.AddScoped<ISqlProvider, PostgresProvider>();
-// builder.Services.AddScoped<IEventRepository, EventRepository>();
-// builder.Services.AddScoped<EventService>();
-
 // Add services to the container
-builder.Services.AddControllers();
+// builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var connectionString = "Host=localhost;Database=postgres;Username=postgres;Password=mysecretpassword;Port=5432;";
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
-Console.WriteLine($"DB ConnectionString: {connectionString}");
 
-// var dataSource = dataSourceBuilder.Build();
 await using var dataSource = dataSourceBuilder.Build();
 // This should inject a logger and anything else that comes from the consuming service
-builder.Services.AddEventPackage(dataSource);
+builder.Services.AddAddressPackage(dataSource);
 
 builder.Services.AddOpenApiDocument(options =>
 {
@@ -65,8 +64,11 @@ builder.Services.AddOpenApiDocument(options =>
 
 var app = builder.Build();
 
-app.MapReservationEndpoints();
-app.MapEventEndpoints();
+// app.MapReservationEndpoints();
+// app.MapEventEndpoints();
+// app.MapRegistrantEndpoints();
+// app.MapChurchEndpoints();
+
 
 app.UseSwagger();
 app.UseSwaggerUI();
