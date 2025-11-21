@@ -1,10 +1,9 @@
 using System.Data;
-
 using RoBrosEventsService.Data;
 using RoBrosEventsService.Interfaces;
 using RoBrosEventsService.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Npgsql;
+using Microsoft.Data.SqlClient;
 
 namespace RoBrosEventsService.Extensions;
 
@@ -12,42 +11,39 @@ public static class ServiceCollectionExtensions
 {
     public static IServiceCollection AddEventPackage(
         this IServiceCollection services,
-        NpgsqlDataSource dataSource)
+        string connectionString,
+        Type? customSqlProviderType = null)
     {
-       
-        services.AddScoped<ISqlProvider, PostgresProvider>();
+        // Register SQL provider (default or custom)
+        if (customSqlProviderType != null && typeof(ISqlProvider).IsAssignableFrom(customSqlProviderType))
+        {
+            services.AddScoped(typeof(ISqlProvider), customSqlProviderType);
+        }
+        else
+        {
+            services.AddScoped<ISqlProvider, SqlServerProvider>();
+        }
 
         // Register repository
         services.AddScoped<IEventRepository>(provider =>
         {
             var sqlProvider = provider.GetRequiredService<ISqlProvider>();
             var logger = provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<EventRepository>>();
-
-            // TODO: I think logger should come from the consuming service and default if not provided
-            return new EventRepository(dataSource, sqlProvider, logger);
+            return new EventRepository(connectionString, sqlProvider, logger);
         });
 
-        // Register service
+        // Register service (both interface and concrete class)
         services.AddScoped<IEventService, EventService>();
+        services.AddScoped<EventService>();
 
         return services;
     }
 
-    // public static IServiceCollection AddAddressPackage<TSqlProvider>(
-    //     this IServiceCollection services,
-    //     string connectionString)
-    //     where TSqlProvider : class, ISqlProvider
-    // {
-    //     return services.AddAddressPackage(connectionString, typeof(TSqlProvider));
-    // }
-
-    // public static IServiceCollection AddAddressPackage<TSqlProvider>(
-    //     this IServiceCollection services,
-    //     NpgsqlDataSource dataSource)
-    //     where TSqlProvider : class, ISqlProvider
-    // {
-    //     return services.AddAddressPackage(dataSource, typeof(TSqlProvider));
-    // }
-
-   
+    public static IServiceCollection AddEventPackage<TSqlProvider>(
+        this IServiceCollection services,
+        string connectionString)
+        where TSqlProvider : class, ISqlProvider
+    {
+        return services.AddEventPackage(connectionString, typeof(TSqlProvider));
+    }
 }

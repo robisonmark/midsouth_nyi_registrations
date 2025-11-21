@@ -3,5 +3,5 @@ from enum import Enum
 
 class EventsAcademic(Enum):
     MATH = "Math"
-    ACCOUNTING = "Accounting"
+    ACCOUNTING = "Accounting (Sr. Youth Only)"
     SCIENCE = "Science (Sr. Youth Only)"

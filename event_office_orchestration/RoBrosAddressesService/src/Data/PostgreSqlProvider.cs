@@ -2,27 +2,20 @@ using EventOfficeApi.RoBrosAddressesService.Interfaces;
 
 namespace EventOfficeApi.RoBrosAddressesService.Data;
 
-public class PostgreSqlProvider : ISqlProvider
+public class SqlServerProvider : ISqlProvider
 {
-    // should version start with 0 or 1
     public virtual string GetCreateAddressQuery()
     {
         return @"
-            INSERT INTO addresses (id, street_address_1, street_address_2, locality, administrative_area_level, postal_code, country, created_at, created_by, updated_at, updated_by, version)
-            VALUES (
-                @Id, 
-                @StreetAddress1, 
-                @StreetAddress2, 
-                @City, 
-                @State, 
-                @PostalCode, 
-                @Country, 
-                @CreatedAt,
-                @CreatedBy,
-                @UpdatedAt,
-                @UpdatedBy,
-                1)
-            RETURNING *;";
+        MERGE addresses AS target
+        USING (SELECT @StreetAddress1 AS street_address_1, @City AS city, @PostalCode AS postal_code) AS source
+        ON target.street_address_1 = source.street_address_1 
+           AND target.city = source.city 
+           AND target.postal_code = source.postal_code
+        WHEN NOT MATCHED THEN
+            INSERT (street_address_1, street_address_2, city, state, postal_code, country, created_at, created_by, updated_at, updated_by, version)
+            VALUES (@StreetAddress1, @StreetAddress2, @City, @State, @PostalCode, @Country, @CreatedAt, @CreatedBy, @UpdatedAt, @UpdatedBy, 1)
+        OUTPUT INSERTED.id;";
     }
 
     public virtual string GetUpdateAddressQuery()
@@ -36,8 +29,8 @@ public class PostgreSqlProvider : ISqlProvider
                 postal_code = COALESCE(@PostalCode, postal_code),
                 country = COALESCE(@Country, country),
                 updated_at = @UpdatedAt
-            WHERE id = @Id
-            RETURNING *;";
+            OUTPUT INSERTED.*
+            WHERE id = @Id;";
     }
 
     public virtual string GetDeleteAddressQuery()
@@ -67,8 +60,8 @@ public class PostgreSqlProvider : ISqlProvider
     {
         return @"
             INSERT INTO address_entity_mappings (id, address_id, entity_id, entity_type, address_type, created_at)
-            VALUES (@Id, @AddressId, @EntityId, @EntityType, @AddressType, @CreatedAt)
-            RETURNING *;";
+            OUTPUT INSERTED.*
+            VALUES (@Id, @AddressId, @EntityId, @EntityType, @AddressType, @CreatedAt);";
     }
 
     public virtual string GetDeleteMappingQuery()
@@ -99,45 +92,64 @@ public class PostgreSqlProvider : ISqlProvider
     public virtual string GetAddressExistsQuery()
     {
         return @"
-            SELECT EXISTS(
+            SELECT CASE WHEN EXISTS(
                 SELECT 1 FROM addresses WHERE id = @Id
                 UNION 
-                SELECT 1 FROM addresses WHERE street_address_1 = @StreetAddress1 AND locality = @City AND postal_code = @PostalCode
-            );";
+                SELECT 1 FROM addresses WHERE street_address_1 = @StreetAddress1 AND city = @City AND postal_code = @PostalCode
+            ) THEN CAST(1 AS BIT) ELSE CAST(0 AS BIT) END;";
     }
 
     public virtual string GetCreateTablesScript()
     {
         return @"
-            CREATE EXTENSION IF NOT EXISTS ""uuid-ossp"";
+            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'addresses')
+            BEGIN
+                CREATE TABLE addresses (
+                    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+                    street_address_1 NVARCHAR(255) NOT NULL,
+                    street_address_2 NVARCHAR(255) NULL,
+                    city NVARCHAR(100) NOT NULL,
+                    state NVARCHAR(100) NOT NULL,
+                    postal_code NVARCHAR(20) NOT NULL,
+                    country NVARCHAR(100) NOT NULL DEFAULT 'USA',
+                    created_at DATETIMEOFFSET NOT NULL DEFAULT SYSDATETIMEOFFSET(),
+                    created_by NVARCHAR(100) NOT NULL,
+                    updated_at DATETIMEOFFSET NOT NULL DEFAULT SYSDATETIMEOFFSET(),
+                    updated_by NVARCHAR(100) NOT NULL,
+                    version INT NOT NULL DEFAULT 1,
+                    CONSTRAINT UQ_addresses_street_city_postal UNIQUE (street_address_1, city, postal_code)
+                );
+            END;
 
-            CREATE TABLE IF NOT EXISTS addresses (
-                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                street_address_1 VARCHAR(255) NOT NULL,
-                street_address_2 VARCHAR(255),
-                city VARCHAR(100) NOT NULL,
-                state VARCHAR(100) NOT NULL,
-                postal_code VARCHAR(20) NOT NULL,
-                country VARCHAR(100) NOT NULL DEFAULT 'USA',
-                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-                updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-            );
+            IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'address_entity_mappings')
+            BEGIN
+                CREATE TABLE address_entity_mappings (
+                    id UNIQUEIDENTIFIER PRIMARY KEY DEFAULT NEWID(),
+                    address_id UNIQUEIDENTIFIER NOT NULL,
+                    entity_id UNIQUEIDENTIFIER NOT NULL,
+                    entity_type NVARCHAR(100) NOT NULL,
+                    address_type NVARCHAR(50) NULL,
+                    created_at DATETIMEOFFSET NOT NULL DEFAULT SYSDATETIMEOFFSET(),
+                    CONSTRAINT FK_mappings_addresses FOREIGN KEY (address_id) 
+                        REFERENCES addresses(id) ON DELETE CASCADE,
+                    CONSTRAINT UQ_mappings_address_entity UNIQUE (address_id, entity_id, entity_type)
+                );
+            END;
 
-            CREATE TABLE IF NOT EXISTS address_entity_mappings (
-                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                address_id UUID NOT NULL REFERENCES addresses(id) ON DELETE CASCADE,
-                entity_id UUID NOT NULL,
-                entity_type VARCHAR(100) NOT NULL,
-                address_type VARCHAR(50),
-                created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-                UNIQUE(address_id, entity_id, entity_type)
-            );
+            IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'idx_addresses_city' AND object_id = OBJECT_ID('addresses'))
+                CREATE INDEX idx_addresses_city ON addresses(city);
 
-            CREATE INDEX IF NOT EXISTS idx_addresses_city ON addresses(city);
-            CREATE INDEX IF NOT EXISTS idx_addresses_state ON addresses(state);
-            CREATE INDEX IF NOT EXISTS idx_addresses_postal_code ON addresses(postal_code);
-            CREATE INDEX IF NOT EXISTS idx_mappings_entity ON address_entity_mappings(entity_id, entity_type);
-            CREATE INDEX IF NOT EXISTS idx_mappings_address ON address_entity_mappings(address_id);
+            IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'idx_addresses_state' AND object_id = OBJECT_ID('addresses'))
+                CREATE INDEX idx_addresses_state ON addresses(state);
+
+            IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'idx_addresses_postal_code' AND object_id = OBJECT_ID('addresses'))
+                CREATE INDEX idx_addresses_postal_code ON addresses(postal_code);
+
+            IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'idx_mappings_entity' AND object_id = OBJECT_ID('address_entity_mappings'))
+                CREATE INDEX idx_mappings_entity ON address_entity_mappings(entity_id, entity_type);
+
+            IF NOT EXISTS (SELECT * FROM sys.indexes WHERE name = 'idx_mappings_address' AND object_id = OBJECT_ID('address_entity_mappings'))
+                CREATE INDEX idx_mappings_address ON address_entity_mappings(address_id);
         ";
     }
 }

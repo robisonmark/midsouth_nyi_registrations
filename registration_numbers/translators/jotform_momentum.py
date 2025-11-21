@@ -21,7 +21,7 @@ from models.momentum import MomentumRegistrant
 
 
 def translate_registrant(registrant_data: dict) -> MomentumRegistrant:
-    payment_array = get_nested_value(registrant_data, "paymentSent.paymentArray")
+    payment_array = get_nested_value(registrant_data, "payment_amount.paymentArray")
     payment = 0.00
     if payment_array is not None:
         payment += float(get_nested_value(json.loads(payment_array), "total", 0.00))
@@ -33,6 +33,11 @@ def translate_registrant(registrant_data: dict) -> MomentumRegistrant:
     participation_status = get_nested_value(registrant_data, "participant_spectator", "")
     if participation_status is not None:
         participation_status = participation_status.split("(")[0].strip()
+
+    quizzing_events = get_nested_value(registrant_data, "quizzing")
+    quizzing = []
+    if quizzing_events != "Neither" and quizzing_events is not None:
+        quizzing.append(EventsQuizzing(re.sub(r"[*]", "", quizzing_events).strip()))
 
     academics = [
         EventsAcademic(re.sub(r"[*]", "", academic_event).strip())
@@ -126,11 +131,7 @@ def translate_registrant(registrant_data: dict) -> MomentumRegistrant:
         art_events=arts,
         creative_ministries_events=creative_ministries,
         music_events=music,
-        quizzing_events=(
-            []
-            if get_nested_value(registrant_data, "quizzing") == "Neither"
-            else get_nested_value(registrant_data, "quizzing")
-        ),
+        quizzing_events=quizzing,
         individual_sports_events=individual_sports,
         team_sports_events=team_sports,
         event_errors=get_nested_value(registrant_data, "event_errors", []),  # List of errors for events if any
