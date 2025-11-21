@@ -1,5 +1,5 @@
 using Microsoft.Extensions.Logging;
-using Npgsql;
+using Microsoft.Data.SqlClient;
 using System.Data;
 using System.Data.Common;
 
@@ -241,57 +241,29 @@ public class RegistrantRepository : IRegistrantRepository
     public async Task<Registrant> UpdateRegistrantAsync(Registrant registrant)
     {
          var sql = @"
-            UPDATE registrant (
-                Id, 
-                GivenName,
-                FamilyName, 
-                ParticipantRole, 
-                ChurchId, 
-                YouthLeaderEmail, 
-                YouthLeaderFirstName, 
-                YouthLeaderLastName, 
-                AddressId, 
-                Mobile, 
-                Email, 
-                Birthday,
-                Gender, 
-                ShirtSize, 
-                Price, 
-                Paid, 
-                Notes, 
-                SubmissionDate, 
-                IPAddress,
-                CreatedAt,
-                CreatedBy,
-                UpdatedAt,
-                UpdatedBy
-            ) VALUES (
-                @Id,
-                @GivenName, 
-                @FamilyName, 
-                @ParticipantRole, 
-                @Church, 
-                @YouthLeaderEmail, 
-                @YouthLeaderFirstName, 
-                @YouthLeaderLastName, 
-                @Address, 
-                @Mobile, 
-                @Email, 
-                @Birthday, 
-                @Gender, 
-                @ShirtSize, 
-                @Price, 
-                @Paid, 
-                @Notes, 
-                @SubmissionDate, 
-                @IPAddress,
-                @CreatedAt,
-                @CreatedBy,
-                @UpdatedAt,
-                @UpdatedBy
-            )
-            WHERE Id = @Id
-            RETURNING *";
+            UPDATE registrant SET
+                GivenName = @GivenName,
+                FamilyName = @FamilyName, 
+                ParticipantRole = @ParticipantRole, 
+                ChurchId = @ChurchId, 
+                YouthLeaderEmail = @YouthLeaderEmail, 
+                YouthLeaderFirstName = @YouthLeaderFirstName, 
+                YouthLeaderLastName = @YouthLeaderLastName, 
+                AddressId = @AddressId, 
+                Mobile = @Mobile, 
+                Email = @Email, 
+                Birthday = @Birthday,
+                Gender = @Gender, 
+                ShirtSize = @ShirtSize, 
+                Price = @Price, 
+                Paid = @Paid, 
+                Notes = @Notes, 
+                SubmissionDate = @SubmissionDate, 
+                IPAddress = @IPAddress,
+                UpdatedAt = @UpdatedAt,
+                UpdatedBy = @UpdatedBy
+            OUTPUT INSERTED.*
+            WHERE Id = @Id";
 
         // int rowsAffected = await _databaseService.ExecuteAsync(sql, registrant);
         // Console.WriteLine($"Rows affected: {rowsAffected}");
@@ -313,10 +285,10 @@ public class RegistrantRepository : IRegistrantRepository
     public async Task<IEnumerable<Competitor>> SearchRegistrantsAsync(string searchParameters)
     {
         IEnumerable<Competitor> return_value = new List<Competitor>();
-        // Use a parameterized pattern for ILIKE. Passing the % wildcard in the SQL string
+        // Use a parameterized pattern for LIKE. Passing the % wildcard in the SQL string
         // around the parameter (e.g. '%@p%') does NOT substitute the parameter value.
         // Two safe options are: (1) build the pattern in .NET and pass it as a parameter,
-        // or (2) use SQL concatenation: column ILIKE '%' || @p || '%'.
+        // or (2) use SQL concatenation: column LIKE '%' + @p + '%'.
          var sql = @"SELECT
             registrants.id AS Id,
             registrants.given_name AS GivenName,
@@ -355,9 +327,9 @@ public class RegistrantRepository : IRegistrantRepository
         INNER JOIN churches ON registrants.church_id = churches.id
         INNER JOIN addresses ON registrants.address_id = addresses.id
         LEFT JOIN students ON registrants.id = students.registrant_id
-        WHERE registrants.given_name ILIKE @pattern
-            OR registrants.family_name ILIKE @pattern
-            OR churches.name ILIKE @pattern;";
+        WHERE registrants.given_name LIKE @pattern
+            OR registrants.family_name LIKE @pattern
+            OR churches.name LIKE @pattern;";
 
         var pattern = $"%{searchParameters}%";
         var rows = await _databaseService.QueryAsync<dynamic>(sql, new { pattern });

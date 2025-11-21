@@ -2,7 +2,7 @@ using RoBrosEventsService.Interfaces;
 
 namespace RoBrosEventsService.Data;
 
-public class PostgresProvider : ISqlProvider
+public class SqlServerProvider : ISqlProvider
 {
     public virtual string GetAllEventsQuery()
     {
@@ -27,7 +27,7 @@ public class PostgresProvider : ISqlProvider
         return @"
             INSERT INTO events (id, category, name, master_start, master_end, is_active) 
             VALUES
-            (uuid_generate_v4(), @category, @name, @masterStart, @masterEnd, 'true')
+            (NEWID(), @category, @name, @masterStart, @masterEnd, 1);
         ";
     }
 
@@ -37,7 +37,6 @@ public class PostgresProvider : ISqlProvider
             INSERT INTO event_times (event_id, start_time, end_time, created_by, version)
             VALUES
             (@eventId, @startTime, @endTime, @createdBy, 1);
-
         ";
     }
 
@@ -93,7 +92,7 @@ public class PostgresProvider : ISqlProvider
     {
         return @"
             SELECT *
-            FROM event_types
+            FROM event_types;
         ";
     }
 
@@ -119,9 +118,9 @@ public class PostgresProvider : ISqlProvider
         return @"
             INSERT INTO slot_reservations
                 (slot_id, participant_id, reserved_name, reserved_contact, status, created_at)
+            OUTPUT INSERTED.*
             VALUES
-                (@SlotId, @ParticipantId, @ReservedName, @ReservedContact, @Status, @CreatedAt)
-            RETURNING *;
+                (@SlotId, @ParticipantId, @ReservedName, @ReservedContact, @Status, @CreatedAt);
         ";
     }
 
@@ -145,4 +144,3 @@ public class PostgresProvider : ISqlProvider
         ";
     }
 }
-

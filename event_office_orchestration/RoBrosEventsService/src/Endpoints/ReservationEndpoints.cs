@@ -17,7 +17,7 @@ namespace RoBrosEventsService.Endpoints
             group.MapPost("/{slotId:guid}", async (
                 Guid slotId,
                 ReservationRequest request,
-                IEventService EventService) =>
+                IEventService eventService) =>
             {
                 var reservation = new SlotReservation
                 {
@@ -27,14 +27,14 @@ namespace RoBrosEventsService.Endpoints
                     ReservedContact = request.ReservedContact,
                     // Status, CreatedAt, and Id will use their defaults
                 };
-                await EventService.CreateReservationAsync(reservation);
+                await eventService.CreateReservationAsync(reservation);
                 return Results.Ok();
             });
 
-            group.MapGet("/{reservationId:guid}", async (Guid reservationId, IEventService EventService) =>
+            group.MapGet("/{reservationId:guid}", async (Guid reservationId, IEventService eventService) =>
             {
                 // Implementation for getting a reservation by ID can be added here
-                var reservation = await EventService.GetReservationAsync(reservationId);
+                var reservation = await eventService.GetReservationAsync(reservationId);
                 return Results.Ok(reservation);
             });
         }

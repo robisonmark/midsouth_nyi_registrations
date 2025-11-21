@@ -1,7 +1,7 @@
 using EventOfficeApi.RoBrosAddressesService.Interfaces;
 using EventOfficeApi.RoBrosAddressesService.Models;
 using Microsoft.Extensions.Logging;
-using Npgsql;
+using Microsoft.Data.SqlClient;
 using System;
 using System.Data;
 using System.Data.Common;
@@ -10,18 +10,13 @@ namespace EventOfficeApi.RoBrosAddressesService.Data;
 
 public class AddressRepository : IAddressRepository
 {
-    // private readonly string _connectionString;
+    private readonly string _connectionString;
     private readonly ISqlProvider _sqlProvider;
-
-    private readonly NpgsqlDataSource _dataSource;
-    
     private readonly ILogger<AddressRepository> _logger;
 
-    // public AddressRepository(string connectionString, ISqlProvider sqlProvider, ILogger<AddressRepository> logger)
-    public AddressRepository(NpgsqlDataSource dataSource, ISqlProvider sqlProvider, ILogger<AddressRepository> logger)
+    public AddressRepository(string connectionString, ISqlProvider sqlProvider, ILogger<AddressRepository> logger)
     {
-        _dataSource = dataSource;
-        // _connectionString = connectionString;
+        _connectionString = connectionString;
         _sqlProvider = sqlProvider;
         _logger = logger;
     }
@@ -29,11 +24,11 @@ public class AddressRepository : IAddressRepository
 
     public async Task<Address?> GetByIdAsync(Guid id)
     {
-        await using var connection = await _dataSource.OpenConnectionAsync();
-        using var command = new NpgsqlCommand(_sqlProvider.GetSelectAddressByIdQuery(), connection);
-
-        command.Parameters.AddWithValue("Id", id);
-
+        await using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
+        
+        using var command = new SqlCommand(_sqlProvider.GetSelectAddressByIdQuery(), connection);
+        command.Parameters.AddWithValue("@Id", id);
 
         using var reader = await command.ExecuteReaderAsync();
         return await MapAddressWithMappings(reader);
@@ -41,13 +36,12 @@ public class AddressRepository : IAddressRepository
 
     public async Task<IEnumerable<Address>> GetByEntityAsync(Guid entityId, string entityType)
     {
-        // using var connection = new NpgsqlConnection(_connectionString);
-        // await connection.OpenAsync();
-        await using var connection = await _dataSource.OpenConnectionAsync();
+        await using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
 
-        using var command = new NpgsqlCommand(_sqlProvider.GetSelectAddressByEntityQuery());
-        command.Parameters.AddWithValue("EntityId", entityId);
-        command.Parameters.AddWithValue("EntityType", entityType);
+        using var command = new SqlCommand(_sqlProvider.GetSelectAddressByEntityQuery(), connection);
+        command.Parameters.AddWithValue("@EntityId", entityId);
+        command.Parameters.AddWithValue("@EntityType", entityType);
 
         using var reader = await command.ExecuteReaderAsync();
         return await MapAddressesWithMappings(reader);
@@ -55,7 +49,6 @@ public class AddressRepository : IAddressRepository
 
     public async Task<Guid> CreateAsync(CreateAddressRequest request)
     {
-        // Should this be a try{} catch{} block?
         var address = new Address
         {
             StreetAddress1 = request.StreetAddress1,
@@ -70,36 +63,16 @@ public class AddressRepository : IAddressRepository
             UpdatedBy = "Mark"
         };
 
-        // var exists = await CheckExistsBeforeCreate(address);
-        // if (exists)
-        // {
-        //     _logger.LogInformation("Address already exists");
-        //     throw new FileNotFoundException("Address Already Exists");
-        // }
-
-        // await using var connection = new NpgsqlConnection(_connectionString);
-            // try
-            // {
-            //     if (connection.State != System.Data.ConnectionState.Open)
-            //         Console.WriteLine("Connection: " + connection.ConnectionString);
-            // await connection.OpenAsync();
-            // connection.Open();
-            // }
-            // catch (Exception ex)
-            // {
-            //     Console.WriteLine("test " + ex);
-            // }
-
-        await using var connection = await _dataSource.OpenConnectionAsync();
-        using var command = new NpgsqlCommand(_sqlProvider.GetCreateAddressQuery(), connection);
-
+        await using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
+        
+        using var command = new SqlCommand(_sqlProvider.GetCreateAddressQuery(), connection);
         AddAddressParameters(command, address);
-
 
         using var reader = await command.ExecuteReaderAsync();
         if (await reader.ReadAsync())
         {
-            return reader.GetGuid("id");
+            return reader.GetGuid(reader.GetOrdinal("id"));
         }
 
         throw new InvalidOperationException("Failed to create address");
@@ -107,19 +80,18 @@ public class AddressRepository : IAddressRepository
 
     public async Task<Address?> UpdateAsync(Guid id, UpdateAddressRequest request)
     {
-        // using var connection = new NpgsqlConnection(_connectionString);
-        // await connection.OpenAsync();
-        await using var connection = await _dataSource.OpenConnectionAsync();
+        await using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
 
-        using var command = new NpgsqlCommand(_sqlProvider.GetUpdateAddressQuery());
-        command.Parameters.AddWithValue("Id", id);
-        command.Parameters.AddWithValue("StreetAddress1", (object?)request.StreetAddress1 ?? DBNull.Value);
-        command.Parameters.AddWithValue("StreetAddress2", (object?)request.StreetAddress2 ?? DBNull.Value);
-        command.Parameters.AddWithValue("City", (object?)request.City ?? DBNull.Value);
-        command.Parameters.AddWithValue("State", (object?)request.State ?? DBNull.Value);
-        command.Parameters.AddWithValue("PostalCode", (object?)request.PostalCode ?? DBNull.Value);
-        command.Parameters.AddWithValue("Country", (object?)request.Country ?? DBNull.Value);
-        command.Parameters.AddWithValue("UpdatedAt", DateTime.UtcNow);
+        using var command = new SqlCommand(_sqlProvider.GetUpdateAddressQuery(), connection);
+        command.Parameters.AddWithValue("@Id", id);
+        command.Parameters.AddWithValue("@StreetAddress1", (object?)request.StreetAddress1 ?? DBNull.Value);
+        command.Parameters.AddWithValue("@StreetAddress2", (object?)request.StreetAddress2 ?? DBNull.Value);
+        command.Parameters.AddWithValue("@City", (object?)request.City ?? DBNull.Value);
+        command.Parameters.AddWithValue("@State", (object?)request.State ?? DBNull.Value);
+        command.Parameters.AddWithValue("@PostalCode", (object?)request.PostalCode ?? DBNull.Value);
+        command.Parameters.AddWithValue("@Country", (object?)request.Country ?? DBNull.Value);
+        command.Parameters.AddWithValue("@UpdatedAt", DateTime.UtcNow);
 
         using var reader = await command.ExecuteReaderAsync();
         if (await reader.ReadAsync())
@@ -132,12 +104,11 @@ public class AddressRepository : IAddressRepository
 
     public async Task<bool> DeleteAsync(Guid id)
     {
-        // using var connection = new NpgsqlConnection(_connectionString);
-        // await connection.OpenAsync();
-        await using var connection = await _dataSource.OpenConnectionAsync();
+        await using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
 
-        using var command = new NpgsqlCommand(_sqlProvider.GetDeleteAddressQuery());
-        command.Parameters.AddWithValue("Id", id);
+        using var command = new SqlCommand(_sqlProvider.GetDeleteAddressQuery(), connection);
+        command.Parameters.AddWithValue("@Id", id);
 
         var rowsAffected = await command.ExecuteNonQueryAsync();
         return rowsAffected > 0;
@@ -155,17 +126,16 @@ public class AddressRepository : IAddressRepository
             CreatedAt = DateTime.UtcNow
         };
 
-        // using var connection = new NpgsqlConnection(_connectionString);
-        // await connection.OpenAsync();
-        await using var connection = await _dataSource.OpenConnectionAsync();
+        await using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
 
-        using var command = new NpgsqlCommand(_sqlProvider.GetCreateMappingQuery());
-        command.Parameters.AddWithValue("Id", mapping.Id);
-        command.Parameters.AddWithValue("AddressId", mapping.AddressId);
-        command.Parameters.AddWithValue("EntityId", mapping.EntityId);
-        command.Parameters.AddWithValue("EntityType", mapping.EntityType);
-        command.Parameters.AddWithValue("AddressType", (object?)mapping.AddressType ?? DBNull.Value);
-        command.Parameters.AddWithValue("CreatedAt", mapping.CreatedAt);
+        using var command = new SqlCommand(_sqlProvider.GetCreateMappingQuery(), connection);
+        command.Parameters.AddWithValue("@Id", mapping.Id);
+        command.Parameters.AddWithValue("@AddressId", mapping.AddressId);
+        command.Parameters.AddWithValue("@EntityId", mapping.EntityId);
+        command.Parameters.AddWithValue("@EntityType", mapping.EntityType);
+        command.Parameters.AddWithValue("@AddressType", (object?)mapping.AddressType ?? DBNull.Value);
+        command.Parameters.AddWithValue("@CreatedAt", mapping.CreatedAt);
 
         using var reader = await command.ExecuteReaderAsync();
         if (await reader.ReadAsync())
@@ -178,14 +148,13 @@ public class AddressRepository : IAddressRepository
 
     public async Task<bool> UnmapFromEntityAsync(Guid addressId, Guid entityId, string entityType)
     {
-        // using var connection = new NpgsqlConnection(_connectionString);
-        // await connection.OpenAsync();
-        await using var connection = await _dataSource.OpenConnectionAsync();
+        await using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
 
-        using var command = new NpgsqlCommand(_sqlProvider.GetDeleteMappingQuery());
-        command.Parameters.AddWithValue("AddressId", addressId);
-        command.Parameters.AddWithValue("EntityId", entityId);
-        command.Parameters.AddWithValue("EntityType", entityType);
+        using var command = new SqlCommand(_sqlProvider.GetDeleteMappingQuery(), connection);
+        command.Parameters.AddWithValue("@AddressId", addressId);
+        command.Parameters.AddWithValue("@EntityId", entityId);
+        command.Parameters.AddWithValue("@EntityType", entityType);
 
         var rowsAffected = await command.ExecuteNonQueryAsync();
         return rowsAffected > 0;
@@ -193,13 +162,12 @@ public class AddressRepository : IAddressRepository
 
     public async Task<IEnumerable<AddressEntityMapping>> GetMappingsByEntityAsync(Guid entityId, string entityType)
     {
-        // using var connection = new NpgsqlConnection(_connectionString);
-        // await connection.OpenAsync();
-        await using var connection = await _dataSource.OpenConnectionAsync();
+        await using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
 
-        using var command = new NpgsqlCommand(_sqlProvider.GetSelectMappingsByEntityQuery());
-        command.Parameters.AddWithValue("EntityId", entityId);
-        command.Parameters.AddWithValue("EntityType", entityType);
+        using var command = new SqlCommand(_sqlProvider.GetSelectMappingsByEntityQuery(), connection);
+        command.Parameters.AddWithValue("@EntityId", entityId);
+        command.Parameters.AddWithValue("@EntityType", entityType);
 
         using var reader = await command.ExecuteReaderAsync();
         var mappings = new List<AddressEntityMapping>();
@@ -214,14 +182,13 @@ public class AddressRepository : IAddressRepository
 
     public async Task<IEnumerable<Address>> SearchAsync(string? city = null, string? state = null, string? postalCode = null)
     {
-        // using var connection = new NpgsqlConnection(_connectionString);
-        // await connection.OpenAsync();
-        await using var connection = await _dataSource.OpenConnectionAsync();
+        await using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
 
-        using var command = new NpgsqlCommand(_sqlProvider.GetSearchAddressesQuery());
-        command.Parameters.AddWithValue("City", (object?)city ?? DBNull.Value);
-        command.Parameters.AddWithValue("State", (object?)state ?? DBNull.Value);
-        command.Parameters.AddWithValue("PostalCode", (object?)postalCode ?? DBNull.Value);
+        using var command = new SqlCommand(_sqlProvider.GetSearchAddressesQuery(), connection);
+        command.Parameters.AddWithValue("@City", (object?)city ?? DBNull.Value);
+        command.Parameters.AddWithValue("@State", (object?)state ?? DBNull.Value);
+        command.Parameters.AddWithValue("@PostalCode", (object?)postalCode ?? DBNull.Value);
 
         using var reader = await command.ExecuteReaderAsync();
         return await MapAddressesWithMappings(reader);
@@ -229,14 +196,14 @@ public class AddressRepository : IAddressRepository
 
     public async Task<bool> CheckExistsBeforeCreate(Address address)
     {
-        // TODO: see about using existing connection?
-        await using var connection = await _dataSource.OpenConnectionAsync();
+        await using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
 
-        using var command = new NpgsqlCommand(_sqlProvider.GetAddressExistsQuery(), connection);
-        command.Parameters.AddWithValue("Id", address.Id);
-        command.Parameters.AddWithValue("StreetAddress1", address.StreetAddress1);
-        command.Parameters.AddWithValue("City", address.City);
-        command.Parameters.AddWithValue("PostalCode", address.PostalCode);
+        using var command = new SqlCommand(_sqlProvider.GetAddressExistsQuery(), connection);
+        command.Parameters.AddWithValue("@Id", address.Id);
+        command.Parameters.AddWithValue("@StreetAddress1", address.StreetAddress1);
+        command.Parameters.AddWithValue("@City", address.City);
+        command.Parameters.AddWithValue("@PostalCode", address.PostalCode);
 
         var result = await command.ExecuteScalarAsync();
         return result is bool exists && exists;
@@ -244,47 +211,46 @@ public class AddressRepository : IAddressRepository
 
     public async Task<bool> ExistsAsync(Guid id)
     {
-        // using var connection = new NpgsqlConnection(_connectionString);
-        // await connection.OpenAsync();
-        await using var connection = await _dataSource.OpenConnectionAsync();
+        await using var connection = new SqlConnection(_connectionString);
+        await connection.OpenAsync();
 
-        using var command = new NpgsqlCommand(_sqlProvider.GetAddressExistsQuery());
-        command.Parameters.AddWithValue("Id", id);
+        using var command = new SqlCommand(_sqlProvider.GetAddressExistsQuery(), connection);
+        command.Parameters.AddWithValue("@Id", id);
 
         var result = await command.ExecuteScalarAsync();
         return result is bool exists && exists;
     }
 
-    private static void AddAddressParameters(NpgsqlCommand command, Address address)
+    private static void AddAddressParameters(SqlCommand command, Address address)
     {
-        command.Parameters.AddWithValue("Id", address.Id);
-        command.Parameters.AddWithValue("StreetAddress1", address.StreetAddress1);
-        command.Parameters.AddWithValue("StreetAddress2", (object?)address.StreetAddress2 ?? DBNull.Value);
-        command.Parameters.AddWithValue("City", address.City);
-        command.Parameters.AddWithValue("State", address.State);
-        command.Parameters.AddWithValue("PostalCode", address.PostalCode);
-        command.Parameters.AddWithValue("Country", address.Country);
-        command.Parameters.AddWithValue("CreatedAt", address.CreatedAt);
-        command.Parameters.AddWithValue("CreatedBy", address.CreatedBy);
-        command.Parameters.AddWithValue("UpdatedAt", address.UpdatedAt);
-        command.Parameters.AddWithValue("UpdatedBy", address.UpdatedBy);
+        command.Parameters.AddWithValue("@Id", address.Id);
+        command.Parameters.AddWithValue("@StreetAddress1", address.StreetAddress1);
+        command.Parameters.AddWithValue("@StreetAddress2", (object?)address.StreetAddress2 ?? DBNull.Value);
+        command.Parameters.AddWithValue("@City", address.City);
+        command.Parameters.AddWithValue("@State", address.State);
+        command.Parameters.AddWithValue("@PostalCode", address.PostalCode);
+        command.Parameters.AddWithValue("@Country", address.Country);
+        command.Parameters.AddWithValue("@CreatedAt", address.CreatedAt);
+        command.Parameters.AddWithValue("@CreatedBy", address.CreatedBy);
+        command.Parameters.AddWithValue("@UpdatedAt", address.UpdatedAt);
+        command.Parameters.AddWithValue("@UpdatedBy", address.UpdatedBy);
     }
 
     private static Address MapAddressFromReader(DbDataReader reader)
     {
         return new Address
         {
-            Id = reader.GetGuid("id"),
-            StreetAddress1 = reader.GetString("street_address_1"),
-            StreetAddress2 = reader.IsDBNull("street_address_2") ? null : reader.GetString("street_address_2"),
-            City = reader.GetString("locality"),
-            State = reader.GetString("administrative_area_level"),
-            PostalCode = reader.GetString("postal_code"),
-            Country = reader.GetString("country"),
-            CreatedAt = reader.GetDateTime("created_at"),
-            CreatedBy = reader.GetString("created_by"),
-            UpdatedAt = reader.GetDateTime("updated_at"),
-            UpdatedBy = reader.GetString("updated_by")
+            Id = reader.GetGuid(reader.GetOrdinal("id")),
+            StreetAddress1 = reader.GetString(reader.GetOrdinal("street_address_1")),
+            StreetAddress2 = reader.IsDBNull(reader.GetOrdinal("street_address_2")) ? null : reader.GetString(reader.GetOrdinal("street_address_2")),
+            City = reader.GetString(reader.GetOrdinal("locality")),
+            State = reader.GetString(reader.GetOrdinal("administrative_area_level")),
+            PostalCode = reader.GetString(reader.GetOrdinal("postal_code")),
+            Country = reader.GetString(reader.GetOrdinal("country")),
+            CreatedAt = reader.GetDateTime(reader.GetOrdinal("created_at")),
+            CreatedBy = reader.GetString(reader.GetOrdinal("created_by")),
+            UpdatedAt = reader.GetDateTime(reader.GetOrdinal("updated_at")),
+            UpdatedBy = reader.GetString(reader.GetOrdinal("updated_by"))
         };
     }
 
@@ -292,12 +258,12 @@ public class AddressRepository : IAddressRepository
     {
         return new AddressEntityMapping
         {
-            Id = reader.GetGuid("id"),
-            AddressId = reader.GetGuid("address_id"),
-            EntityId = reader.GetGuid("entity_id"),
-            EntityType = reader.GetString("entity_type"),
-            AddressType = reader.IsDBNull("address_type") ? null : reader.GetString("address_type"),
-            CreatedAt = reader.GetDateTime("created_at")
+            Id = reader.GetGuid(reader.GetOrdinal("id")),
+            AddressId = reader.GetGuid(reader.GetOrdinal("address_id")),
+            EntityId = reader.GetGuid(reader.GetOrdinal("entity_id")),
+            EntityType = reader.GetString(reader.GetOrdinal("entity_type")),
+            AddressType = reader.IsDBNull(reader.GetOrdinal("address_type")) ? null : reader.GetString(reader.GetOrdinal("address_type")),
+            CreatedAt = reader.GetDateTime(reader.GetOrdinal("created_at"))
         };
     }
 
@@ -313,7 +279,7 @@ public class AddressRepository : IAddressRepository
 
         while (await reader.ReadAsync())
         {
-            var addressId = reader.GetGuid("id");
+            var addressId = reader.GetGuid(reader.GetOrdinal("id"));
             
             if (!addressDict.TryGetValue(addressId, out var address))
             {
@@ -322,16 +288,17 @@ public class AddressRepository : IAddressRepository
             }
 
             // Check if there's a mapping
-            if (!reader.IsDBNull("mapping_id"))
+            var mappingIdOrdinal = reader.GetOrdinal("mapping_id");
+            if (!reader.IsDBNull(mappingIdOrdinal))
             {
                 var mapping = new AddressEntityMapping
                 {
-                    Id = reader.GetGuid("mapping_id"),
+                    Id = reader.GetGuid(mappingIdOrdinal),
                     AddressId = addressId,
-                    EntityId = reader.GetGuid("entity_id"),
-                    EntityType = reader.GetString("entity_type"),
-                    AddressType = reader.IsDBNull("address_type") ? null : reader.GetString("address_type"),
-                    CreatedAt = reader.GetDateTime("mapping_created_at")
+                    EntityId = reader.GetGuid(reader.GetOrdinal("entity_id")),
+                    EntityType = reader.GetString(reader.GetOrdinal("entity_type")),
+                    AddressType = reader.IsDBNull(reader.GetOrdinal("address_type")) ? null : reader.GetString(reader.GetOrdinal("address_type")),
+                    CreatedAt = reader.GetDateTime(reader.GetOrdinal("mapping_created_at"))
                 };
 
                 address.EntityMappings.Add(mapping);
