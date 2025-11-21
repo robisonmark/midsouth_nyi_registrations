@@ -1,37 +1,25 @@
 using System.Text.Json.Serialization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
-using Npgsql;
+using Microsoft.Data.SqlClient;
 using NSwag;
-
 // RoBros Libraries
 using EventOfficeApi.RoBrosAddressesService.Extensions;
 
-
 var builder = WebApplication.CreateBuilder(args);
+
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 
-    ?? "Host=localhost;Database=RoBrosRegistrant;Username=postgres;Password=YourPassword;Timeout=30;";
-
-builder.Services.AddSingleton<NpgsqlDataSource>(provider =>
-{
-    var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
-    return dataSourceBuilder.Build();
-});
-
-var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
-var dataSource = dataSourceBuilder.Build();
+    ?? "";
 
 // Register application services
 // I Need to understand this better. ChatGPT explains
 builder.Services.AddScoped<RoBrosRegistrantsService.Services.DatabaseService>();
-
 builder.Services.AddScoped<RoBrosRegistrantsService.Services.IRegistrantService, RoBrosRegistrantsService.Services.RegistrantService>();
 builder.Services.AddScoped<RoBrosRegistrantsService.Data.IRegistrantRepository, RoBrosRegistrantsService.Data.RegistrantRepository>();
-
 builder.Services.AddScoped<RoBrosRegistrantsService.Services.IChurchService, RoBrosRegistrantsService.Services.ChurchService>();
 builder.Services.AddScoped<RoBrosRegistrantsService.Data.IChurchRepository, RoBrosRegistrantsService.Data.ChurchRepository>();
 
-builder.Services.AddAddressPackage(dataSource);
+builder.Services.AddAddressPackage(connectionString);
 
 // Add services to the container.
 builder.Services.AddControllers()
@@ -65,14 +53,12 @@ builder.Services.AddOpenApiDocument(options =>
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
+// if (app.Environment.IsDevelopment())
+// {
     // Add OpenAPI document serving middleware
     app.UseOpenApi();
-
     // Add web UI for Swagger
     app.UseSwaggerUi(); // Use Swagger UI (from NSwag)
-
     // Optionally add ReDoc for another UI
     app.UseReDoc(settings =>
     {
@@ -80,7 +66,7 @@ if (app.Environment.IsDevelopment())
         settings.Path = "/redoc";
         settings.DocumentPath = "/swagger/v1/swagger.json"; // Set the correct Swagger document path
     });
-}
+// }
 
 // Configure the routes
 app.MapControllers();
