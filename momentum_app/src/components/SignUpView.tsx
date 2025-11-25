@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import {  useDispatch } from 'react-redux';
-import { apiFetch } from '../api/client';
+import { apiFetch, eventApiFetch } from '../api/client';
 import { useParams } from 'react-router-dom';
 import { useAppSelector } from '../store/hooks';
 import svgPaths from "../imports/svg-n6pltu4jyi";
@@ -78,7 +78,15 @@ export default function SignUpView() {
   }, [category]); // Empty dependency array ensures it runs only once on mount
 
 
+  useEffect(() => {
+    const fetchEvents = async () => {
+      const results = await eventApiFetch<Any>(`/api/events`);
+      console.log("results: ", results);
+    }
+    console.log("fetchEvents: ", fetchEvents); 
 
+    fetchEvents();
+  }, [])
 
   // Load available age groups for the selected event
   useEffect(() => {
@@ -96,7 +104,7 @@ export default function SignUpView() {
         return;
       }
       try {
-        const result = await apiFetch<AgeCategory[]>(`/api/events/${selectedEvent.id}/age_groups`);
+        const result = await eventApiFetch<AgeCategory[]>(`/api/events/${selectedEvent.id}/age_groups`);
         setAgeGroups(result);
         setSelectedAgeGroup(result[0] || '');
       } catch {
@@ -115,8 +123,9 @@ export default function SignUpView() {
       setTimeslotError(null);
       try {
         const selectedEvent = events.find(e => e.name === selectedEventType);
+        console.log(selectedEvent)
         if (selectedEvent) {
-          const filtered = await apiFetch<TimeSlot[]>(`/api/events/${selectedEvent.id}/time_slots?age=${newAgeGroup}`);
+          const filtered = await eventApiFetch<TimeSlot[]>(`/api/events/${selectedEvent.id}/time_slots?age=${newAgeGroup}`);
           setTimeslots(filtered);
         }
       } catch (err: any) {
@@ -144,7 +153,7 @@ export default function SignUpView() {
   useEffect(() => {
     setLoadingEvents(true);
     setEventsError(null);
-    apiFetch<Array<{ id: string; name: string; category: string; type?: string }>>('/api/events')
+    eventApiFetch<Array<{ id: string; name: string; category: string; type?: string }>>('/api/events')
       .then((data) => {
         setEvents(data);
         // Set default event type if not already set
@@ -171,7 +180,7 @@ export default function SignUpView() {
       setLoadingTimeslots(false);
       return;
     }
-    apiFetch<TimeSlot[]>(`/api/events/${selectedEvent.id}/time_slots`)
+    eventApiFetch<TimeSlot[]>(`/api/events/${selectedEvent.id}/time_slots`)
       .then(setTimeslots)
       .catch((err) => setTimeslotError(err.message))
       .finally(() => setLoadingTimeslots(false));
@@ -183,7 +192,7 @@ export default function SignUpView() {
     if (reservedSlots.length === 0) return;
 
     reservedSlots.forEach(slot => {
-      apiFetch<Reservation>(`/api/reservations/${slot.id}`)
+      eventApiFetch<Reservation>(`/api/reservations/${slot.id}`)
         .then(res => setReservations(prev => ({ ...prev, [slot.id]: res })))
         .catch(() => setReservations(prev => ({ ...prev, [slot.id]: null })));
     });
@@ -232,7 +241,7 @@ export default function SignUpView() {
   const handleSelectParticipant = async (participant: { id: number; name: string; church: string }) => {
     if (!selectedTimeSlot) return;
     try {
-      await apiFetch(`/api/reservations/${selectedTimeSlot}`, {
+      await eventApiFetch(`/api/reservations/${selectedTimeSlot}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -242,7 +251,7 @@ export default function SignUpView() {
         })
       });
       // Fetch the latest reservation for this slot to ensure UI is in sync with backend
-      const latestReservation = await apiFetch(`/api/reservations/${selectedTimeSlot}`);
+      const latestReservation = await eventApiFetch(`/api/reservations/${selectedTimeSlot}`);
       setReservations(prev => ({
         ...prev,
         [selectedTimeSlot]: latestReservation

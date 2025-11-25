@@ -99,3 +99,23 @@
 | Creativity                                     | Engineering Projects Evaluation                         | Project demonstrates significant creativity in one or more of the above criteria |
 | Presentation/Poster                            | Engineering Projects Evaluation                         | Logical organization of material; clarity of graphics and legends; supporting documentation displayed |
 | Interview                                       | Engineering Projects Evaluation                         | Clear, concise, thoughtful responses to questions; understanding of basic science relevant to project; understanding interpretation and limitation of results and conclusions; degree of independence in conducting project; recognition of potential impact in science, society and/or economics; quality of ideas for further research and development |
+
+## Scoring Allocations
+| Category                       |  1st  |  2nd  |  3rd  |  Entry/Participation  | All-Star |  MVP  |
+| Quizzing - A League            |  1000 |  750  |  500  |  200                  | 100      |  200  |
+| Quizzing - B League            |  700  |  500  |  350  |  150                  | 100      |  200  |
+| Quizzing - A League Individual |  500  |  400  |  350  |  4th-200, 5th 100     | 100      |  200  |
+| Quizzing - B League Individual |  300  |  200  |  100  |  4th-0, 5th 0.        | 100      |  200  |
+| Team Sports                    |  700  |  500  |  350  |  75 (per team)        | 100      |  200  |
+| Individual Sports              |  400  |  250  |  150  |  75                   | 0        |  0    |
+| Vocal Music Choir/Ensemble     |  500  |  300  |  200  |  100                  | 0        |  0    |
+| Instrumental Music             |  400  |  250  |  150  |  75                   | 0        |  0    |
+| Speech                         |  400  |  250  |  150  |  75                   | 0        |  0    |
+| Math & Accounting              |  400  |  250  |  150  |  75                   | 0        |  0    |
+| Creative Writing               |  400  |  250  |  150  |  75                   | 0        |  0    |
+| Art                            |  400  |  250  |  150  |  75                   | 0        |  0    |
+| Creative Ministries            |  400  |  250  |  150  |  75                   | 0        |  0    |
+
+### Additional scoring considerations
+- Exhibition Events do not recieve points for entry or placement
+
