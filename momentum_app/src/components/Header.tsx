@@ -22,7 +22,9 @@ export default function Header() {
             <div className="relative max-w-[1400px] mx-auto h-full">
                 
             {/* Momentum Logo */}
-            <div className="absolute left-[15px] md:left-[40px] top-[13px] md:top-[15px] h-[40px] md:h-[40px]">
+            {/* <div className="absolute left-[15px] md:left-[40px] top-[13px] md:top-[15px] h-[40px] md:h-[40px]"> */}
+            {/* Momentum Logo */}
+            <div className="absolute left-[15px] md:left-[40px] top-[13px] md:top-[20px] w-[158px] md:w-[200px] h-[35px] md:h-[44px]">
                 <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 158 35">
                 <path clipRule="evenodd" d={svgPaths.p3f704780} fill="#39FF14" fillRule="evenodd" />
                 </svg>

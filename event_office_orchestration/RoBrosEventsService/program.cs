@@ -9,7 +9,6 @@ using System.Text.Json.Serialization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Data.SqlClient;
-using Npgsql;
 using NSwag;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -25,7 +24,9 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 // var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-var connectionString = "Host=localhost;Database=RoBrosRegistrant;Username=postgres;Password=YourPassword";
+// var connectionString = "Host=localhost;Database=RoBrosRegistrant;Username=postgres;Password=YourPassword";
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+var connectionString = "Host=localhost;Database=postgres;Username=postgres;Password=mysecretpassword;Port=5432;";
 var dataSourceBuilder = new NpgsqlDataSourceBuilder(connectionString);
 
 Console.WriteLine($"DB ConnectionString: {connectionString}");

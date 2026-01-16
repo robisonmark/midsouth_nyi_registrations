@@ -30,6 +30,13 @@ namespace RoBrosRegistrantsService.Services
         //     return new SqlCommand(sql, connection);
         // }
 
+        // public async Task<SqlCommand> InitializeCommandAsync(string sql, object? parameters = null)
+        // {
+        //     await using var connection = new SqlConnection(_connectionString);
+        //     await connection.OpenAsync();
+        //     return new SqlCommand(sql, connection);
+        // }
+
         public async Task<T?> QuerySingleAsync<T>(string sql, object? parameters = null)
         {
             return await _connection.QuerySingleOrDefaultAsync<T>(sql, parameters);
