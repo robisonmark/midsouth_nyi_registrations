@@ -6,7 +6,7 @@ public interface IAddressRepository
 {
     Task<Address?> GetByIdAsync(Guid id);
     Task<IEnumerable<Address>> GetByEntityAsync(Guid entityId, string entityType);
-    Task<Address> CreateAsync(CreateAddressRequest request);
+    Task<Guid> CreateAsync(CreateAddressRequest request);
     Task<Address?> UpdateAsync(Guid id, UpdateAddressRequest request);
     Task<bool> DeleteAsync(Guid id);
     Task<AddressEntityMapping> MapToEntityAsync(Guid addressId, Guid entityId, string entityType, string? addressType = null);

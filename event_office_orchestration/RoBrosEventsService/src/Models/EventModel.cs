@@ -30,13 +30,14 @@ public class EventSlot
     public Guid Id { get; set; }
     public Guid EventId { get; set; }
     public Guid TimeBlockId { get; set; }
-    public Guid LocationId { get; set; }
+    public string LocationId { get; set; }
     public DateTime StartTime { get; set; }
     public DateTime EndTime { get; set; }
     public int Capacity { get; set; } = 1;
     public int ReservedCount { get; set; } = 0;
     public string Status { get; set; } = "open";
     public DateTime CreatedAt { get; set; }
+    public string Level { get; set; } = default!;
 }
 
 public class SlotReservation
@@ -49,6 +50,7 @@ public class SlotReservation
     public string Status { get; set; } = "reserved";
     public DateTime CreatedAt { get; set; }
     public int Version { get; set; } = 1;
+    public string? Church { get; set; }
 }
 
 public class Location

@@ -14,11 +14,13 @@ export type Church =
 interface AppState {
   selectedChurch: Church;
   selectedCategory: EventCategory;
+  headerSubText: String;
 }
 
 const initialState: AppState = {
   selectedChurch: "Clarksville Grace",
   selectedCategory: "vocal",
+  headerSubText: "Schedule"
 };
 
 const appSlice = createSlice({
@@ -37,9 +39,15 @@ const appSlice = createSlice({
     ) => {
       state.selectedCategory = action.payload;
     },
+    setHeaderSubText: (
+      state,
+      action: PayloadAction<string>,
+    ) => {
+      state.headerSubText = action.payload;
+    }
   },
 });
 
-export const { setSelectedChurch, setSelectedCategory } =
+export const { setSelectedChurch, setSelectedCategory, setHeaderSubText } =
   appSlice.actions;
 export default appSlice.reducer;

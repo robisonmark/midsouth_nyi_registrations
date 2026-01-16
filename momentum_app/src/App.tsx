@@ -3,6 +3,7 @@ import { Provider } from 'react-redux';
 import { store } from './store/store';
 import SignUpView from './components/SignUpView';
 import ScheduleView from './components/ScheduleView';
+import Header from './components/Header';
 import BottomNavigation from './components/BottomNavigation';
 
 export default function App() {
@@ -10,11 +11,13 @@ export default function App() {
     <Provider store={store}>
       <Router>
         <div className="relative min-h-screen bg-[#fdfdf1] overflow-x-hidden">
+          <Header />
           <Routes>
-            <Route path="/" element={<Navigate to="/signup/vocal" replace />} />
+            <Route path="/" index element={<ScheduleView />} />
             <Route path="/signup/:category" element={<SignUpView />} />
             <Route path="/schedule" element={<ScheduleView />} />
-            <Route path="*" element={<Navigate to="/signup/vocal" replace />} />
+            <Route path="*" element={<ScheduleView />} />
+            {/* <Route path="*" element={<Navigate to="/signup/vocal" replace />} /> */}
           </Routes>
           
           <BottomNavigation />

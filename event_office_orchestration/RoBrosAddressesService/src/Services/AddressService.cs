@@ -44,14 +44,14 @@ public class AddressService : IAddressService
         return await _repository.GetByEntityAsync(entityId, entityType);
     }
 
-    public async Task<Address> CreateAddressAsync(CreateAddressRequest request)
+    public async Task<Guid> CreateAddressAsync(CreateAddressRequest request)
     {
         _logger.LogInformation("Creating new address for city: {City}, state: {State}", request.City, request.State);
-        
+
         ValidateCreateRequest(request);
-        
         var address = await _repository.CreateAsync(request);
-        _logger.LogInformation("Created address with ID: {AddressId}", address.Id);
+        
+        _logger.LogInformation("Created address with ID: {Address}", address);
         
         return address;
     }
