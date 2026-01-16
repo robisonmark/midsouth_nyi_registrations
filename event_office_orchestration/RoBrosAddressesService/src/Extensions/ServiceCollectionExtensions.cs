@@ -1,10 +1,9 @@
 using System.Data;
-
+using System.Data.SqlClient;
 using EventOfficeApi.RoBrosAddressesService.Data;
 using EventOfficeApi.RoBrosAddressesService.Interfaces;
 using EventOfficeApi.RoBrosAddressesService.Services;
 using Microsoft.Extensions.DependencyInjection;
-using Npgsql;
 
 namespace EventOfficeApi.RoBrosAddressesService.Extensions;
 
@@ -51,7 +50,7 @@ public static class ServiceCollectionExtensions
     //     }
     //     else
     //     {
-    //         services.AddScoped<ISqlProvider, PostgreSqlProvider>();
+    //         services.AddScoped<ISqlProvider, SqlServerProvider>();
     //     }
 
     //     // Register repository
@@ -60,7 +59,7 @@ public static class ServiceCollectionExtensions
     //         var sqlProvider = provider.GetRequiredService<ISqlProvider>();
     //         var logger = provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<AddressRepository>>();
     //         return new AddressRepository(connectionString, sqlProvider, logger);
-    //         // this needs to take the data source instead of connection string
+    //         // this needs to take the connection string
     //     });
 
     //     // Register service
@@ -71,7 +70,7 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddAddressPackage(
         this IServiceCollection services,
-        NpgsqlDataSource dataSource,
+        string connectionString,
         Type? customSqlProviderType = null)
     {
         // Register SQL provider (default or custom)
@@ -81,7 +80,7 @@ public static class ServiceCollectionExtensions
         }
         else
         {
-            services.AddScoped<ISqlProvider, PostgreSqlProvider>();
+            services.AddScoped<ISqlProvider, SqlServerProvider>();
         }
 
         // Register repository
@@ -91,7 +90,7 @@ public static class ServiceCollectionExtensions
             var logger = provider.GetRequiredService<Microsoft.Extensions.Logging.ILogger<AddressRepository>>();
 
             // TODO: I think logger should come from the consuming service and default if not provided
-            return new AddressRepository(dataSource, sqlProvider, logger);
+            return new AddressRepository(connectionString, sqlProvider, logger);
         });
 
         // Register service
@@ -110,10 +109,10 @@ public static class ServiceCollectionExtensions
 
     public static IServiceCollection AddAddressPackage<TSqlProvider>(
         this IServiceCollection services,
-        NpgsqlDataSource dataSource)
+        string connectionString)
         where TSqlProvider : class, ISqlProvider
     {
-        return services.AddAddressPackage(dataSource, typeof(TSqlProvider));
+        return services.AddAddressPackage(connectionString, typeof(TSqlProvider));
     }
 
    

@@ -32,8 +32,8 @@ public class ChurchRepository : IChurchRepository
 
         var sql = @"
             INSERT INTO churches (id, name, address_id, created_by, created_at, updated_by, updated_at, version)
-            VALUES (@Id, @Name, @AddressId, @CreatedBy, NOW(), @UpdatedBy, NOW(), 1)
-            RETURNING id;";
+            OUTPUT INSERTED.id
+            VALUES (@Id, @Name, @AddressId, @CreatedBy, current_timestamp, @UpdatedBy, current_timestamp, 1);";
 
         var parameters = new
         {
@@ -51,7 +51,7 @@ public class ChurchRepository : IChurchRepository
 
     public async Task<Church?> GetByNameAsync(string name)
     {
-        var sql = @"SELECT
+        var sql = @"SELECT TOP 1
                 c.id,
                 c.name,
                 c.address_id,
@@ -67,8 +67,7 @@ public class ChurchRepository : IChurchRepository
                 a.country AS country
             FROM churches c
             LEFT JOIN addresses a ON c.address_id = a.id
-            WHERE LOWER(c.name) = LOWER(@Name)
-            LIMIT 1;";
+            WHERE LOWER(c.name) = LOWER(@Name);";
 
 
         var row = await _databaseService.QuerySingleAsync<dynamic>(sql, new { Name = name });
