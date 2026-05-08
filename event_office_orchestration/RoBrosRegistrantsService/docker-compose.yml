@@ -1,21 +1,21 @@
 services:
-  api:
-    build:
-      context: ..
-      dockerfile: ./RoBrosRegistrantsService/Dockerfile.dev   # <-- use dev Dockerfile
-    ports:
-      - "8080:8080"
-    volumes:
-      - .:/app                     # mount source code
-      - /app/bin                   # prevent host build artifacts polluting container
-      - /app/obj
-    environment:
-      - DOTNET_USE_POLLING_FILE_WATCHER=1   # helps inside Docker
-      - DOTNET_HOST_PATH=/usr/share/dotnet/dotnet
-      - ASPNETCORE_ENVIRONMENT=Development
-      - ConnectionStrings__DefaultConnection=Host=db;Database=RoBrosRegistrant;Username=postgres;Password=YourPassword
-    depends_on:
-      - db
+  # api:
+  #   build:
+  #     context: ..
+  #     dockerfile: ./RoBrosRegistrantsService/Dockerfile.dev   # <-- use dev Dockerfile
+  #   ports:
+  #     - "8080:8080"
+  #   volumes:
+  #     - .:/app                     # mount source code
+  #     - /app/bin                   # prevent host build artifacts polluting container
+  #     - /app/obj
+  #   environment:
+  #     - DOTNET_USE_POLLING_FILE_WATCHER=1   # helps inside Docker
+  #     - DOTNET_HOST_PATH=/usr/share/dotnet/dotnet
+  #     - ASPNETCORE_ENVIRONMENT=Development
+  #     - ConnectionStrings__DefaultConnection=Host=db;Database=RoBrosRegistrant;Username=postgres;Password=YourPassword
+  #   depends_on:
+  #     - db
 
   db:
     image: postgres:15-alpine

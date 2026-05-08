@@ -20,8 +20,9 @@ export default function Header() {
             
             {/* Header Content Container */}
             <div className="relative max-w-[1400px] mx-auto h-full">
+                
             {/* Momentum Logo */}
-            <div className="absolute left-[15px] md:left-[40px] top-[13px] md:top-[20px] w-[158px] md:w-[200px] h-[35px] md:h-[44px]">
+            <div className="absolute left-[15px] md:left-[40px] top-[13px] md:top-[15px] h-[40px] md:h-[40px]">
                 <svg className="block size-full" fill="none" preserveAspectRatio="none" viewBox="0 0 158 35">
                 <path clipRule="evenodd" d={svgPaths.p3f704780} fill="#39FF14" fillRule="evenodd" />
                 </svg>
@@ -32,7 +33,7 @@ export default function Header() {
             <p className="absolute left-[142px] md:left-[230px] top-[44px] md:top-[60px] text-[#fdfdf1] text-[11px] md:text-[13px] font-['Over_the_Rainbow',_cursive] text-right translate-x-[-100%]">For God</p> */}
             
             {/* Title */}
-            <h1 className="absolute leading-none left-[15px] md:left-[40px] top-[55px] md:top-[60px] text-[#fdfdf1] text-[24px] md:text-[36px] font-['Playfair_Display',_serif]" style={{ fontVariant: 'small-caps' }}>
+            <h1 className="absolute leading-none left-[15px] md:left-[40px] top-[55px] md:top-[60px] text-[#fdfdf1] text-[24px] md:text-[32px] font-['Playfair_Display',_serif]" style={{ fontVariant: 'small-caps', fontWeight: 800 }}>
                 {headerSubText}
             </h1>
             </div>

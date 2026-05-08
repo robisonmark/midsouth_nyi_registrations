@@ -71,6 +71,7 @@ public class EventService : IEventService
         _logger.LogInformation("Getting timeslots for category: {category}, age: {age}", category, age);
         // TODO: Replace with real implementation
         // For now, return an empty list
+        await Task.Delay(500);
         return new List<EventSlot>();
     }
 

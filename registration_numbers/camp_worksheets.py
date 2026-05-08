@@ -3,7 +3,7 @@ import re
 from datetime import datetime
 from typing import Any, OrderedDict
 
-from config import API_KEY, EVENT, MOMENTUM_FORM_ID
+from config import API_KEY, EVENT, CAMP_FORM_ID
 from enums import Camp, Gender, RegistrationType
 from FileManager import FileManager
 from models.campers import Campers
@@ -26,7 +26,7 @@ class CampWorksheets:
             "Middle School Camp": {"worksheet_name": "MS Participants", "data": []},
         }
         self.pricing_breakdown = {
-            "student": {"05-02-25": 225, "05-16-25": 250, "05-23-25": 300},
+            "student": {"05-03-26": 245, "05-17-26": 300, "05-24-26": 375},
             "chaperone": {
                 "High School Camp": 150,
                 "Middle School Camp": 150,
@@ -60,7 +60,7 @@ class CampWorksheets:
         late_fee = 0
 
         if row.registration_type == RegistrationType.CHAPERONE:
-            return self.pricing_breakdown["chaperone"][row.camp]
+            return self.pricing_breakdown["chaperone"][row.camp.value]
 
         if row.registration_type == RegistrationType.STAFF:
             return 0
@@ -82,6 +82,9 @@ class CampWorksheets:
                 return self.pricing_breakdown["student"][list(price_dates)[-1]] + late_fee
 
     def youth_leader_email_list(self, row_data: dict) -> dict[str, list[str]]:
+        if row_data.youth_leader_email == "" or row_data.youth_leader_email is None:
+            return
+
         current_church = None
         email = row_data.youth_leader_email.lower()
         if current_church is None or current_church != row_data.church:
@@ -102,7 +105,7 @@ class CampWorksheets:
             "camp": row_data.camp.value,
             "first_name": row_data.first_name,
             "last_name": row_data.last_name,
-            "paid_online": row_data.payment != "",
+            "paid_online": row_data.payment > 0.0,
             "price": self.get_price(row_data),
             "paid": row_data.payment,
         }
@@ -439,7 +442,7 @@ class CampWorksheets:
     def process_data(self, raw_data: list[dict[str:str]]) -> list[dict[str:Any]]:
         online_payment = 0
         for data in raw_data:
-            if data.church == "":
+            if data.church == "" or data.church is None:
                 data.church = "Staff"
 
             # could this be to create my row entries so I don't have to loop twice
@@ -483,13 +486,8 @@ class CampWorksheets:
 
 if __name__ == "__main__":
     run_camp_worksheets = CampWorksheets()
-    # camp_data = run_camp_worksheets.read_file()
-    # run_camp_worksheets.process_data(camp_data)
-    # jotform = JotformAPIClient(API_KEY)
-    # submission_count = jotform.get_form("250758652718164").get("count", 0)
-    # submissions = jotform.get_form_submissions("250758652718164", limit=5)
-    # camp_data = run_camp_worksheets.generate_raw_data(submissions)
-    jotform = JotformClient(API_KEY, MOMENTUM_FORM_ID, translate_camper)
+
+    jotform = JotformClient(API_KEY, CAMP_FORM_ID, translate_camper)
     camp_data = jotform.get_data()
 
     run_camp_worksheets.process_data(camp_data)
@@ -498,3 +496,5 @@ if __name__ == "__main__":
     # TODO: Create Camp Master (Start from Template - Guess Rooming)
     # TODO: Create Camp Gotcha Spreadsheet
     # TODO: Clean Up
+    # TODO: Add Hope Presbyterian Church to master list
+    # TODO: CORRECT SHIRT ROSTER TO GO TO PDF INSTEAD OF XLSX - USE MOMENTUM as BASE

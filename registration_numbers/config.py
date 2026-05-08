@@ -26,7 +26,7 @@ class ARTS_AGE_GROUPS:
 API_KEY = "ca959f5b2862927b9e91bd7b69675e76"  # DO NOT COMMIT
 API_URL = "https://api.jotform.com/form/{formID}/submissions?apiKey={apiKey}"
 
-CAMP_FORM_ID = "250758652718164"
+CAMP_FORM_ID = "260697973045166"
 MOMENTUM_FORM_ID = "251575366309160"
 
 # class Configuration():
