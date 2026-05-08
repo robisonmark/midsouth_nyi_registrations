@@ -6,8 +6,6 @@ using NSwag;
 // RoBros Libraries
 using EventOfficeApi.RoBrosAddressesService.Extensions;
 
-
-
 var builder = WebApplication.CreateBuilder(args);
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") 

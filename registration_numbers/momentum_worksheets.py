@@ -265,6 +265,7 @@ class MomentumWorksheets:
                         excel_safe_name = event.replace("/", "-").replace("\\", "-")
 
                         # Names for these too are too long for Excel worksheets
+                        # and at max length they are the same
                         if excel_safe_name == "Human Video-Interpretive Worship Group":
                             excel_safe_name = "Human Video - Group"
                         if excel_safe_name == "Human Video-Interpretive Worship Solo":
@@ -447,6 +448,7 @@ class MomentumWorksheets:
 
             data = sheet.get("data", [])
             if not data:
+                # nothing to write
                 continue
 
             header = data[0]
@@ -464,9 +466,9 @@ class MomentumWorksheets:
 
             sheet["data"] = [header] + rows
 
-            all_rows[0]["data"].extend(sheet["data"][1:])
+            all_rows[0]["data"].extend(sheet["data"][1:])  # Exclude header for now
 
-        # Re-index row numbers
+        # Re-index row numbers so any downstream code relying on row indices stays consistent.
         for idx, r in enumerate(all_rows[0]["data"], start=1):
             r["row"] = idx
 

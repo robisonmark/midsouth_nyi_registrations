@@ -66,6 +66,16 @@
 			"options": {
 				"cwd": "${workspaceFolder}/event_office_orchestration/RoBrosEventsService"
 			}
+		},
+		{
+			"type": "func",
+			"dependsOn": "build (functions)",
+			"options": {
+				"cwd": "${workspaceFolder}/event_office_orchestration/RoBrosEventsService/bin/Debug/net9.0"
+			},
+			"command": "host start",
+			"isBackground": true,
+			"problemMatcher": "$func-dotnet-watch"
 		}
 	]
 }
