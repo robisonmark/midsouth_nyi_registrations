@@ -30,6 +30,7 @@ class Camper(BaseModel):
     student_email: EmailStr
     gender: Gender
     shirt_size: ShirtSize
+    gotcha: Union[str, None] = False
     medical_conditions: Union[str, None] = None
     dietary_restrictions: Union[str, None] = None
     allergies: Union[str, None] = None

@@ -112,6 +112,8 @@ class FileManager:
                     worksheet.write_column(data["row"], data["col"], data["formula"], cell_format)
                 if data["type"] == "col_format":
                     worksheet.set_column(data["first_col"], data["last_col"], data["width"], cell_format)
+                if data["type"] == "checkbox":
+                    worksheet.insert_checkbox(data["row"], data["col"], data["values"][0])
 
         workbook.close()
 

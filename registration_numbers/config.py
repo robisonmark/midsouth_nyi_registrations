@@ -27,6 +27,7 @@ API_KEY = "ca959f5b2862927b9e91bd7b69675e76"  # DO NOT COMMIT
 API_URL = "https://api.jotform.com/form/{formID}/submissions?apiKey={apiKey}"
 
 CAMP_FORM_ID = "260697973045166"
+HOPE_CAMP_FORM_ID = "261101753934150" # hope presbyterian
 MOMENTUM_FORM_ID = "251575366309160"
 
 # class Configuration():

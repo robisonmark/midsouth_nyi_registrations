@@ -3,9 +3,11 @@ import re
 from datetime import datetime
 from typing import Any, OrderedDict
 
-from config import API_KEY, EVENT, CAMP_FORM_ID
+from config import API_KEY, EVENT, CAMP_FORM_ID, HOPE_CAMP_FORM_ID
 from enums import Camp, Gender, RegistrationType
 from FileManager import FileManager
+from SwagManager import SwagManager
+from SwagPDFGenerator import SwagPDFGenerator
 from models.campers import Campers
 from ShirtManager import ShirtManager
 from translators.jotform import JotformClient
@@ -20,10 +22,17 @@ class CampWorksheets:
         self.file_manager = FileManager(self._event)
         self.shirt_manager = ShirtManager(level_specific=True)
 
+        self.swag_manager = SwagManager(event_type="camp", age_group_specific=True, cutoff_date=None)
+        self.swag_pdf_generator = SwagPDFGenerator(font_name="Helvetica", font_size=12)
+
         self.church_roster_worksheet = {}
         self.camp_master_roster = {
             "High School Camp": {"worksheet_name": "HS Participants", "data": []},
             "Middle School Camp": {"worksheet_name": "MS Participants", "data": []},
+        }
+        self.camp_master_entries = {
+            "High School Camp": [],
+            "Middle School Camp": [],
         }
         self.pricing_breakdown = {
             "student": {"05-03-26": 245, "05-17-26": 300, "05-24-26": 375},
@@ -36,6 +45,10 @@ class CampWorksheets:
         self.late_fee = 0
         self.email_list = []
         self.shirts = []
+        self.gotcha_participants = {
+            "High School Camp": [],
+            "Middle School Camp": [],
+        }
 
     def read_file(self) -> list[OrderedDict]:
         files = self.file_manager.gather_files("./files")
@@ -89,8 +102,6 @@ class CampWorksheets:
         email = row_data.youth_leader_email.lower()
         if current_church is None or current_church != row_data.church:
             current_church = row_data.church
-            # if current_church not in self.email_list:
-            # self.email_list[current_church] = []
 
             if email not in self.email_list:
                 self.email_list.append(email)
@@ -206,7 +217,6 @@ class CampWorksheets:
                 "camp", f"{datetime.now().strftime('%Y_%m_%d')}_{church}", self.church_roster_worksheet[church]
             )
 
-    # Should this be a class method?
     def add_entry_to_camp(self, entry, camp_name):
         camp = camp_name.value
         student_pricing = list(self.pricing_breakdown["student"].values())
@@ -225,17 +235,89 @@ class CampWorksheets:
 
         row_index = len(self.camp_master_roster[camp]["data"]) + 1
         entry["amount_owed"] = (
-            f"=SUM((J{row_index} * {student_pricing[0]}) +\
-                (K{row_index} * {student_pricing[1]}) + (L{row_index}\
-                * {student_pricing[2]}) + (M{row_index} * {self.late_fee}) +\
-                (N{row_index} * {chaperone_pricing[0]}) + (O{row_index} *\
-                {chaperone_pricing[1]}))"
+            f"=SUM((J{row_index} * {student_pricing[0]}) + (K{row_index} * {student_pricing[1]}) + (L{row_index} * {student_pricing[2]}) + (M{row_index} * {self.late_fee}) + (N{row_index} * {chaperone_pricing[0]}) + (O{row_index} * {chaperone_pricing[2]}))"
         )
         entry["balance"] = f"=SUM(Q{row_index} - R{row_index})"
 
-        self.camp_master_roster[camp]["data"].insert(
-            row_index - 1, {"type": "row", "row": row_index - 1, "col": 0, "values": list(entry.values()), "format": None}
-        )
+        self.camp_master_entries[camp].append(dict(entry))
+
+    def _camp_entry_sort_key(self, entry: dict[str, Any]) -> tuple[str, str]:
+        church = (entry.get("church") or "").strip().lower()
+        full_name = (entry.get("name") or "").strip()
+        last_name = full_name.split()[-1].lower() if full_name else ""
+        return church, last_name
+
+    def _build_camp_master_sheet(self, camp: str) -> dict[str, Any]:
+        header = {
+            "type": "header",
+            "row": 0,
+            "col": 0,
+            "values": [
+                "Name",
+                "Church",
+                "Shirt Size",
+                "Medical Release",
+                "Tower Release",
+                "Teen Female",
+                "Teen Male",
+                "Adult Female",
+                "Adult Male",
+                "First Deadline",
+                "Second Deadline",
+                "Final Deadline",
+                "Late Fee",
+                "Adult One Camp",
+                "Adult Both Camps",
+                "Pay Form",
+                "Amount Owed",
+                "Amount Paid",
+                "Balance",
+            ],
+            "format": {"bg_color": "#bdbdbd", "bold": True},
+        }
+
+        rows = sorted(self.camp_master_entries[camp], key=self._camp_entry_sort_key)
+        sheet_data = [header]
+
+        student_pricing = list(self.pricing_breakdown["student"].values())
+        chaperone_pricing = list(self.pricing_breakdown["chaperone"].values())
+
+        for index, entry in enumerate(rows, start=1):
+            amount_owed = (
+                f"=SUM((J{index + 1} * {student_pricing[0]}) + "
+                f"(K{index + 1} * {student_pricing[1]}) + "
+                f"(L{index + 1} * {student_pricing[2]}) + "
+                f"(M{index + 1} * {self.late_fee}) + "
+                f"(N{index + 1} * {chaperone_pricing[0]}) + "
+                f"(O{index + 1} * {chaperone_pricing[2]}))"
+            )
+            balance = f"=SUM(Q{index + 1} - R{index + 1})"
+
+            row_values = [
+                entry["name"],
+                entry["church"],
+                entry["shirt_size"],
+                entry["medical_release"],
+                entry["tower_release"],
+                entry["teen_female"],
+                entry["teen_male"],
+                entry["adult_female"],
+                entry["adult_male"],
+                entry["first_deadline"],
+                entry["second_deadline"],
+                entry["final_deadline"],
+                entry["late_fee"],
+                entry["adult_one_camp"],
+                entry["adult_both_camps"],
+                entry["pay_form"],
+                amount_owed,
+                entry["amount_paid"],
+                balance,
+            ]
+
+            sheet_data.append({"type": "row", "row": index, "col": 0, "values": row_values, "format": None})
+
+        return {"worksheet_name": self.camp_master_roster[camp]["worksheet_name"], "data": sheet_data}
 
     def create_camp_master_worksheets(self, row_data: dict) -> None:
         camp = row_data.camp
@@ -245,6 +327,11 @@ class CampWorksheets:
         adult = (
             row_data.registration_type == RegistrationType.CHAPERONE or row_data.registration_type == RegistrationType.STAFF
         )
+
+        price_dates = self.pricing_breakdown["student"].keys()
+        first_deadline = datetime.strptime(list(price_dates)[0], "%m-%d-%y")
+        second_deadline = datetime.strptime(list(price_dates)[1], "%m-%d-%y")
+        final_deadline = datetime.strptime(list(price_dates)[2], "%m-%d-%y")
 
         entry = {
             "name": f"{row_data.first_name} {row_data.last_name}",
@@ -256,14 +343,14 @@ class CampWorksheets:
             "teen_male": 1 if row_data.gender == Gender.MALE and teen else "",
             "adult_female": 1 if row_data.gender == Gender.FEMALE and adult else "",
             "adult_male": 1 if row_data.gender == Gender.MALE and adult else "",
-            "first_deadline": 1 if teen and registration_date <= datetime(2025, 5, 2) else "",
-            "second_deadline": 1 if teen and datetime(2025, 5, 2) < registration_date <= datetime(2025, 5, 16) else "",
-            "final_deadline": 1 if teen and datetime(2025, 5, 16) < registration_date else "",
-            "late_fee": "1" if registration_date > datetime(2025, 5, 23) else "",
+            "first_deadline": 1 if teen and registration_date <= first_deadline else "",
+            "second_deadline": 1 if teen and registration_date > first_deadline and registration_date <= second_deadline else "",
+            "final_deadline": 1 if teen and registration_date > second_deadline else "",
+            "late_fee": "1" if registration_date > final_deadline else "",
             "adult_one_camp": 1 if adult and camp != Camp.BOTH else "",
             "adult_both_camps": 1 if adult and camp == Camp.BOTH else "",
-            "pay_form": "online" if row_data.payment != "" else "",
-            "amount_owed": "",
+            "pay_form": "online" if row_data.payment > 0.00 else "",
+            "amount_owed": self.get_price(row_data),
             "amount_paid": row_data.payment,
             "balance": "",
         }
@@ -274,11 +361,77 @@ class CampWorksheets:
         else:
             self.add_entry_to_camp(entry, camp)
 
+
+    def create_gotcha_spreadsheet(self, row_data: dict) -> None:
+        camp = row_data.camp
+
+        if row_data.gotcha:
+            entry = {
+                "name": f"{row_data.first_name} {row_data.last_name}",
+                "church": row_data.church,
+                "gotcha": True if row_data.gotcha.lower() == 'yes' else False,
+            }
+
+            if camp == Camp.BOTH:
+                self.gotcha_participants[Camp.MIDDLE_SCHOOL.value].append(entry)
+                self.gotcha_participants[Camp.HIGH_SCHOOL.value].append(entry)
+            else:
+                self.gotcha_participants[camp.value].append(entry)
+
+    
+    def create_gotcha_workbook(self) -> None:
+        for camp in self.gotcha_participants:
+            gotcha_sheet = {
+                "worksheet_name": f"{camp} Gotcha",
+                "data": [
+                    {
+                        "type": "header",
+                        "row": 0,
+                        "col": 0,
+                        "values": ["Name", "Church", "Gotcha Participant", "", "Order"],
+                        "format": {"bg_color": "#bdbdbd", "bold": True},
+                    },
+                    # {
+                    #     "type": "row",
+                    #     "row": 1,
+                    #     "col": 4,
+                    #     "values": [
+                    #         "=SORT(FILTER(A2:A, C2:C=TRUE), RANDARRAY(COUNTA(FILTER(A2:A, C2:C=TRUE)), 1), TRUE)"
+                    #     ],
+                    #     "format": None,
+                    # }
+                ],
+            }
+
+            for index, entry in enumerate(self.gotcha_participants[camp], start=1):
+                gotcha_sheet["data"].append(
+                    {
+                        "type": "row",
+                        "row": index,
+                        "col": 0,
+                        "values": [entry["name"], entry["church"]],
+                        "format": None,
+                    }
+                )
+                gotcha_sheet["data"].append(
+                    {
+                        "type": "checkbox",
+                        "row": index,
+                        "col": 2,
+                        "values": [entry["gotcha"]],
+                        "format": None,
+                    }
+                )
+
+            self.file_manager.write_to_excel("camp", f"{datetime.now().year}_{camp}_gotcha_participants", [gotcha_sheet])
+
     def create_camp_master_workbook(self) -> None:
+        camp_sheets = {}
         for camp in self.camp_master_roster:
-            current_row_index = len(self.camp_master_roster[camp]["data"])
-            self.camp_master_roster[camp]["data"].insert(
-                len(self.camp_master_roster[camp]["data"]),
+            master_sheet = self._build_camp_master_sheet(camp)
+            current_row_index = len(master_sheet["data"])
+
+            master_sheet["data"].append(
                 {
                     "type": "row",
                     "row": current_row_index,
@@ -307,102 +460,90 @@ class CampWorksheets:
                     "format": {"bold": True},
                 },
             )
-            self.camp_master_roster[camp]["data"].append(
-                {
-                    "type": "col_format",
-                    "first_col": 5,
-                    "last_col": 5,
-                    "width": 8,
-                    "format": {"bg_color": "#ff85ff", "align": "center"},
-                }
-            )
-            self.camp_master_roster[camp]["data"].append(
-                {
-                    "type": "col_format",
-                    "first_col": 6,
-                    "last_col": 6,
-                    "width": 8,
-                    "format": {"bg_color": "#b4c6e7", "align": "center"},
-                }
-            )
-            self.camp_master_roster[camp]["data"].append(
-                {
-                    "type": "col_format",
-                    "first_col": 7,
-                    "last_col": 7,
-                    "width": 8,
-                    "format": {"bg_color": "#e394ff", "align": "center"},
-                }
-            )
-            self.camp_master_roster[camp]["data"].append(
-                {
-                    "type": "col_format",
-                    "first_col": 8,
-                    "last_col": 8,
-                    "width": 8,
-                    "format": {"bg_color": "#00b0f0", "align": "center"},
-                }
-            )
-            self.camp_master_roster[camp]["data"].append(
-                {
-                    "type": "col_format",
-                    "first_col": 9,
-                    "last_col": 9,
-                    "width": 8,
-                    "format": {"bg_color": "#92d050", "align": "center"},
-                }
-            )
-            self.camp_master_roster[camp]["data"].append(
-                {
-                    "type": "col_format",
-                    "first_col": 10,
-                    "last_col": 10,
-                    "width": 8,
-                    "format": {"bg_color": "#ffff00", "align": "center"},
-                }
-            )
-            self.camp_master_roster[camp]["data"].append(
-                {
-                    "type": "col_format",
-                    "first_col": 11,
-                    "last_col": 11,
-                    "width": 8,
-                    "format": {"bg_color": "#a64d79", "align": "center"},
-                }
-            )
-            self.camp_master_roster[camp]["data"].append(
-                {
-                    "type": "col_format",
-                    "first_col": 12,
-                    "last_col": 12,
-                    "width": 8,
-                    "format": {"bg_color": "#4472c4", "align": "center"},
-                }
-            )
-            self.camp_master_roster[camp]["data"].append(
-                {
-                    "type": "col_format",
-                    "first_col": 13,
-                    "last_col": 13,
-                    "width": 8,
-                    "format": {"bg_color": "#80c8c1", "align": "center"},
-                }
-            )
-            self.camp_master_roster[camp]["data"].append(
-                {
-                    "type": "col_format",
-                    "first_col": 13,
-                    "last_col": 13,
-                    "width": 8,
-                    "format": {"bg_color": "#81a9a5", "align": "center"},
-                }
+            master_sheet["data"].extend(
+                [
+                    {
+                        "type": "col_format",
+                        "first_col": 5,
+                        "last_col": 5,
+                        "width": 8,
+                        "format": {"bg_color": "#ff85ff", "align": "center"},
+                    },
+                    {
+                        "type": "col_format",
+                        "first_col": 6,
+                        "last_col": 6,
+                        "width": 8,
+                        "format": {"bg_color": "#b4c6e7", "align": "center"},
+                    },
+                    {
+                        "type": "col_format",
+                        "first_col": 7,
+                        "last_col": 7,
+                        "width": 8,
+                        "format": {"bg_color": "#e394ff", "align": "center"},
+                    },
+                    {
+                        "type": "col_format",
+                        "first_col": 8,
+                        "last_col": 8,
+                        "width": 8,
+                        "format": {"bg_color": "#00b0f0", "align": "center"},
+                    },
+                    {
+                        "type": "col_format",
+                        "first_col": 9,
+                        "last_col": 9,
+                        "width": 8,
+                        "format": {"bg_color": "#92d050", "align": "center"},
+                    },
+                    {
+                        "type": "col_format",
+                        "first_col": 10,
+                        "last_col": 10,
+                        "width": 8,
+                        "format": {"bg_color": "#ffff00", "align": "center"},
+                    },
+                    {
+                        "type": "col_format",
+                        "first_col": 11,
+                        "last_col": 11,
+                        "width": 8,
+                        "format": {"bg_color": "#a64d79", "align": "center"},
+                    },
+                    {
+                        "type": "col_format",
+                        "first_col": 12,
+                        "last_col": 12,
+                        "width": 8,
+                        "format": {"bg_color": "#4472c4", "align": "center"},
+                    },
+                    {
+                        "type": "col_format",
+                        "first_col": 13,
+                        "last_col": 13,
+                        "width": 8,
+                        "format": {"bg_color": "#80c8c1", "align": "center"},
+                    },
+                    {
+                        "type": "col_format",
+                        "first_col": 13,
+                        "last_col": 13,
+                        "width": 8,
+                        "format": {"bg_color": "#81a9a5", "align": "center"},
+                    },
+                ]
             )
 
-        church_worksheets = [self.church_roster_worksheet[church][0] for church in self.church_roster_worksheet.keys()]
+            camp_sheets[camp] = master_sheet
+
+        church_worksheets = []
+        for church in sorted(self.church_roster_worksheet.keys(), key=lambda s: s.lower()):
+            church_worksheets.append(self.church_roster_worksheet[church][0])
 
         self.camp_master_roster = [
-            self.camp_master_roster["High School Camp"],
-            self.camp_master_roster["Middle School Camp"],
+            camp_sheets["High School Camp"],
+            camp_sheets["Middle School Camp"],
             *church_worksheets,
         ]
 
@@ -439,49 +580,70 @@ class CampWorksheets:
 
         self.file_manager.write_to_excel("camp", f"{datetime.now().year}_shirt_roster", self.shirts)
 
+    def generate_swag_pdfs(self) -> None:
+        """Generate swag PDFs for all churches."""
+        print("\n🎽 Generating Swag Reports...")
+        swag_output = self.file_manager.create_directory("swag_reports")
+        self.swag_pdf_generator.generate_all_pdfs(self.swag_manager, swag_output)
+        print(f"✅ Swag reports saved to: {swag_output}")
+
     def process_data(self, raw_data: list[dict[str:str]]) -> list[dict[str:Any]]:
         online_payment = 0
-        for data in raw_data:
-            if data.church == "" or data.church is None:
-                data.church = "Staff"
 
-            # could this be to create my row entries so I don't have to loop twice
-            self.create_church_worksheets(data)
-            self.create_camp_master_worksheets(data)
-            self.youth_leader_email_list(data)
+        for data in raw_data:
+            if data.approval_status.lower() not in ["deleted", "archived"]:
+                self.swag_manager.add_registrant(data)
+
+                if data.registration_type is RegistrationType.STAFF or data.church == "" or data.church is None:
+                    data.church = "Staff"
+                
+                if data.church == "Memphis Hope Tabernacle":
+                    data.church = "Hope Presbyterian"
+
+                # could this be to create my row entries so I don't have to loop twice
+                self.create_church_worksheets(data)
+                self.create_gotcha_spreadsheet(data)
+                self.create_camp_master_worksheets(data)
+                self.youth_leader_email_list(data)
+                
+                #     #  =SORT(FILTER(A2:A, C2:C=TRUE), RANDARRAY(COUNTA(FILTER(A2:A, C2:C=TRUE)), 1), TRUE)
 
         self.create_church_workbook()
+        self.create_gotcha_workbook()
         self.create_camp_master_workbook()
-        self.create_shirt_master()
+        # self.create_shirt_master()
 
         print(f"Total Online Payments: ${online_payment}")
 
         self.file_manager.write_to_txt_file("camp", "youth_leader_email", str(self.email_list))
 
-    def generate_raw_data(self, submissions: list[dict[str:str]]) -> list[dict[str:Any]]:
-        """
-        Generates raw data from Jotform submissions.
-        :param submissions: List of Jotform submissions.
-        :return: Processed data ready for further processing.
-        """
-        processed_data = []
+        # Generate swag PDFs
+        self.generate_swag_pdfs()
 
-        for submission in submissions:
-            registrant_submission = {
-                "id": submission["id"],
-                "submission_date": submission["created_at"],
-                "status": submission["status"],
-            }
+    # def generate_raw_data(self, submissions: list[dict[str:str]]) -> list[dict[str:Any]]:
+    #     """
+    #     Generates raw data from Jotform submissions.
+    #     :param submissions: List of Jotform submissions.
+    #     :return: Processed data ready for further processing.
+    #     """
+    #     processed_data = []
 
-            for answer in submission["answers"].values():
-                if "answer" in answer.keys():
-                    registrant_submission[answer["name"]] = answer["answer"]
+    #     for submission in submissions:
+    #         registrant_submission = {
+    #             "id": submission["id"],
+    #             "submission_date": submission["created_at"],
+    #             "status": submission["status"],
+    #         }
 
-            camper = translate_camper(registrant_submission)
-            self.shirt_manager.create_individual_entry(row_data=camper)
-            processed_data.append(camper)
+    #         for answer in submission["answers"].values():
+    #             if "answer" in answer.keys():
+    #                 registrant_submission[answer["name"]] = answer["answer"]
 
-        return processed_data
+    #         camper = translate_camper(registrant_submission)
+    #         self.shirt_manager.create_individual_entry(row_data=camper)
+    #         processed_data.append(camper)
+        
+    #     return processed_data
 
 
 if __name__ == "__main__":
@@ -490,11 +652,20 @@ if __name__ == "__main__":
     jotform = JotformClient(API_KEY, CAMP_FORM_ID, translate_camper)
     camp_data = jotform.get_data()
 
+    jotform_hope = JotformClient(API_KEY, HOPE_CAMP_FORM_ID, translate_camper)
+    camp_data_hope = jotform_hope.get_data()
+
+    camp_data.extend(camp_data_hope)
+
     run_camp_worksheets.process_data(camp_data)
 
-    # TODO: Create TNU Master
-    # TODO: Create Camp Master (Start from Template - Guess Rooming)
+   
+
+
+
     # TODO: Create Camp Gotcha Spreadsheet
+    # TODO: CREATE TOWER RELEASE LIST
+    # TODO: Create Camp Master (Start from Template - Guess Rooming)
     # TODO: Clean Up
-    # TODO: Add Hope Presbyterian Church to master list
-    # TODO: CORRECT SHIRT ROSTER TO GO TO PDF INSTEAD OF XLSX - USE MOMENTUM as BASE
+    # TODO: CONFIRM SHIRT ROSTER 
+

@@ -18,6 +18,8 @@ def translate_camper(raw: dict) -> Camper:
     if registration_type_date is None:
         registration_type_date = get_nested_value(raw, "submission_date")
 
+    print(raw)
+
     return Camper(
         submission_id=get_nested_value(raw, "id"),
         submission_date=get_nested_value(raw, "submission_date"),
@@ -38,6 +40,7 @@ def translate_camper(raw: dict) -> Camper:
         student_email=get_nested_value(raw, "yourEmail"),
         gender=get_nested_value(raw, "gender").lower(),
         shirt_size=get_nested_value(raw, "shirtSize"),
+        gotcha=get_nested_value(raw, "gotcha"),
         medical_concerns=get_nested_value(raw, "medicalConcerns"),
         dietary_restrictions=get_nested_value(raw, "submission_id"),  # Needs Updated
         allergies=get_nested_value(raw, "generalAllergies"),
