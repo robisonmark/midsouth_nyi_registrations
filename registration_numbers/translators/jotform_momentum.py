@@ -7,6 +7,8 @@ from enums import (
     EventsAcademic,
     EventsArt,
     EventsCreativeMinistries,
+    EventsCreativeWriting,
+    EventsSpeech,
     EventsIndividualSports,
     EventsMusic,
     EventsQuizzing,
@@ -53,9 +55,21 @@ def translate_registrant(registrant_data: dict) -> MomentumRegistrant:
     creative_ministries = [
         EventsCreativeMinistries(re.sub(r"[*]", "", creative_event).strip())
         for creative_event in [
-            *get_nested_value(registrant_data, "creative_ministries", []),
-            *get_nested_value(registrant_data, "creative_writing", []),
-            *get_nested_value(registrant_data, "speech", []),
+            *get_nested_value(registrant_data, "creative_ministries", [])
+        ]
+    ]
+
+    creative_writing = [
+        EventsCreativeWriting(re.sub(r"[*]", "", creative_event).strip())
+        for creative_event in [
+            *get_nested_value(registrant_data, "creative_writing", [])
+        ]
+    ]
+
+    speech = [
+        EventsSpeech(re.sub(r"[*]", "", creative_event).strip())
+        for creative_event in [
+            *get_nested_value(registrant_data, "speech", [])
         ]
     ]
 
@@ -119,7 +133,8 @@ def translate_registrant(registrant_data: dict) -> MomentumRegistrant:
         guardian_last_name=get_nested_value(registrant_data, "guardian_name.last"),
         guardian_home_phone=get_nested_value(registrant_data, "guardian_home_phone.full"),
         guardian_work_phone=get_nested_value(registrant_data, "guardian_work_phone.full"),
-        guardian_contact_phone=get_nested_value(registrant_data, "guardian_contact_phone.full"),
+        guardian_contact_phone=get_nested_value(registrant_data, "guardian_cell_phone.full"),
+        guardian_contact_email=get_nested_value(registrant_data, "guardian_email"),
         church=get_nested_value(registrant_data, "church_affiliation"),
         youth_leader_first_name=get_nested_value(registrant_data, "youth_leader_name.first"),
         youth_leader_last_name=get_nested_value(registrant_data, "youth_leader_name.last"),
@@ -130,6 +145,8 @@ def translate_registrant(registrant_data: dict) -> MomentumRegistrant:
         academic_events=academics,  # This probably needs to be split in the model
         art_events=arts,
         creative_ministries_events=creative_ministries,
+        creative_writing_events=creative_writing,
+        speech_events=speech,
         music_events=music,
         quizzing_events=quizzing,
         individual_sports_events=individual_sports,

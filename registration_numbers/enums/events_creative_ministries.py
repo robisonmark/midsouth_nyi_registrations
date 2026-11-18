@@ -10,13 +10,3 @@ class EventsCreativeMinistries(Enum):
     PUPPETS = "Puppets"
     SIGN_LANG = "Sign Language"
     VIDEO_PRODUCTION = "Video Production"
-
-    # Creative Writing
-    POETRY = "Poetry"
-    PROSE = "Prose"
-
-    # Speech
-    IMPROMPTU = "Impromptu"
-    ORAL_INTERPRETATION = "Oral Interpretation"
-    ORATORY = "Original Oratory"
-    STORYTELLING = "Storytelling"

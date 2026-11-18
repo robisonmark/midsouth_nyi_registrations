@@ -7,6 +7,8 @@ from enums import (
     EventsAcademic,
     EventsArt,
     EventsCreativeMinistries,
+    EventsCreativeWriting,
+    EventsSpeech,
     EventsIndividualSports,
     EventsMusic,
     EventsQuizzing,
@@ -31,13 +33,13 @@ class MomentumRegistrant(BaseModel):
     approval_status: str
     registration_type: RegistrationType
     registration_type_date: Union[datetime, None] = None  # Can be None if not provided
+    first_name: str
+    last_name: str
+    birthday: Union[datetime, None] = None  # Can be None if not provided
     grade_level: Union[str, None] = None  # Should be a calculated field based on birthday
     age_range_talent: Union[AgeRangeTalent, None] = None  # Should be calculated based on grade level
     age_range_individual: Union[AgeRangeIndividualSports, None] = None  # Should be calculated based on birthday
     participation_status: ParticipationStatus
-    first_name: str
-    last_name: str
-    birthday: Union[datetime, None] = None  # Can be None if not provided
     street_address: str
     street_address2: Union[str, None] = None
     city: str
@@ -47,7 +49,7 @@ class MomentumRegistrant(BaseModel):
     student_email: EmailStr
     gender: Gender
     shirt_size: ShirtSize
-    medical_conditions: Union[str, None] = None
+    medical_concerns: Union[str, None] = None
     dietary_restrictions: Union[str, None] = None
     allergies: Union[str, None] = None
     past_surgeries: Union[str, None] = None
@@ -57,6 +59,7 @@ class MomentumRegistrant(BaseModel):
     guardian_home_phone: Union[str, None] = None  # Should these be nullable or only added for student
     guardian_work_phone: Union[str, None] = None  # Should these be nullable or only added for student
     guardian_contact_phone: Union[str, None] = None  # Should these be nullable or only added for student
+    guardian_contact_email: Union[str, None] = None  # Should these be nullable or only added for student
     insurance_company: Union[str, None] = None  # Should these be nullable or only added for student
     policy_number: Union[str, None] = None  # Should these be nullable or only added for student
     church: Union[str, None] = None
@@ -70,6 +73,12 @@ class MomentumRegistrant(BaseModel):
     creative_ministries_events: Union[list[EventsCreativeMinistries], None] = (
         None  # Should this be nullable or only added for student
     )
+    creative_writing_events: Union[list[EventsCreativeWriting], None] = (
+        None  # Should this be nullable or only added for student
+    )
+    speech_events: Union[list[EventsSpeech], None] = (
+        None  # Should this be nullable or only added for student
+    )
     # math_and_business_events: Union[list[EventsAcademic.ACCOUNTING, EventsAcademic.MATH], None] = (
     #     None  # Should this be nullable or only added for student
     # )
@@ -78,7 +87,6 @@ class MomentumRegistrant(BaseModel):
     individual_sports_events: Union[list[EventsIndividualSports], None] = (
         None  # Should this be nullable or only added for student
     )
-    # science_events: Union[list[EventsAcademic.SCIENCE], None] = None  # Should this be nullable or only added for student
     team_sports_events: Union[list[EventsTeamSports], None] = None  # Should this be nullable or only added for student
     event_errors: Union[list[str], None] = None  # List of errors for events if any
 
@@ -118,17 +126,18 @@ class MomentumRegistrant(BaseModel):
         current_year = datetime.now().year
         cut_off_date = datetime(current_year, 9, 1)
 
-        cut_off_delta = birthday - cut_off_date
-        if cut_off_delta.years <= AgeRangeIndividualSports.JUNIOR_HIGH:
+        cut_off_delta = (cut_off_date - birthday).days // 365
+  
+        if cut_off_delta <= AgeRangeIndividualSports.JUNIOR_HIGH.value:
             return AgeRangeIndividualSports.JUNIOR_HIGH
         elif (
-            cut_off_delta.years > AgeRangeIndividualSports.JUNIOR_HIGH
-            and cut_off_delta.years <= AgeRangeIndividualSports.MIDDLE_HIGH
+            cut_off_delta > AgeRangeIndividualSports.JUNIOR_HIGH.value
+            and cut_off_delta <= AgeRangeIndividualSports.MIDDLE_HIGH.value
         ):
             return AgeRangeIndividualSports.MIDDLE_HIGH
         elif (
-            cut_off_delta.years > AgeRangeIndividualSports.MIDDLE_HIGH
-            and cut_off_delta.years <= AgeRangeIndividualSports.SENIOR_HIGH
+            cut_off_delta > AgeRangeIndividualSports.MIDDLE_HIGH.value
+            and cut_off_delta <= AgeRangeIndividualSports.SENIOR_HIGH.value
         ):
             return AgeRangeIndividualSports.SENIOR_HIGH
 
@@ -170,6 +179,8 @@ class MomentumRegistrant(BaseModel):
                 (data.academic_events is not None and len(data.academic_events) > 0)
                 or (data.art_events is not None and len(data.art_events) > 0)
                 or (data.creative_ministries_events is not None and len(data.creative_ministries_events) > 0)
+                or (data.creative_writing_events is not None and len(data.creative_writing_events) > 0)
+                or (data.speech_events is not None and len(data.speech_events) > 0)
                 or (data.music_events is not None and len(data.music_events) > 0)
                 or (data.quizzing_events is not None and len(data.quizzing_events) > 0)
                 or (data.individual_sports_events is not None and len(data.individual_sports_events) > 0)
@@ -179,6 +190,8 @@ class MomentumRegistrant(BaseModel):
 
             data.art_events = []
             data.creative_ministries_events = []
+            data.creative_writing_events = []
+            data.speech_events = []
             # data.math_and_business_events = []
             data.music_events = []
             data.quizzing_events = []

@@ -26,7 +26,7 @@ ZIP_CODE_COLUMN = 13
 MAIN_ROSTER = []
 
 
-file_path = "./church/"
+file_path = "./output/camp/camp/2026-06-08/"
 
 for root, dirs, files in os.walk(file_path, topdown=False):
     for name in files:

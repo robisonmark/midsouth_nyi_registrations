@@ -4,6 +4,8 @@ from enums.camp import Camp
 from enums.events_academic import EventsAcademic
 from enums.events_art import EventsArt
 from enums.events_creative_ministries import EventsCreativeMinistries
+from enums.events_creative_writing import EventsCreativeWriting
+from enums.events_speech import EventsSpeech
 from enums.events_individual_sports import EventsIndividualSports
 from enums.events_music import EventsMusic
 from enums.events_quizzing import EventsQuizzing
@@ -24,6 +26,8 @@ __all__ = [
     "EventsAcademic",
     "EventsArt",
     "EventsCreativeMinistries",
+    "EventsCreativeWriting",
+    "EventsSpeech",
     "EventsIndividualSports",
     "EventsMusic",
     "EventsQuizzing",

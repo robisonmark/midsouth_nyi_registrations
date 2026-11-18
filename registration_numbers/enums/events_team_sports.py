@@ -6,7 +6,7 @@ class EventsTeamSports(Enum):
     GAGA = "Co-Ed Gaga Ball"
     SOFTBALL = "Co-Ed Softball"
     ULTIMATE = "Co-Ed Ultimate Frisbee"
-    LADIES_BASKETBALL = "Ladies' Basketball"
+    LADIES_BASKETBALL = "Ladies' 3v3 Basketball"
     LADIES_FLAG = "Ladies' Flag Football"
     LADIES_SOCCER = "Ladies' Soccer"
     LADIES_VOLLEYBALL = "Ladies' Volleyball"

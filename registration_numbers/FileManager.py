@@ -96,7 +96,7 @@ class FileManager:
         workbook = xlsxwriter.Workbook(f"{output_loc}/{filename}.xlsx")
 
         for worksheet_data in worksheets:
-            print(f"Creating worksheet: {worksheet_data['worksheet_name']}")
+
             worksheet = workbook.add_worksheet(worksheet_data["worksheet_name"])
             for data in worksheet_data["data"]:
                 cell_format = None

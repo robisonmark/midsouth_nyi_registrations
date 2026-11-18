@@ -25,10 +25,11 @@ class MomentumWorksheets:
     def __init__(self):
         self._event = EVENT.MOMENTUM
         self.file_manager = FileManager(self._event)
+        self.TNT_CUT_OFF_DATE = datetime(2026, 9, 1)  # September 1, 2026
 
         # Initialize SwagManager for Momentum (no age group split)
         # Cutoff date: November 4, 2025 (last guaranteed date)
-        self.swag_manager = SwagManager(event_type="momentum", age_group_specific=False, cutoff_date=datetime(2025, 11, 4))
+        self.swag_manager = SwagManager(event_type="momentum", age_group_specific=False, cutoff_date=datetime(2026, 11, 8))
         self.swag_pdf_generator = SwagPDFGenerator(font_name="Helvetica", font_size=12)
 
         self.church_roster_worksheet = {}
@@ -36,10 +37,13 @@ class MomentumWorksheets:
         self.event_roster_by_category = {}
         self.church_summary_worksheet = {}
         self.momentum_main_worksheet = {}
+        # Not Separated by Church
+        self.tnt_app_upload_worksheet = []
+        
 
         # Define pricing as when price expires. The last date defines the walk up price
         self.pricing_breakdown = {
-            "student": {"10-24-25": 85, "11-14-25": 130, "11-15-25": 175},
+            "student": {"10-25-26": 90, "11-8-26": 135, "11-22-26": 200},
             "chaperone": 35,
             "spectator": 55,
         }
@@ -483,6 +487,136 @@ class MomentumWorksheets:
         self.swag_pdf_generator.generate_all_pdfs(self.swag_manager, swag_output)
         print(f"✅ Swag reports saved to: {swag_output}")
 
+    def calculate_anticipated_graduation_year(self, grade_level: int) -> int:
+        """Calculate the anticipated year of high school graduation based on the grade level."""
+        current_year = datetime.now().year
+        if grade_level is None:
+            return 2027
+
+        # need to take the th suffix off
+        grade = grade_level.split("th")[0].split("st")[0].split("nd")[0].split("rd")[0]
+        years_until_graduation = 12 - int(grade)
+        anticipated_graduation_year = current_year + years_until_graduation
+        return anticipated_graduation_year
+
+    def create_tnt_app_upload_worksheet(self, row_data: dict) -> None:
+        if len(self.tnt_app_upload_worksheet) == 0:
+            self.tnt_app_upload_worksheet.append(
+                {
+                    "worksheet_name": "Momentum TNT App Upload",
+                    "data": [
+                        {
+                            "type": "header",
+                            "row": 0,
+                            "col": 0,
+                            "values": [
+                                "Timestamp",
+                                "First Name",
+                                "Last Name",
+                                "Church You Attend",
+                                "T-Shirt Size",
+                                "Are you an adult chaperone?",
+                                "Street Address Line 1",
+                                "Street Address Line 2",
+                                "City",
+                                "State",
+                                "Zip",
+                                "Phone Number",
+                                "Email Address",
+                                "Emergency Contact First & Last Name",
+                                "Emergency Contact Phone Number",
+                                "Date of Birth",
+                                "Age at Time of Event",
+                                "Grade in School",
+                                "Anticipated Year of High School Graduation",
+                                "Gender",
+                                "Age Level in Individual Sports",
+                                "Age Level",
+                                "Creative Writing",
+                                "Speech",
+                                "Academics",
+                                "Instrumental Music",
+                                "Vocal Music",
+                                "Art",
+                                "Creative Ministries",
+                                "Team Sports",
+                                "Individual Sports",
+                                "List any medical problems.",
+                                "Allergies",
+                                "Past surgeries",
+                                "Name of medication & dosage taking during event",
+                                "Insurance Company",
+                                "Parent/Guardian First Name",
+                                "Parent/Guardian Last Name",
+                                "Parent/Guardian Phone Number",
+                                "Parent/Guardian Email Address",
+                            ],
+                            "format": {"bold": True},
+                        }
+                    ]
+                }
+            )
+
+        row_index = len(self.tnt_app_upload_worksheet[0]["data"]) if len(self.tnt_app_upload_worksheet) > 0 and self.tnt_app_upload_worksheet[0].get("data", None) is not None else 0
+        self.tnt_app_upload_worksheet[0]["data"].append(
+                {
+                    "type": "row",
+                    "row": row_index,
+                    "col": 0,
+                    "values": (
+                        row_data.submission_date.strftime("%m/%d/%Y %H:%M:%S"),
+                        row_data.first_name,
+                        row_data.last_name,
+                        row_data.church,
+                        row_data.shirt_size.value,
+                        row_data.registration_type.value == RegistrationType.CHAPERONE.value or row_data.registration_type.value == RegistrationType.STAFF.value,
+                        row_data.street_address,
+                        row_data.street_address2,
+                        row_data.city,
+                        row_data.state,
+                        row_data.zip_code,
+                        row_data.cell_phone,
+                        row_data.student_email,
+                        str(row_data.guardian_first_name) + " " + str(row_data.guardian_last_name),
+                        str(row_data.guardian_contact_phone),
+                        row_data.birthday.strftime("%m/%d/%Y") if row_data.birthday is not None else "",
+                        # age at time of event calculated by september 1 of year minus birthday
+                        (self.TNT_CUT_OFF_DATE - row_data.birthday).days // 365 if row_data.birthday is not None else "",
+                        row_data.grade_level,
+                        self.calculate_anticipated_graduation_year(row_data.grade_level), # anticipated year of high school graduation
+                        row_data.gender.value,
+                        row_data.age_range_individual.name if row_data.age_range_individual is not None else "",
+                        row_data.age_range_talent.value if row_data.age_range_talent is not None else "",
+                        ", ".join([member.value for member in row_data.creative_writing_events]) if row_data.creative_writing_events else "", # Creative Writing
+                        ", ".join([member.value for member in row_data.speech_events]) if row_data.speech_events else "", # Speech
+                        ", ".join([member.value for member in row_data.academic_events]) if row_data.academic_events else "",
+                        ", ".join([member.value for member in row_data.music_events]) if row_data.music_events else "", #  Instrumental Music
+                        ", ".join([member.value for member in row_data.music_events]) if row_data.music_events else "", #  Vocal Music
+                        ", ".join([member.value for member in row_data.art_events]) if row_data.art_events else "",
+                        ", ".join([member.value for member in row_data.creative_ministries_events]) if row_data.creative_ministries_events else "",
+                        ", ".join([member.value for member in row_data.team_sports_events]) if row_data.team_sports_events else "",
+                        ", ".join([member.value for member in row_data.individual_sports_events]) if row_data.individual_sports_events else "",
+                        row_data.medical_concerns,
+                        row_data.allergies,
+                        row_data.past_surgeries,
+                        row_data.medications,
+                        row_data.insurance_company,
+                        str(row_data.guardian_first_name),
+                        str(row_data.guardian_last_name),
+                        str(row_data.guardian_contact_phone),
+                        str(row_data.guardian_contact_email)
+                    ),
+                    "format": None,
+                },
+            )
+    
+    def create_tnt_app_upload_workbook(self) -> None:
+        self.file_manager.write_to_excel(
+            "momentum_tnt_app_upload",
+            f"{datetime.now().strftime('%Y_%m_%d')}_momentum_tnt_app_upload", 
+            self.tnt_app_upload_worksheet
+        )
+    
     def process_data(self, raw_data: list[dict[str:Any]]) -> None:
         """
         Processes the raw data and generates the necessary worksheets.
@@ -500,11 +634,13 @@ class MomentumWorksheets:
                 self.create_roster_by_category_worksheets(data)
                 self.create_church_summary(data)
                 self.aggregate_momentum_main_sheet(data)
+                self.create_tnt_app_upload_worksheet(data)
 
         self.create_church_workbook()
         self.create_roster_workbook()
         self.create_church_summary_pdf()
         self.create_momentum_main_workbook()
+        self.create_tnt_app_upload_workbook()
 
         # Generate swag PDFs
         self.generate_swag_pdfs()

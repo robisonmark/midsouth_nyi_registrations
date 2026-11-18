@@ -1,4 +1,5 @@
 import json
+import csv
 import re
 from datetime import datetime
 from typing import Any, OrderedDict
@@ -45,6 +46,7 @@ class CampWorksheets:
         self.late_fee = 0
         self.email_list = []
         self.shirts = []
+        self.trevecca_roster = []
         self.gotcha_participants = {
             "High School Camp": [],
             "Middle School Camp": [],
@@ -378,6 +380,46 @@ class CampWorksheets:
             else:
                 self.gotcha_participants[camp.value].append(entry)
 
+    def create_trevecca_roster(self, row_data: dict) -> None:
+        if row_data.registration_type == RegistrationType.CHAPERONE or row_data.registration_type == RegistrationType.STAFF:
+            return
+
+        address_parts = [row_data.street_address]
+        if row_data.street_address2:
+            address_parts.append(row_data.street_address2)
+
+        street_address = " ".join(part for part in address_parts if part)
+        city_state_zip = ", ".join(
+            part
+            for part in [
+                row_data.city,
+                " ".join(part for part in [row_data.state, row_data.zip_code] if part),
+            ]
+            if part
+        )
+
+        self.trevecca_roster.append(
+            {
+                "no": len(self.trevecca_roster) + 1,
+                "Church": row_data.church,
+                "Name": f"{row_data.last_name}, {row_data.first_name}",
+                "Camp": row_data.camp.value.lower(),
+                "Birthday": row_data.birthday.strftime("%Y-%m-%d"),
+                "Email": str(row_data.student_email),
+                "Address": ", ".join(part for part in [street_address, city_state_zip] if part),
+            }
+        )
+
+    def create_trevecca_roster_csv(self, filename: str = "trevecca_roster.csv") -> None:
+        output_directory = self.file_manager.create_directory("camp")
+        output_path = f"{output_directory}/{filename}"
+
+        with open(output_path, "w", newline="") as csv_file:
+            fieldnames = ["no", "Church", "Name", "Camp", "Birthday", "Email", "Address"]
+            writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
+            writer.writeheader()
+            writer.writerows(self.trevecca_roster)
+
     
     def create_gotcha_workbook(self) -> None:
         for camp in self.gotcha_participants:
@@ -604,6 +646,7 @@ class CampWorksheets:
                 self.create_church_worksheets(data)
                 self.create_gotcha_spreadsheet(data)
                 self.create_camp_master_worksheets(data)
+                self.create_trevecca_roster(data)
                 self.youth_leader_email_list(data)
                 
                 #     #  =SORT(FILTER(A2:A, C2:C=TRUE), RANDARRAY(COUNTA(FILTER(A2:A, C2:C=TRUE)), 1), TRUE)
@@ -611,6 +654,7 @@ class CampWorksheets:
         self.create_church_workbook()
         self.create_gotcha_workbook()
         self.create_camp_master_workbook()
+        self.create_trevecca_roster_csv()
         # self.create_shirt_master()
 
         print(f"Total Online Payments: ${online_payment}")
